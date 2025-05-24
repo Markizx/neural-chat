@@ -1,3 +1,4 @@
+import React from 'react';
 import { Html, Head, Main, NextScript } from 'next/document';
 import { ServerStyleSheets } from '@mui/styles';
 import createEmotionServer from '@emotion/server/create-instance';
