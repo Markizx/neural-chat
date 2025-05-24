@@ -1,6 +1,6 @@
 // Components
-export * from './components/Button';
-export * from './components/Card';
+export * from './components/button';
+export * from './components/card';
 export * from './components/Avatar';
 export * from './components/Badge';
 export * from './components/Chip';
@@ -16,11 +16,11 @@ export * from './components/SearchInput';
 export * from './components/StatCard';
 export * from './components/StatusIndicator';
 export * from './components/Toast';
-export * from './components/Tooltip';
+export * from './components/ToolTip';
 
 // Hooks
 export * from './hooks/useTheme';
-export * from './hooks/useBreakpoint';
+export * from './hooks/useBreakpoints';
 export * from './hooks/useDebounce';
 export * from './hooks/useOnClickOutside';
 

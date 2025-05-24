@@ -81,4 +81,56 @@ export const darken = (hex: string, amount: number): string => {
 
 export const lighten = (hex: string, amount: number): string => {
   const num = parseInt(hex.replace('#', ''), 16);
-  const amt = Math.round(2.55 * amount
+  const amt = Math.round(2.55 * amount);
+  const R = (num >> 16) + amt;
+  const G = ((num >> 8) & 0x00ff) + amt;
+  const B = (num & 0x0000ff) + amt;
+
+  return (
+    '#' +
+    (
+      0x1000000 +
+      (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+      (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+      (B < 255 ? (B < 1 ? 0 : B) : 255)
+    )
+      .toString(16)
+      .slice(1)
+  );
+};
+
+export const getContrastText = (background: string): string => {
+  const rgb = hexToRgba(background, 1).match(/\d+/g);
+  if (!rgb) return '#000000';
+  
+  const [r, g, b] = rgb.map(Number);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  return luminance > 0.5 ? '#000000' : '#ffffff';
+};
+
+export const createPalette = (baseColor: string) => {
+  return {
+    50: lighten(baseColor, 80),
+    100: lighten(baseColor, 60),
+    200: lighten(baseColor, 40),
+    300: lighten(baseColor, 20),
+    400: lighten(baseColor, 10),
+    500: baseColor,
+    600: darken(baseColor, 10),
+    700: darken(baseColor, 20),
+    800: darken(baseColor, 30),
+    900: darken(baseColor, 40),
+  };
+};
+
+export const gradients = {
+  primary: `linear-gradient(135deg, ${colors.primary.main} 0%, ${colors.secondary.main} 100%)`,
+  secondary: `linear-gradient(135deg, ${colors.secondary.main} 0%, ${colors.primary.main} 100%)`,
+  success: `linear-gradient(135deg, ${colors.success.main} 0%, ${colors.success.light} 100%)`,
+  error: `linear-gradient(135deg, ${colors.error.main} 0%, ${colors.error.light} 100%)`,
+  warning: `linear-gradient(135deg, ${colors.warning.main} 0%, ${colors.warning.light} 100%)`,
+  info: `linear-gradient(135deg, ${colors.info.main} 0%, ${colors.info.light} 100%)`,
+  dark: `linear-gradient(135deg, ${colors.grey[900]} 0%, ${colors.grey[700]} 100%)`,
+  light: `linear-gradient(135deg, ${colors.grey[100]} 0%, ${colors.grey[300]} 100%)`,
+};

@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@mui/icons-material": "^5.15.3",
+    "@mui/lab": "^5.0.0-alpha.158",
     "clsx": "^2.1.0",
     "react-intersection-observer": "^9.5.3"
   },
