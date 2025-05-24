@@ -39,16 +39,19 @@ const commonThemeOptions: ThemeOptions = {
       fontSize: '2.5rem',
       fontWeight: 700,
       lineHeight: 1.2,
+      letterSpacing: '-0.02em',
     },
     h2: {
       fontSize: '2rem',
       fontWeight: 600,
       lineHeight: 1.3,
+      letterSpacing: '-0.01em',
     },
     h3: {
       fontSize: '1.75rem',
       fontWeight: 600,
       lineHeight: 1.3,
+      letterSpacing: '-0.01em',
     },
     h4: {
       fontSize: '1.5rem',
@@ -76,6 +79,7 @@ const commonThemeOptions: ThemeOptions = {
     button: {
       textTransform: 'none',
       fontWeight: 500,
+      letterSpacing: '0.02em',
     },
   },
   shape: {
@@ -87,12 +91,17 @@ const commonThemeOptions: ThemeOptions = {
         root: {
           borderRadius: 25,
           padding: '10px 24px',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           fontSize: '0.9375rem',
           fontWeight: 500,
+          position: 'relative',
+          overflow: 'hidden',
           '&:hover': {
             transform: 'translateY(-2px)',
             boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+          },
+          '&:active': {
+            transform: 'translateY(0)',
           },
         },
         contained: {
@@ -111,7 +120,7 @@ const commonThemeOptions: ThemeOptions = {
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          transition: 'box-shadow 0.2s ease',
+          transition: 'box-shadow 0.2s ease, transform 0.2s ease',
         },
         elevation0: {
           border: '1px solid',
@@ -192,6 +201,7 @@ const commonThemeOptions: ThemeOptions = {
           borderRadius: 16,
           transition: 'all 0.2s ease',
           '&:hover': {
+            transform: 'translateY(-4px)',
             boxShadow: '0 12px 24px rgba(0, 0, 0, 0.1)',
           },
         },
@@ -239,6 +249,7 @@ export const lightTheme = createTheme({
     action: {
       hover: alpha('#6366f1', 0.04),
       selected: alpha('#6366f1', 0.08),
+      focus: alpha('#6366f1', 0.12),
     },
   },
   components: {
@@ -252,6 +263,20 @@ export const lightTheme = createTheme({
             radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.02) 0%, transparent 50%)
           `,
           backgroundAttachment: 'fixed',
+          '&::before': {
+            content: '""',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `
+              radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.03), transparent 25%),
+              radial-gradient(circle at 85% 80%, rgba(236, 72, 153, 0.03), transparent 25%)
+            `,
+            pointerEvents: 'none',
+            zIndex: 0,
+          },
         },
       },
     },
@@ -259,11 +284,11 @@ export const lightTheme = createTheme({
       styleOverrides: {
         ...commonThemeOptions.components?.MuiButton?.styleOverrides,
         containedPrimary: {
-          background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #5a67d8 0%, #9b46a1 100%)',
+            background: 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 16px rgba(99, 102, 241, 0.25)',
+            boxShadow: '0 8px 24px rgba(102, 126, 234, 0.35)',
           },
         },
       },
@@ -271,7 +296,7 @@ export const lightTheme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',
         },
       },
@@ -285,17 +310,17 @@ export const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: brandColors.primary.light,
+      main: '#818cf8',
       light: '#a5b4fc',
-      dark: brandColors.primary.main,
+      dark: '#6366f1',
     },
     secondary: {
-      main: brandColors.secondary.light,
+      main: '#f472b6',
       light: '#f9a8d4',
-      dark: brandColors.secondary.main,
+      dark: '#ec4899',
     },
     background: {
-      default: '#0d0d1f',
+      default: '#0f0f23',
       paper: '#161625',
     },
     text: {
@@ -326,6 +351,7 @@ export const darkTheme = createTheme({
     action: {
       hover: alpha('#818cf8', 0.08),
       selected: alpha('#818cf8', 0.12),
+      focus: alpha('#818cf8', 0.16),
     },
   },
   components: {
@@ -340,6 +366,20 @@ export const darkTheme = createTheme({
             radial-gradient(circle at 80% 80%, rgba(238, 0, 255, 0.03) 0%, transparent 40%)
           `,
           backgroundAttachment: 'fixed',
+          '&::before': {
+            content: '""',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `
+              radial-gradient(circle at 15% 50%, rgba(0, 217, 255, 0.03), transparent 25%),
+              radial-gradient(circle at 85% 80%, rgba(238, 0, 255, 0.03), transparent 25%)
+            `,
+            pointerEvents: 'none',
+            zIndex: 0,
+          },
         },
       },
     },
@@ -375,7 +415,7 @@ export const darkTheme = createTheme({
         elevation1: {
           boxShadow: `
             0 4px 16px rgba(0, 0, 0, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05)
+            inset 0 1px 0 rgba(255, 255, 255, 0.03)
           `,
         },
       },
@@ -406,10 +446,12 @@ export const darkTheme = createTheme({
           '&.MuiChip-colorPrimary': {
             backgroundColor: alpha('#6366f1', 0.2),
             color: '#a5b4fc',
+            border: `1px solid ${alpha('#6366f1', 0.3)}`,
           },
           '&.MuiChip-colorSecondary': {
             backgroundColor: alpha('#ec4899', 0.2),
             color: '#f9a8d4',
+            border: `1px solid ${alpha('#ec4899', 0.3)}`,
           },
         },
       },
@@ -419,7 +461,6 @@ export const darkTheme = createTheme({
         root: {
           '&.Mui-selected': {
             backgroundColor: alpha('#6366f1', 0.15),
-            borderLeft: '3px solid #6366f1',
             '&:hover': {
               backgroundColor: alpha('#6366f1', 0.2),
             },
