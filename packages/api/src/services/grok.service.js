@@ -1,9 +1,20 @@
+const axios = require('axios');
 const logger = require('../utils/logger');
 
 class GrokService {
   constructor() {
     this.apiKey = process.env.GROK_API_KEY;
     this.baseURL = 'https://api.x.ai/v1';
+    
+    // Создаем axios instance
+    this.client = axios.create({
+      baseURL: this.baseURL,
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 60000 // 60 секунд
+    });
     
     // Актуальные модели Grok
     this.models = {
@@ -65,34 +76,16 @@ class GrokService {
         stream
       };
 
-      const response = await fetch(`${this.baseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: response.statusText }));
-        
-        if (response.status === 429) {
-          throw new Error(`Rate limit exceeded for model ${modelId}. Limit: ${this.rateLimits[modelId]}rps`);
-        }
-        
-        if (response.status === 401) {
-          throw new Error('Invalid API key');
-        }
-        
-        throw new Error(`Grok API error: ${error.message || response.statusText}`);
-      }
-
       if (stream) {
-        return response.body;
+        // Для streaming используем другой подход
+        const response = await this.client.post('/chat/completions', requestBody, {
+          responseType: 'stream'
+        });
+        return response.data;
       }
 
-      const data = await response.json();
+      const response = await this.client.post('/chat/completions', requestBody);
+      const data = response.data;
 
       return {
         content: data.choices[0].message.content,
@@ -106,7 +99,33 @@ class GrokService {
       };
     } catch (error) {
       logger.error('Grok API error:', error);
-      throw error;
+      
+      if (error.response) {
+        // Обработка ошибок от API
+        const status = error.response.status;
+        const errorData = error.response.data;
+        
+        if (status === 429) {
+          const modelId = this.models[options.model] || options.model;
+          throw new Error(`Rate limit exceeded for model ${modelId}. Limit: ${this.rateLimits[modelId]}rps`);
+        }
+        
+        if (status === 401) {
+          throw new Error('Invalid API key');
+        }
+        
+        if (status === 400) {
+          throw new Error(`Bad request: ${errorData.error?.message || 'Invalid request'}`);
+        }
+        
+        throw new Error(`Grok API error: ${errorData.error?.message || error.message}`);
+      } else if (error.request) {
+        // Ошибка сети
+        throw new Error('Network error: Unable to reach Grok API');
+      } else {
+        // Другие ошибки
+        throw error;
+      }
     }
   }
 
@@ -231,21 +250,24 @@ class GrokService {
 
   async validateApiKey(apiKey) {
     try {
-      const response = await fetch(`${this.baseURL}/chat/completions`, {
-        method: 'POST',
+      const testClient = axios.create({
+        baseURL: this.baseURL,
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          model: 'grok-3-mini', // Используем самую дешевую модель для проверки
-          messages: [{ role: 'user', content: 'Hi' }],
-          max_tokens: 10
-        })
+        timeout: 10000
+      });
+
+      await testClient.post('/chat/completions', {
+        model: 'grok-3-mini', // Используем самую дешевую модель для проверки
+        messages: [{ role: 'user', content: 'Hi' }],
+        max_tokens: 10
       });
       
-      return response.ok;
+      return true;
     } catch (error) {
+      logger.error('API key validation failed:', error);
       return false;
     }
   }
@@ -350,6 +372,35 @@ class GrokService {
         output: estimatedOutputCost
       }
     };
+  }
+
+  // Метод для обработки streaming ответов
+  async *streamResponse(stream) {
+    try {
+      for await (const chunk of stream) {
+        const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.substring(6);
+            
+            if (data === '[DONE]') {
+              return;
+            }
+            
+            try {
+              const parsed = JSON.parse(data);
+              yield parsed;
+            } catch (e) {
+              logger.error('Error parsing stream chunk:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Stream processing error:', error);
+      throw error;
+    }
   }
 }
 

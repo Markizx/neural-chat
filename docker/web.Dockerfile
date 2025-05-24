@@ -9,6 +9,7 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 COPY lerna.json ./
 COPY packages/shared/package*.json ./packages/shared/
+COPY packages/ui-kit/package*.json ./packages/ui-kit/
 COPY packages/web/package*.json ./packages/web/
 
 # Install dependencies
@@ -17,10 +18,12 @@ RUN npm run bootstrap
 
 # Copy source code
 COPY packages/shared ./packages/shared
+COPY packages/ui-kit ./packages/ui-kit
 COPY packages/web ./packages/web
 
 # Build
 RUN npm run build --workspace=@smartchat/shared
+RUN npm run build --workspace=@smartchat/ui-kit
 RUN npm run build --workspace=@smartchat/web
 
 # Production stage
@@ -34,7 +37,7 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
 
 EXPOSE 80
 

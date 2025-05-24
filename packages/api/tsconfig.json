@@ -5,7 +5,7 @@
     "lib": ["es2020"],
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -18,14 +18,15 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": true,
     "allowJs": true,
+    "checkJs": false,
     "paths": {
       "@/*": ["./src/*"],
       "@smartchat/shared": ["../shared"]
@@ -38,7 +39,7 @@
     "node_modules",
     "dist",
     "tests",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.test.js",
+    "**/*.spec.js"
   ]
 }

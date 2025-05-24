@@ -1,21 +1,7 @@
 const rateLimit = require('express-rate-limit');
-const RedisStore = require('rate-limit-redis');
-const { createClient } = require('redis');
+const RedisStore = require('rate-limit-redis').default;
+const { getRedisClient } = require('../config/redis');
 const { apiResponse } = require('../utils/apiResponse');
-
-// Create Redis client
-const redisClient = createClient({
-  url: process.env.REDIS_URL
-});
-
-redisClient.on('error', (err) => {
-  console.error('Redis Client Error:', err);
-});
-
-// Connect to Redis
-(async () => {
-  await redisClient.connect();
-})();
 
 // Default rate limiter
 const defaultLimiter = rateLimit({
@@ -33,7 +19,7 @@ const defaultLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: new RedisStore({
-    client: redisClient,
+    client: getRedisClient(),
     prefix: 'rl:default:'
   })
 });
@@ -52,7 +38,7 @@ const authLimiter = rateLimit({
     );
   },
   store: new RedisStore({
-    client: redisClient,
+    client: getRedisClient(),
     prefix: 'rl:auth:'
   })
 });
@@ -74,7 +60,7 @@ const apiLimiter = rateLimit({
     );
   },
   store: new RedisStore({
-    client: redisClient,
+    client: getRedisClient(),
     prefix: 'rl:api:'
   })
 });
@@ -95,7 +81,7 @@ const messageLimiter = rateLimit({
     );
   },
   store: new RedisStore({
-    client: redisClient,
+    client: getRedisClient(),
     prefix: 'rl:message:'
   })
 });
@@ -116,7 +102,7 @@ const uploadLimiter = rateLimit({
     );
   },
   store: new RedisStore({
-    client: redisClient,
+    client: getRedisClient(),
     prefix: 'rl:upload:'
   })
 });
@@ -149,7 +135,7 @@ const dynamicLimiter = (req, res, next) => {
       );
     },
     store: new RedisStore({
-      client: redisClient,
+      client: getRedisClient(),
       prefix: `rl:${userPlan}:`
     })
   });

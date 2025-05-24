@@ -1,13 +1,12 @@
-const { S3 } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command, CopyObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command, CopyObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
 
 class StorageService {
   constructor() {
     // Используем переименованные переменные
-    this.s3 = new S3({
+    this.s3 = new S3Client({
       region: process.env.S3_REGION || process.env.AWS_REGION || 'us-east-1',
       credentials: {
         accessKeyId: process.env.S3_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID,

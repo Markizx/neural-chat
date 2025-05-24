@@ -1,3 +1,4 @@
+// Исправленная версия packages/api/src/index.js
 require('dotenv').config();
 const http = require('http');
 const app = require('./app');
@@ -20,9 +21,6 @@ const io = new Server(server, {
   }
 });
 
-// Initialize WebSocket handlers
-initWebSocket(io);
-
 // Start server
 async function startServer() {
   try {
@@ -33,6 +31,13 @@ async function startServer() {
     // Connect to Redis
     await connectRedis();
     logger.info('Redis connected');
+
+    // Initialize WebSocket handlers after Redis is connected
+    initWebSocket(io);
+
+    // Import and apply rate limiters after Redis is connected
+    const { defaultLimiter } = require('./middleware/rateLimiter.middleware');
+    app.use('/api/', defaultLimiter);
 
     // Start listening
     server.listen(PORT, () => {

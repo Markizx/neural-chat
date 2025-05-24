@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
+const jwksClient = require('jwks-rsa');
 
 class AuthService {
   constructor() {
@@ -105,11 +106,6 @@ class AuthService {
   // Verify Apple token
   async verifyAppleToken(identityToken) {
     try {
-      // TODO: Implement Apple Sign In verification
-      // This requires fetching Apple's public keys and verifying the JWT
-      const jwt = require('jsonwebtoken');
-      const jwksClient = require('jwks-rsa');
-      
       // Get Apple's public keys
       const client = jwksClient({
         jwksUri: 'https://appleid.apple.com/auth/keys'

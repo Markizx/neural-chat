@@ -1,3 +1,4 @@
+// Исправленная версия packages/api/src/middleware/error.middleware.js
 const { apiResponse } = require('../utils/apiResponse');
 const logger = require('../utils/logger');
 
@@ -115,9 +116,5 @@ const notFound = (req, res, next) => {
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
-module.exports = {
-  errorMiddleware,
-  notFound,
-  asyncHandler
-};
+
 module.exports = errorMiddleware;
