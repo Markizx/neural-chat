@@ -2,26 +2,122 @@
   "name": "smartchat-ai-platform",
   "version": "1.0.0",
   "private": true,
+  "description": "SmartChat.ai - Advanced AI Chat Platform with Claude and Grok Integration",
+  "author": "SmartChat Team",
+  "license": "MIT",
+  "homepage": "https://smartchat.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smartchat-ai/smartchat-platform.git"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "build": "lerna run build",
-    "build:api": "lerna run build --scope=@smartchat/api",
-    "build:web": "lerna run build --scope=@smartchat/web",
+    "build": "lerna run build --stream",
+    "build:shared": "lerna run build --scope=@smartchat/shared",
+    "build:api": "npm run build:shared && lerna run build --scope=@smartchat/api",
+    "build:web": "npm run build:shared && lerna run build --scope=@smartchat/web",
+    "build:all": "npm run build:shared && lerna run build --ignore=@smartchat/shared --stream",
+    "build:docker": "docker-compose build",
+    "build:docker:api": "docker build -t smartchat-api -f docker/api.Dockerfile .",
+    "build:docker:web": "docker build -t smartchat-web -f docker/web.Dockerfile .",
+    "start": "lerna run start --parallel",
     "start:api": "lerna run start --scope=@smartchat/api",
     "start:web": "lerna run start --scope=@smartchat/web",
+    "start:docker": "docker-compose up",
+    "start:docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up",
     "dev": "lerna run dev --parallel",
+    "dev:api": "lerna run dev --scope=@smartchat/api",
+    "dev:web": "lerna run dev --scope=@smartchat/web",
+    "test": "jest",
+    "test:api": "jest --projects packages/api",
+    "test:web": "jest --projects packages/web",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "lint": "lerna run lint --parallel",
+    "lint:fix": "lerna run lint -- --fix",
+    "type-check": "lerna run type-check --parallel",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "clean": "lerna clean -y && rm -rf node_modules",
-    "test": "lerna run test",
-    "lint": "lerna run lint"
+    "clean:all": "npm run clean && rm -rf packages/*/dist packages/*/build",
+    "reset": "npm run clean:all && npm install && npm run bootstrap",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged",
+    "deploy:aws": "./scripts/deploy.sh production",
+    "deploy:staging": "./scripts/deploy.sh staging",
+    "deploy:docker": "npm run docker:build && npm run docker:push",
+    "docker:build": "npm run build:docker:api && npm run build:docker:web",
+    "docker:push": "npm run docker:push:api && npm run docker:push:web",
+    "docker:push:api": "docker tag smartchat-api:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/smartchat-api:latest && docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/smartchat-api:latest",
+    "docker:push:web": "docker tag smartchat-web:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/smartchat-web:latest && docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/smartchat-web:latest",
+    "docker:login": "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com",
+    "db:migrate": "lerna run migrate --scope=@smartchat/api",
+    "db:seed": "lerna run seed --scope=@smartchat/api",
+    "analyze": "lerna run analyze --parallel",
+    "check:deps": "npm-check-updates",
+    "update:deps": "npm-check-updates -u && npm install",
+    "security:check": "npm audit && lerna exec -- npm audit",
+    "docs:build": "typedoc",
+    "release": "lerna version --conventional-commits --yes",
+    "release:publish": "lerna publish from-package --yes",
+    "postinstall": "npm run bootstrap"
   },
   "devDependencies": {
-    "lerna": "^8.0.0"
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.8",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^8.0.3",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "lerna": "^8.0.2",
+    "lint-staged": "^15.2.0",
+    "npm-check-updates": "^16.14.12",
+    "prettier": "^3.1.1",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.25.6",
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "volta": {
+    "node": "18.19.0",
+    "npm": "10.2.5"
   }
 }

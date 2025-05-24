@@ -1,0 +1,43 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - echo Installing dependencies...
+      - npm ci --legacy-peer-deps
+      - npm run bootstrap
+      
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building shared package...
+      - npm run build --workspace=@smartchat/shared
+      
+      - echo Building API...
+      - npm run build --workspace=@smartchat/api
+      - docker build -t $IMAGE_REPO_NAME_API:$IMAGE_TAG -f docker/api.Dockerfile .
+      - docker tag $IMAGE_REPO_NAME_API:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_API:$IMAGE_TAG
+      
+      - echo Building Web...
+      - npm run build --workspace=@smartchat/web
+      - docker build -t $IMAGE_REPO_NAME_WEB:$IMAGE_TAG -f docker/web.Dockerfile .
+      - docker tag $IMAGE_REPO_NAME_WEB:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_WEB:$IMAGE_TAG
+      
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_API:$IMAGE_TAG
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_WEB:$IMAGE_TAG
+      
+      - echo Writing image definitions file...
+      - printf '[{"name":"api","imageUri":"%s"},{"name":"web","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_API:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_WEB:$IMAGE_TAG > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - docker-compose.yml
+    - packages/api/dist/**/*
+    - packages/web/build/**/*

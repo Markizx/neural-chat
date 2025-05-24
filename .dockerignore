@@ -1,0 +1,60 @@
+# Dependencies
+node_modules
+*/node_modules
+packages/*/node_modules
+
+# Build outputs
+dist
+build
+*/dist
+*/build
+packages/*/dist
+packages/*/build
+
+# Environment files
+.env
+.env.*
+!.env.example
+packages/*/.env
+packages/*/.env.*
+!packages/*/.env.example
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs
+LICENSE
+
+# Testing
+coverage
+.nyc_output
+*.test.js
+*.spec.js
+__tests__
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Temporary files
+.cache
+.temp
+tmp
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml

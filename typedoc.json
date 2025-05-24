@@ -1,0 +1,26 @@
+{
+  "entryPoints": [
+    "./packages/api/src",
+    "./packages/web/src",
+    "./packages/shared"
+  ],
+  "entryPointStrategy": "expand",
+  "out": "./docs/api",
+  "exclude": [
+    "**/node_modules/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "API",
+    "Web",
+    "Shared",
+    "*"
+  ],
+  "plugin": [],
+  "theme": "default",
+  "name": "SmartChat.ai API Documentation",
+  "readme": "./README.md"
+}

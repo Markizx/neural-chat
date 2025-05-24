@@ -21,10 +21,21 @@
     "jsx": "react-jsx",
     "baseUrl": "src",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["*"],
+      "@smartchat/shared": ["../../shared/src"],
+      "@smartchat/shared/*": ["../../shared/src/*"]
     }
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "scripts",
+    "acceptance-tests",
+    "webpack",
+    "jest"
   ]
 }
