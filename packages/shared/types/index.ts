@@ -1,12 +1,52 @@
+// Re-export all types
+export * from './chat.types';
+export * from './user.types';
+export * from './api.types';
+export * from './subscription.types';
+export * from './project.types';
+export * from './brainstorm.types';
+
+// Common types
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: ApiError;
+  metadata: ApiMetadata;
+  pagination?: ApiPagination;
+}
+
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: any;
+}
+
+export interface ApiMetadata {
+  timestamp: string;
+  version: string;
+  platform: 'web' | 'ios' | 'android';
+  requestId: string;
+}
+
+export interface ApiPagination {
+  page: number;
+  limit: number;
+  total: number;
+  hasNext: boolean;
+}
+
 export interface User {
   _id: string;
   email: string;
+  emailVerified: boolean;
   name: string;
   avatar?: string;
   role: 'user' | 'admin' | 'moderator';
   subscription: Subscription;
   usage: Usage;
   settings: UserSettings;
+  status: 'active' | 'suspended' | 'deleted';
+  metadata: UserMetadata;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +86,19 @@ export interface NotificationSettings {
   marketing: boolean;
 }
 
+export interface UserMetadata {
+  lastLogin?: string;
+  lastActivity?: string;
+  loginCount: number;
+  referralCode?: string;
+  referredBy?: string;
+  utm?: {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+  };
+}
+
 export interface Chat {
   _id: string;
   userId: string;
@@ -56,17 +109,22 @@ export interface Chat {
   tags: string[];
   isPinned: boolean;
   isArchived: boolean;
-  sharing: {
-    isPublic: boolean;
-    shareId?: string;
-  };
-  metadata: {
-    messageCount: number;
-    lastMessageAt?: string;
-    totalTokens: number;
-  };
+  sharing: ChatSharing;
+  metadata: ChatMetadata;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ChatSharing {
+  isPublic: boolean;
+  shareId?: string;
+  sharedWith?: string[];
+}
+
+export interface ChatMetadata {
+  messageCount: number;
+  lastMessageAt?: string;
+  totalTokens: number;
 }
 
 export interface Message {
@@ -202,32 +260,4 @@ export interface BrainstormSettings {
   maxTurns: number;
   moderationLevel: 'low' | 'medium' | 'high';
   format: 'debate' | 'brainstorm' | 'analysis' | 'creative';
-}
-
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: ApiError;
-  metadata: ApiMetadata;
-  pagination?: ApiPagination;
-}
-
-export interface ApiError {
-  code: string;
-  message: string;
-  details?: any;
-}
-
-export interface ApiMetadata {
-  timestamp: string;
-  version: string;
-  platform: string;
-  requestId: string;
-}
-
-export interface ApiPagination {
-  page: number;
-  limit: number;
-  total: number;
-  hasNext: boolean;
 }
