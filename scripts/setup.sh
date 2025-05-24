@@ -141,6 +141,19 @@ setup_redis() {
     echo "  redis-server"
 }
 
+# Create test user
+create_test_user() {
+    echo ""
+    read -p "Would you like to create a test user? (y/n): " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "Creating test user..."
+        echo "⚠️  This feature will be available after starting the server"
+        echo "⚠️  Use the registration endpoint or UI to create a user"
+    fi
+}
+
 # Instructions
 print_instructions() {
     echo ""
@@ -170,6 +183,9 @@ print_instructions() {
     echo "   - Web: http://localhost:3000"
     echo "   - API: http://localhost:5000"
     echo ""
+    echo "5. API Documentation:"
+    echo "   http://localhost:5000/api/v1"
+    echo ""
     echo "For production deployment, see docs/deployment.md"
 }
 
@@ -178,4 +194,13 @@ main() {
     check_requirements
     install_dependencies
     setup_env_files
-    crea
+    create_directories
+    build_shared
+    setup_database
+    setup_redis
+    create_test_user
+    print_instructions
+}
+
+# Run main function
+main
