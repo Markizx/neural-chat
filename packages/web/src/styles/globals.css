@@ -22,10 +22,10 @@ body {
   height: 100%;
 }
 
-/* Scrollbar styles */
+/* Custom scrollbar styles */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -33,25 +33,44 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #666;
+  background: rgba(128, 128, 128, 0.5);
+  background-clip: content-box;
+}
+
+/* Dark mode scrollbar */
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  background-clip: content-box;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+  background-clip: content-box;
 }
 
 /* Code block styles */
 pre {
   overflow-x: auto;
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
   line-height: 1.5;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode pre {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 code {
-  font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
 }
 
 /* Markdown styles */
@@ -84,7 +103,8 @@ code {
 .markdown-body blockquote {
   margin: 0 0 16px;
   padding: 0 1em;
-  border-left: 4px solid #dfe2e5;
+  border-left: 4px solid #6366f1;
+  opacity: 0.8;
 }
 
 /* Animation classes */
@@ -101,6 +121,43 @@ code {
 
 .fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Glow effect for dark mode */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.8), 0 0 30px rgba(99, 102, 241, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+  }
+}
+
+.glow-effect {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Neon text effect */
+.neon-text {
+  text-shadow: 
+    0 0 10px rgba(99, 102, 241, 0.8),
+    0 0 20px rgba(99, 102, 241, 0.6),
+    0 0 30px rgba(99, 102, 241, 0.4);
+}
+
+/* Glass morphism effect */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .glass-morphism {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Loading animation */
@@ -128,12 +185,99 @@ code {
   -webkit-text-fill-color: transparent;
 }
 
+/* Neon gradient for dark mode */
+.dark-mode .gradient-text {
+  background: linear-gradient(135deg, #00d9ff 0%, #6366f1 50%, #ee00ff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 /* Custom focus styles */
 :focus-visible {
-  outline: 2px solid #667eea;
+  outline: 2px solid #6366f1;
   outline-offset: 2px;
 }
 
 button:focus-visible {
   outline-offset: 4px;
+}
+
+/* Message bubbles */
+.message-bubble {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 18px;
+  max-width: 70%;
+}
+
+.message-bubble.user {
+  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+  color: white;
+  margin-left: auto;
+}
+
+.message-bubble.assistant {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.dark-mode .message-bubble.assistant {
+  background: rgba(129, 140, 248, 0.1);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.dark-mode .hover-lift:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.05) 25%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.dark-mode .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dots pattern background */
+.dots-pattern {
+  background-image: radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.dark-mode .dots-pattern {
+  background-image: radial-gradient(circle, rgba(129, 140, 248, 0.1) 1px, transparent 1px);
 }

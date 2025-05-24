@@ -12,6 +12,7 @@ import {
   Button,
   Chip,
   alpha,
+  useTheme,
 } from '@mui/material';
 import {
   Home,
@@ -33,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const theme = useTheme();
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -53,27 +55,83 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box sx={{ p: 2, pt: 10 }}>
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100%',
+        background: theme.palette.mode === 'dark' 
+          ? alpha(theme.palette.background.paper, 0.8)
+          : alpha(theme.palette.background.paper, 0.95),
+        backdropFilter: 'blur(10px)',
+      }}
+    >
+      {/* Logo Section */}
+      <Box sx={{ p: 3, pt: 10 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Box
+            sx={{
+              width: 50,
+              height: 50,
+              borderRadius: '15px',
+              background: theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, #00d9ff 0%, #6366f1 50%, #ee00ff 100%)'
+                : 'linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: theme.palette.mode === 'dark'
+                ? '0 4px 16px rgba(99, 102, 241, 0.3)'
+                : '0 4px 16px rgba(99, 102, 241, 0.2)',
+            }}
+          >
+            <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
+              AI
+            </Typography>
+          </Box>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 300,
+              color: theme.palette.text.primary,
+            }}
+          >
+            NexusChat
+          </Typography>
+        </Box>
+
         <Button
           fullWidth
           variant="contained"
           startIcon={<Add />}
           onClick={() => handleNavigation('/chat/claude')}
           sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: theme.palette.mode === 'dark'
+              ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)'
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
             py: 1.5,
+            borderRadius: '25px',
+            boxShadow: theme.palette.mode === 'dark'
+              ? '0 4px 16px rgba(124, 58, 237, 0.3)'
+              : '0 4px 16px rgba(99, 102, 241, 0.2)',
             '&:hover': {
-              background: 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
+              background: theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, #6d28d9 0%, #db2777 100%)'
+                : 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
+              transform: 'translateY(-2px)',
+              boxShadow: theme.palette.mode === 'dark'
+                ? '0 8px 24px rgba(124, 58, 237, 0.4)'
+                : '0 8px 24px rgba(99, 102, 241, 0.3)',
             },
           }}
         >
-          New Chat
+          ✨ New Chat
         </Button>
       </Box>
 
-      <List sx={{ px: 1 }}>
+      {/* Menu Items */}
+      <List sx={{ px: 1, flexGrow: 1 }}>
         {menuItems.map((item) => (
           <ListItem key={item.path} disablePadding>
             <ListItemButton
@@ -83,24 +141,37 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 borderRadius: 2,
                 mx: 1,
                 mb: 0.5,
+                transition: 'all 0.2s ease',
                 '&.Mui-selected': {
-                  backgroundColor: (theme) =>
-                    alpha(theme.palette.primary.main, 0.1),
+                  backgroundColor: theme.palette.mode === 'dark'
+                    ? alpha(theme.palette.primary.main, 0.15)
+                    : alpha(theme.palette.primary.main, 0.1),
+                  borderLeft: `3px solid ${theme.palette.primary.main}`,
                   '&:hover': {
-                    backgroundColor: (theme) =>
-                      alpha(theme.palette.primary.main, 0.15),
+                    backgroundColor: theme.palette.mode === 'dark'
+                      ? alpha(theme.palette.primary.main, 0.2)
+                      : alpha(theme.palette.primary.main, 0.15),
                   },
+                },
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
+                {item.icon}
+              </ListItemIcon>
               <ListItemText primary={item.text} />
               {item.badge && (
                 <Chip
                   label={item.badge}
                   size="small"
                   color="secondary"
-                  sx={{ height: 20, fontSize: '0.7rem' }}
+                  sx={{ 
+                    height: 20, 
+                    fontSize: '0.7rem',
+                    background: 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
+                  }}
                 />
               )}
             </ListItemButton>
@@ -108,10 +179,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         ))}
       </List>
 
-      <Box sx={{ flexGrow: 1 }} />
-
       <Divider sx={{ mx: 2 }} />
 
+      {/* Bottom Menu */}
       <List sx={{ px: 1, pb: 2 }}>
         {bottomMenuItems.map((item) => (
           <ListItem key={item.path} disablePadding>
@@ -122,33 +192,38 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 borderRadius: 2,
                 mx: 1,
                 mb: 0.5,
+                transition: 'all 0.2s ease',
                 '&.Mui-selected': {
-                  backgroundColor: (theme) =>
-                    alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: (theme) =>
-                      alpha(theme.palette.primary.main, 0.15),
-                  },
+                  backgroundColor: theme.palette.mode === 'dark'
+                    ? alpha(theme.palette.primary.main, 0.15)
+                    : alpha(theme.palette.primary.main, 0.1),
+                  borderLeft: `3px solid ${theme.palette.primary.main}`,
+                },
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
+                {item.icon}
+              </ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
 
+      {/* User Plan Info */}
       {user && (
-        <Box sx={{ p: 2, pt: 0 }}>
+        <Box sx={{ p: 2 }}>
           <Box
             sx={{
               p: 2,
-              borderRadius: 2,
-              backgroundColor: (theme) =>
-                alpha(theme.palette.primary.main, 0.05),
-              border: (theme) =>
-                `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+              borderRadius: '15px',
+              backgroundColor: theme.palette.mode === 'dark'
+                ? alpha(theme.palette.primary.main, 0.1)
+                : alpha(theme.palette.primary.main, 0.05),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
             }}
           >
             <Typography variant="body2" color="text.secondary" gutterBottom>

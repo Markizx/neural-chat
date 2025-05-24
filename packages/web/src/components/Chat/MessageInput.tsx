@@ -10,6 +10,7 @@ import {
   Chip,
   CircularProgress,
   Tooltip,
+  Typography,
 } from '@mui/material';
 import {
   Send,

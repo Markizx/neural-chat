@@ -1,6 +1,74 @@
 // Re-export from shared types
 export * from '@smartchat/shared/types/chat.types';
 
+// Message type for web
+export interface Message {
+  _id: string;
+  chatId: string;
+  userId: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  model?: string;
+  attachments?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    size: number;
+    mimeType: string;
+  }>;
+  artifacts?: Array<{
+    id: string;
+    type: string;
+    title?: string;
+    content: string;
+    language?: string;
+    metadata?: any;
+  }>;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    cost: number;
+  };
+  feedback?: {
+    rating?: number;
+    comment?: string;
+    ratedAt?: string;
+  };
+  isEdited?: boolean;
+  editedAt?: string;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Chat type for web
+export interface Chat {
+  _id: string;
+  userId: string;
+  title: string;
+  type: 'claude' | 'grok' | 'brainstorm';
+  model: string;
+  projectId?: string;
+  tags?: string[];
+  isPinned?: boolean;
+  isArchived?: boolean;
+  sharing?: {
+    isPublic?: boolean;
+    shareId?: string;
+    sharedWith?: string[];
+  };
+  metadata: {
+    messageCount: number;
+    lastMessageAt?: string;
+    totalTokens?: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Additional web-specific chat types
 export interface ChatDraft {
   id: string;

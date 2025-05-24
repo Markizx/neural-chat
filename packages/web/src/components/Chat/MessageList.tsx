@@ -27,7 +27,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
-import { Message } from '../../types';
+import { Message, Artifact } from '../../types';
 import ArtifactViewer from '../Artifacts/ArtifactViewer';
 
 interface MessageListProps {

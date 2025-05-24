@@ -5,6 +5,16 @@ export * from '@smartchat/shared/types';
 export * from './api.types';
 export * from './chat.types';
 
+// Artifact type
+export interface Artifact {
+  id: string;
+  type: 'code' | 'markdown' | 'react' | 'svg' | 'html' | 'mermaid';
+  title?: string;
+  content: string;
+  language?: string;
+  metadata?: Record<string, any>;
+}
+
 // Web-specific UI types
 export interface Theme {
   mode: 'light' | 'dark';

@@ -17,6 +17,14 @@ interface User {
     totalMessages: number;
   };
   settings: any;
+  security?: {
+    twoFactorEnabled?: boolean;
+  };
+  metadata?: {
+    lastLogin?: string;
+    referralCode?: string;
+  };
+  createdAt?: string;
 }
 
 interface AuthContextType {
