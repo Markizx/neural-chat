@@ -4,35 +4,62 @@ applications:
       phases:
         preBuild:
           commands:
-            - npm install
+            # Install dependencies
+            - npm ci --legacy-peer-deps
             - npm run bootstrap
+            
+            # Build shared packages first
+            - npm run build --workspace=@smartchat/shared
+            - npm run build --workspace=@smartchat/ui-kit
+            
         build:
           commands:
-            - npm run build:web
+            # Build web application
+            - npm run build --workspace=@smartchat/web
+            
       artifacts:
         baseDirectory: packages/web/build
         files:
           - '**/*'
+          
       cache:
         paths:
           - node_modules/**/*
           - packages/*/node_modules/**/*
+          - .npm/**/*
+          
     appRoot: .
+    
   - backend:
       phases:
         preBuild:
           commands:
-            - npm install
+            - npm ci --legacy-peer-deps --production=false
             - npm run bootstrap
+            
         build:
           commands:
-            - npm run build:api
+            # Build shared packages
+            - npm run build --workspace=@smartchat/shared
+            
+            # Build API
+            - npm run build --workspace=@smartchat/api
+            
+            # Prepare production dependencies
+            - cd packages/api
+            - cp package.json dist/
+            - cp package-lock.json dist/
+            - cd dist
+            - npm ci --production
+            - cd ../../..
+            
       artifacts:
         baseDirectory: packages/api/dist
         files:
           - '**/*'
+          
       cache:
         paths:
           - node_modules/**/*
-          - packages/*/node_modules/**/*
+          
     appRoot: .

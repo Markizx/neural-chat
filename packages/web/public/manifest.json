@@ -1,6 +1,7 @@
 {
   "short_name": "SmartChat",
   "name": "SmartChat.ai - AI Chat Platform",
+  "description": "Advanced AI chat platform with Claude and Grok integration",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,8 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#667eea",
-  "background_color": "#ffffff"
+  "theme_color": "#6366f1",
+  "background_color": "#ffffff",
+  "categories": ["productivity", "education"],
+  "orientation": "portrait-primary"
 }

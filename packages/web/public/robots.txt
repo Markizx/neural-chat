@@ -1,6 +1,10 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow: /api/
-Disallow: /admin/
-Disallow: /auth/
 Allow: /
+
+# Disallow admin and API paths
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://smartchat.ai/sitemap.xml
