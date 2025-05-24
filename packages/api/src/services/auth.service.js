@@ -107,9 +107,36 @@ class AuthService {
     try {
       // TODO: Implement Apple Sign In verification
       // This requires fetching Apple's public keys and verifying the JWT
-      // For now, returning a mock response
-      console.log('Apple token verification not implemented');
-      return null;
+      const jwt = require('jsonwebtoken');
+      const jwksClient = require('jwks-rsa');
+      
+      // Get Apple's public keys
+      const client = jwksClient({
+        jwksUri: 'https://appleid.apple.com/auth/keys'
+      });
+      
+      // Decode token header to get key id
+      const decodedToken = jwt.decode(identityToken, { complete: true });
+      if (!decodedToken) return null;
+      
+      const kid = decodedToken.header.kid;
+      
+      // Get the signing key
+      const key = await new Promise((resolve, reject) => {
+        client.getSigningKey(kid, (err, key) => {
+          if (err) reject(err);
+          else resolve(key.getPublicKey());
+        });
+      });
+      
+      // Verify token
+      const verified = jwt.verify(identityToken, key, {
+        algorithms: ['RS256'],
+        issuer: 'https://appleid.apple.com',
+        audience: process.env.APPLE_CLIENT_ID
+      });
+      
+      return verified;
     } catch (error) {
       console.error('Apple token verification failed:', error);
       return null;
@@ -163,7 +190,7 @@ class AuthService {
     const hasSpecialChar = /[!@#$%^&*]/.test(password);
 
     const strength = {
-      isValid: password.length >= minLength,
+      isValid: password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar,
       score: 0,
       feedback: []
     };

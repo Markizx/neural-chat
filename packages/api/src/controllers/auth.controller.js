@@ -322,144 +322,6 @@ exports.disable2FA = async (req, res, next) => {
   }
 };
 
-// Resend verification email
-exports.resendVerification = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json(apiResponse(false, null, {
-        code: 'USER_NOT_FOUND',
-        message: 'User not found'
-      }));
-    }
-
-    if (user.emailVerified) {
-      return res.status(400).json(apiResponse(false, null, {
-        code: 'EMAIL_ALREADY_VERIFIED',
-        message: 'Email is already verified'
-      }));
-    }
-
-    // Generate verification token
-    const verificationToken = authService.generateVerificationToken(user._id);
-    await emailService.sendVerificationEmail(user.email, user.name, verificationToken);
-
-    res.json(apiResponse(true, { message: 'Verification email sent' }));
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Device management
-exports.registerDevice = async (req, res, next) => {
-  try {
-    const { deviceId, platform, model, osVersion, appVersion, pushToken } = req.body;
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json(apiResponse(false, null, {
-        code: 'USER_NOT_FOUND',
-        message: 'User not found'
-      }));
-    }
-
-    // Remove existing device with same ID
-    user.devices = user.devices.filter(d => d.deviceId !== deviceId);
-
-    // Add new device
-    user.devices.push({
-      deviceId,
-      platform,
-      model,
-      osVersion,
-      appVersion,
-      pushToken,
-      lastActive: new Date()
-    });
-
-    // Keep only last 5 devices
-    if (user.devices.length > 5) {
-      user.devices = user.devices.slice(-5);
-    }
-
-    await user.save();
-
-    res.json(apiResponse(true, { message: 'Device registered successfully' }));
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Remove device
-exports.removeDevice = async (req, res, next) => {
-  try {
-    const { deviceId } = req.params;
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json(apiResponse(false, null, {
-        code: 'USER_NOT_FOUND',
-        message: 'User not found'
-      }));
-    }
-
-    user.devices = user.devices.filter(d => d.deviceId !== deviceId);
-    await user.save();
-
-    res.json(apiResponse(true, { message: 'Device removed successfully' }));
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get devices
-exports.getDevices = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json(apiResponse(false, null, {
-        code: 'USER_NOT_FOUND',
-        message: 'User not found'
-      }));
-    }
-
-    res.json(apiResponse(true, { devices: user.devices }));
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Logout all devices
-exports.logoutAllDevices = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json(apiResponse(false, null, {
-        code: 'USER_NOT_FOUND',
-        message: 'User not found'
-      }));
-    }
-
-    // Clear all devices
-    user.devices = [];
-    await user.save();
-
-    // In production, you would also invalidate all refresh tokens
-
-    res.json(apiResponse(true, { message: 'Logged out from all devices' }));
-  } catch (error) {
-    next(error);
-  }
-};
-      user: user.toJSON(),
-      accessToken,
-      refreshToken
-    }));
-  } catch (error) {
-    next(error);
-  }
-};
-
 // Refresh token
 exports.refreshToken = async (req, res, next) => {
   try {
@@ -650,3 +512,141 @@ exports.googleAuth = async (req, res, next) => {
     const { accessToken, refreshToken } = authService.generateTokens(user._id);
 
     res.json(apiResponse(true, {
+      user: user.toJSON(),
+      accessToken,
+      refreshToken
+    }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Resend verification email
+exports.resendVerification = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    if (user.emailVerified) {
+      return res.status(400).json(apiResponse(false, null, {
+        code: 'EMAIL_ALREADY_VERIFIED',
+        message: 'Email is already verified'
+      }));
+    }
+
+    // Generate verification token
+    const verificationToken = authService.generateVerificationToken(user._id);
+    await emailService.sendVerificationEmail(user.email, user.name, verificationToken);
+
+    res.json(apiResponse(true, { message: 'Verification email sent' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Device management
+exports.registerDevice = async (req, res, next) => {
+  try {
+    const { deviceId, platform, model, osVersion, appVersion, pushToken } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    // Remove existing device with same ID
+    user.devices = user.devices.filter(d => d.deviceId !== deviceId);
+
+    // Add new device
+    user.devices.push({
+      deviceId,
+      platform,
+      model,
+      osVersion,
+      appVersion,
+      pushToken,
+      lastActive: new Date()
+    });
+
+    // Keep only last 5 devices
+    if (user.devices.length > 5) {
+      user.devices = user.devices.slice(-5);
+    }
+
+    await user.save();
+
+    res.json(apiResponse(true, { message: 'Device registered successfully' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Remove device
+exports.removeDevice = async (req, res, next) => {
+  try {
+    const { deviceId } = req.params;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    user.devices = user.devices.filter(d => d.deviceId !== deviceId);
+    await user.save();
+
+    res.json(apiResponse(true, { message: 'Device removed successfully' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get devices
+exports.getDevices = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    res.json(apiResponse(true, { devices: user.devices }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Logout all devices
+exports.logoutAllDevices = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    // Clear all devices
+    user.devices = [];
+    await user.save();
+
+    // In production, you would also invalidate all refresh tokens
+
+    res.json(apiResponse(true, { message: 'Logged out from all devices' }));
+  } catch (error) {
+    next(error);
+  }
+};

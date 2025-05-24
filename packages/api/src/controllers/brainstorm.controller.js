@@ -43,11 +43,11 @@ exports.startBrainstorm = async (req, res, next) => {
       participants: {
         claude: {
           model: claudeModel,
-          systemPrompt: this.generateSystemPrompt('claude', settings.format)
+          systemPrompt: exports.generateSystemPrompt('claude', settings.format)
         },
         grok: {
           model: grokModel,
-          systemPrompt: this.generateSystemPrompt('grok', settings.format)
+          systemPrompt: exports.generateSystemPrompt('grok', settings.format)
         }
       },
       settings: {
@@ -125,7 +125,7 @@ exports.sendBrainstormMessage = async (req, res, next) => {
     await session.save();
 
     // Continue the brainstorm
-    const nextMessages = await this.continueBrainstorm(session);
+    const nextMessages = await exports.continueBrainstorm(session);
 
     res.json(apiResponse(true, {
       userMessage,
@@ -264,7 +264,7 @@ exports.resumeBrainstorm = async (req, res, next) => {
     await session.save();
 
     // Continue the conversation
-    const nextMessages = await this.continueBrainstorm(session);
+    const nextMessages = await exports.continueBrainstorm(session);
 
     res.json(apiResponse(true, {
       session,
@@ -303,8 +303,8 @@ exports.stopBrainstorm = async (req, res, next) => {
     session.complete();
     
     // Generate summary
-    session.summary = await this.generateSummary(session);
-    session.insights = await this.extractInsights(session);
+    session.summary = await exports.generateSummary(session);
+    session.insights = await exports.extractInsights(session);
     
     await session.save();
 
@@ -342,8 +342,8 @@ exports.getSummary = async (req, res, next) => {
     }
 
     if (!session.summary) {
-      session.summary = await this.generateSummary(session);
-      session.insights = await this.extractInsights(session);
+      session.summary = await exports.generateSummary(session);
+      session.insights = await exports.extractInsights(session);
       await session.save();
     }
 

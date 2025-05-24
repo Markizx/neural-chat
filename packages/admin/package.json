@@ -20,6 +20,7 @@
     "@mui/x-date-pickers": "^6.19.0",
     "@smartchat/shared": "file:../shared",
     "@tanstack/react-query": "^5.17.9",
+    "@hookform/resolvers": "^3.3.4",
     "axios": "^1.6.5",
     "chart.js": "^4.4.1",
     "date-fns": "^3.2.0",

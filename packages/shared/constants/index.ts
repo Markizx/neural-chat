@@ -38,7 +38,11 @@ export const AI_MODELS = {
   },
   GROK: {
     GROK_3: 'grok-3',
+    GROK_3_MINI: 'grok-3-mini',
+    GROK_3_FAST: 'grok-3-fast',
+    GROK_3_MINI_FAST: 'grok-3-mini-fast',
     GROK_2: 'grok-2',
+    GROK_2_VISION: 'grok-2-vision',
   },
 } as const;
 

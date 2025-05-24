@@ -1,6 +1,7 @@
 const Chat = require('../models/chat.model');
 const Message = require('../models/message.model');
 const BrainstormSession = require('../models/brainstorm.model');
+const User = require('../models/user.model');
 const logger = require('../utils/logger');
 
 // Chat handlers

@@ -77,7 +77,9 @@ class AdminApi {
   async deleteUser(id: string) {
     return this.client.delete(`/users/${id}`);
   }
-
+  async resetUserPassword(userId: string) {
+  return this.client.post(`/users/${userId}/reset-password`);
+  }
   async exportUsers() {
     const response = await this.client.get('/users/export', {
       responseType: 'blob',
