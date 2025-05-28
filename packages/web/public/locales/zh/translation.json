@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "NeuralChat",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "submit": "提交",
+    "search": "搜索",
+    "filter": "筛选",
+    "refresh": "刷新",
+    "yes": "是",
+    "no": "否",
+    "or": "或",
+    "and": "和"
+  },
+  "auth": {
+    "login": "登录",
+    "logout": "退出",
+    "register": "注册",
+    "signIn": "登入",
+    "signUp": "创建账户",
+    "email": "电子邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "forgotPassword": "忘记密码？",
+    "resetPassword": "重置密码",
+    "rememberMe": "记住我",
+    "dontHaveAccount": "没有账户？",
+    "alreadyHaveAccount": "已有账户？",
+    "signInWith": "使用 {{provider}} 登录",
+    "signUpWith": "使用 {{provider}} 注册",
+    "termsAgreement": "注册即表示您同意我们的服务条款和隐私政策"
+  },
+  "navigation": {
+    "home": "首页",
+    "chat": "聊天",
+    "newChat": "新建聊天",
+    "brainstorm": "头脑风暴",
+    "projects": "项目",
+    "subscription": "订阅",
+    "settings": "设置",
+    "profile": "个人资料",
+    "help": "帮助",
+    "about": "关于"
+  },
+  "chat": {
+    "newConversation": "新对话",
+    "selectModel": "选择模型",
+    "typeMessage": "输入您的消息...",
+    "send": "发送",
+    "regenerate": "重新生成",
+    "copy": "复制",
+    "copied": "已复制！",
+    "delete": "删除",
+    "edit": "编辑",
+    "stopGenerating": "停止",
+    "thinking": "思考中...",
+    "models": {
+      "claude": "Claude",
+      "grok": "Grok"
+    },
+    "errors": {
+      "failedToSend": "发送消息失败",
+      "connectionLost": "连接丢失"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "appearance": "外观",
+    "notifications": "通知",
+    "security": "安全",
+    "language": "语言",
+    "theme": "主题",
+    "themes": {
+      "light": "浅色",
+      "dark": "深色",
+      "system": "系统"
+    },
+    "fontSize": "字体大小",
+    "defaultModel": "默认 AI 模型",
+    "saved": "设置保存成功"
+  },
+  "subscription": {
+    "title": "订阅",
+    "currentPlan": "当前套餐",
+    "upgrade": "升级",
+    "downgrade": "降级",
+    "cancel": "取消订阅",
+    "plans": {
+      "free": {
+        "name": "免费版",
+        "description": "完美体验 NeuralChat"
+      },
+      "pro": {
+        "name": "专业版",
+        "description": "适合高级用户和专业人士"
+      },
+      "business": {
+        "name": "商业版",
+        "description": "适合团队和组织"
+      }
+    },
+    "features": {
+      "messagesPerDay": "每天 {{count}} 条消息",
+      "allModels": "所有 AI 模型",
+      "prioritySupport": "优先支持",
+      "apiAccess": "API 访问",
+      "teamCollaboration": "团队协作"
+    }
+  },
+  "projects": {
+    "title": "项目",
+    "newProject": "新建项目",
+    "noProjects": "暂无项目",
+    "createFirst": "创建您的第一个项目",
+    "uploadFiles": "上传文件",
+    "dragDrop": "拖放文件到这里",
+    "maxSize": "最大文件大小：{{size}}"
+  },
+  "errors": {
+    "generic": "出现错误",
+    "network": "网络错误。请检查您的连接。",
+    "unauthorized": "请登录以继续。",
+    "forbidden": "您没有权限执行此操作。",
+    "notFound": "页面未找到",
+    "serverError": "服务器错误。请稍后重试。",
+    "validationError": "请检查您的输入并重试。"
+  },
+  "success": {
+    "profileUpdated": "个人资料更新成功",
+    "passwordChanged": "密码修改成功",
+    "subscriptionUpdated": "订阅更新成功",
+    "projectCreated": "项目创建成功",
+    "fileUploaded": "文件上传成功"
+  }
+} 

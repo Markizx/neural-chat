@@ -1,5 +1,5 @@
 // Re-export from shared types
-export * from '@smartchat/shared/types/chat.types';
+export * from '@neuralchat/shared/types/chat.types';
 
 // Message type for web
 export interface Message {

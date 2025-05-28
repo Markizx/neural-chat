@@ -1,6 +1,6 @@
-# SmartChat.ai Documentation
+# NeuralChat Documentation
 
-Welcome to the SmartChat.ai documentation. This documentation covers all aspects of the platform, from getting started to advanced deployment configurations.
+Welcome to the NeuralChat documentation. This documentation covers all aspects of the platform, from getting started to advanced deployment configurations.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ Welcome to the SmartChat.ai documentation. This documentation covers all aspects
 
 ## Overview
 
-SmartChat.ai is a comprehensive AI chat platform that integrates multiple AI models including Claude and Grok. The platform features:
+NeuralChat is a comprehensive AI chat platform that integrates multiple AI models including Claude and Grok. The platform features:
 
 - **Multi-Model Support**: Claude 4 Opus, Claude 4 Sonnet, Claude 3.5 Sonnet, Grok 3, and Grok 2
 - **Brainstorm Mode**: Unique feature where Claude and Grok collaborate on ideas
@@ -38,9 +38,9 @@ If you need help, you can:
 
 1. Check the [FAQ](./faq.md)
 2. Review the [Troubleshooting Guide](./troubleshooting.md)
-3. Contact support at support@smartchat.ai
+3. Contact support at support@neuralchat.pro
 4. Open an issue on GitHub
 
 ## License
 
-SmartChat.ai is proprietary software. See [LICENSE](../LICENSE) for details.
+NeuralChat is proprietary software. See [LICENSE](../LICENSE) for details.

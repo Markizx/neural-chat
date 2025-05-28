@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "NeuralChat",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "submit": "送信",
+    "search": "検索",
+    "filter": "フィルター",
+    "refresh": "更新",
+    "yes": "はい",
+    "no": "いいえ",
+    "or": "または",
+    "and": "と"
+  },
+  "auth": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "register": "登録",
+    "signIn": "サインイン",
+    "signUp": "アカウント作成",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirmPassword": "パスワードの確認",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "resetPassword": "パスワードをリセット",
+    "rememberMe": "ログイン状態を保持",
+    "dontHaveAccount": "アカウントをお持ちでない方",
+    "alreadyHaveAccount": "すでにアカウントをお持ちの方",
+    "signInWith": "{{provider}}でサインイン",
+    "signUpWith": "{{provider}}で登録",
+    "termsAgreement": "登録することで、利用規約とプライバシーポリシーに同意したものとみなされます"
+  },
+  "navigation": {
+    "home": "ホーム",
+    "chat": "チャット",
+    "newChat": "新しいチャット",
+    "brainstorm": "ブレインストーミング",
+    "projects": "プロジェクト",
+    "subscription": "サブスクリプション",
+    "settings": "設定",
+    "profile": "プロフィール",
+    "help": "ヘルプ",
+    "about": "概要"
+  },
+  "chat": {
+    "newConversation": "新しい会話",
+    "selectModel": "モデルを選択",
+    "typeMessage": "メッセージを入力...",
+    "send": "送信",
+    "regenerate": "再生成",
+    "copy": "コピー",
+    "copied": "コピーしました！",
+    "delete": "削除",
+    "edit": "編集",
+    "stopGenerating": "停止",
+    "thinking": "考え中...",
+    "models": {
+      "claude": "Claude",
+      "grok": "Grok"
+    },
+    "errors": {
+      "failedToSend": "メッセージの送信に失敗しました",
+      "connectionLost": "接続が失われました"
+    }
+  },
+  "settings": {
+    "title": "設定",
+    "appearance": "外観",
+    "notifications": "通知",
+    "security": "セキュリティ",
+    "language": "言語",
+    "theme": "テーマ",
+    "themes": {
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "システム"
+    },
+    "fontSize": "フォントサイズ",
+    "defaultModel": "デフォルトAIモデル",
+    "saved": "設定が正常に保存されました"
+  },
+  "subscription": {
+    "title": "サブスクリプション",
+    "currentPlan": "現在のプラン",
+    "upgrade": "アップグレード",
+    "downgrade": "ダウングレード",
+    "cancel": "サブスクリプションをキャンセル",
+    "plans": {
+      "free": {
+        "name": "無料",
+        "description": "NeuralChatを試すのに最適"
+      },
+      "pro": {
+        "name": "プロ",
+        "description": "パワーユーザーとプロフェッショナル向け"
+      },
+      "business": {
+        "name": "ビジネス",
+        "description": "チームと組織向け"
+      }
+    },
+    "features": {
+      "messagesPerDay": "1日{{count}}メッセージ",
+      "allModels": "すべてのAIモデル",
+      "prioritySupport": "優先サポート",
+      "apiAccess": "APIアクセス",
+      "teamCollaboration": "チームコラボレーション"
+    }
+  },
+  "projects": {
+    "title": "プロジェクト",
+    "newProject": "新しいプロジェクト",
+    "noProjects": "プロジェクトはまだありません",
+    "createFirst": "最初のプロジェクトを作成",
+    "uploadFiles": "ファイルをアップロード",
+    "dragDrop": "ここにファイルをドラッグ＆ドロップ",
+    "maxSize": "最大ファイルサイズ：{{size}}"
+  },
+  "errors": {
+    "generic": "エラーが発生しました",
+    "network": "ネットワークエラー。接続を確認してください。",
+    "unauthorized": "続行するにはログインしてください。",
+    "forbidden": "この操作を実行する権限がありません。",
+    "notFound": "ページが見つかりません",
+    "serverError": "サーバーエラー。後でもう一度お試しください。",
+    "validationError": "入力内容を確認してもう一度お試しください。"
+  },
+  "success": {
+    "profileUpdated": "プロフィールが正常に更新されました",
+    "passwordChanged": "パスワードが正常に変更されました",
+    "subscriptionUpdated": "サブスクリプションが正常に更新されました",
+    "projectCreated": "プロジェクトが正常に作成されました",
+    "fileUploaded": "ファイルが正常にアップロードされました"
+  }
+} 

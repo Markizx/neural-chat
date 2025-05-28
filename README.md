@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🤖 SmartChat.ai</h1>
+  <h1>🤖 NeuralChat</h1>
   <p>Advanced AI Chat Platform with Claude and Grok Integration</p>
   
   [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -81,8 +81,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/smartchat-ai.git
-   cd smartchat-ai
+   git clone https://github.com/yourusername/neuralchat.git
+   cd neuralchat
 
 Run setup script
 bashchmod +x scripts/setup.sh
@@ -91,7 +91,7 @@ bashchmod +x scripts/setup.sh
 Configure environment variables
 Edit packages/api/.env:
 env# Database
-MONGODB_URI=mongodb://localhost:27017/smartchat
+MONGODB_URI=mongodb://localhost:27017/neuralchat
 REDIS_URL=redis://localhost:6379
 
 # AI Services
@@ -116,7 +116,7 @@ API: http://localhost:5000
 
 
 Project Structure
-smartchat-ai/
+neuralchat/
 ├── packages/
 │   ├── api/          # Backend API server
 │   ├── web/          # React web application

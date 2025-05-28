@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "NeuralChat",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "refresh": "Actualizar",
+    "yes": "Sí",
+    "no": "No",
+    "or": "o",
+    "and": "y"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "register": "Registrarse",
+    "signIn": "Entrar",
+    "signUp": "Crear cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "rememberMe": "Recuérdame",
+    "dontHaveAccount": "¿No tienes cuenta?",
+    "alreadyHaveAccount": "¿Ya tienes cuenta?",
+    "signInWith": "Iniciar sesión con {{provider}}",
+    "signUpWith": "Registrarse con {{provider}}",
+    "termsAgreement": "Al registrarte, aceptas nuestros Términos de servicio y Política de privacidad"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "chat": "Chat",
+    "newChat": "Nuevo chat",
+    "brainstorm": "Lluvia de ideas",
+    "projects": "Proyectos",
+    "subscription": "Suscripción",
+    "settings": "Configuración",
+    "profile": "Perfil",
+    "help": "Ayuda",
+    "about": "Acerca de"
+  },
+  "chat": {
+    "newConversation": "Nueva conversación",
+    "selectModel": "Seleccionar modelo",
+    "typeMessage": "Escribe tu mensaje...",
+    "send": "Enviar",
+    "regenerate": "Regenerar",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "stopGenerating": "Detener",
+    "thinking": "Pensando...",
+    "models": {
+      "claude": "Claude",
+      "grok": "Grok"
+    },
+    "errors": {
+      "failedToSend": "Error al enviar el mensaje",
+      "connectionLost": "Conexión perdida"
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "appearance": "Apariencia",
+    "notifications": "Notificaciones",
+    "security": "Seguridad",
+    "language": "Idioma",
+    "theme": "Tema",
+    "themes": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "fontSize": "Tamaño de fuente",
+    "defaultModel": "Modelo IA predeterminado",
+    "saved": "Configuración guardada exitosamente"
+  },
+  "subscription": {
+    "title": "Suscripción",
+    "currentPlan": "Plan actual",
+    "upgrade": "Mejorar",
+    "downgrade": "Reducir",
+    "cancel": "Cancelar suscripción",
+    "plans": {
+      "free": {
+        "name": "Gratis",
+        "description": "Perfecto para probar NeuralChat"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Para usuarios avanzados y profesionales"
+      },
+      "business": {
+        "name": "Empresarial",
+        "description": "Para equipos y organizaciones"
+      }
+    },
+    "features": {
+      "messagesPerDay": "{{count}} mensajes por día",
+      "allModels": "Todos los modelos de IA",
+      "prioritySupport": "Soporte prioritario",
+      "apiAccess": "Acceso API",
+      "teamCollaboration": "Colaboración en equipo"
+    }
+  },
+  "projects": {
+    "title": "Proyectos",
+    "newProject": "Nuevo proyecto",
+    "noProjects": "Aún no hay proyectos",
+    "createFirst": "Crea tu primer proyecto",
+    "uploadFiles": "Subir archivos",
+    "dragDrop": "Arrastra y suelta archivos aquí",
+    "maxSize": "Tamaño máximo de archivo: {{size}}"
+  },
+  "errors": {
+    "generic": "Algo salió mal",
+    "network": "Error de red. Por favor, verifica tu conexión.",
+    "unauthorized": "Por favor, inicia sesión para continuar.",
+    "forbidden": "No tienes permiso para realizar esta acción.",
+    "notFound": "Página no encontrada",
+    "serverError": "Error del servidor. Por favor, intenta más tarde.",
+    "validationError": "Por favor, verifica tu entrada e intenta de nuevo."
+  },
+  "success": {
+    "profileUpdated": "Perfil actualizado exitosamente",
+    "passwordChanged": "Contraseña cambiada exitosamente",
+    "subscriptionUpdated": "Suscripción actualizada exitosamente",
+    "projectCreated": "Proyecto creado exitosamente",
+    "fileUploaded": "Archivo subido exitosamente"
+  }
+} 

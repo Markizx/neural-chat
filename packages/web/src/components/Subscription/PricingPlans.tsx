@@ -38,7 +38,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ currentPlan }) => {
       name: 'Free',
       price: 0,
       interval: 'month',
-      description: 'Perfect for trying out SmartChat.ai',
+      description: 'Perfect for trying out NeuralChat',
       features: [
         { text: '10 messages per day', included: true },
         { text: 'Claude 3.5 Sonnet', included: true },

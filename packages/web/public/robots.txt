@@ -7,4 +7,4 @@ Disallow: /admin/
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://smartchat.ai/sitemap.xml
+Sitemap: https://neuralchat.pro/sitemap.xml

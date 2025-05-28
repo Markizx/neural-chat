@@ -1,4 +1,4 @@
-export const APP_NAME = 'SmartChat.ai';
+export const APP_NAME = 'NeuralChat';
 export const APP_VERSION = '1.0.0';
 
 // API endpoints
@@ -28,7 +28,11 @@ export const AI_MODELS = {
   },
   GROK: {
     'grok-3': 'Grok 3',
+    'grok-3-mini': 'Grok 3 Mini',
+    'grok-3-fast': 'Grok 3 Fast',
+    'grok-3-mini-fast': 'Grok 3 Mini Fast',
     'grok-2': 'Grok 2',
+    'grok-2-vision': 'Grok 2 Vision',
   },
 } as const;
 
@@ -73,12 +77,12 @@ export const THEME_COLORS = {
 
 // Local storage keys
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: 'smartchat_access_token',
-  REFRESH_TOKEN: 'smartchat_refresh_token',
-  THEME: 'smartchat_theme',
-  LANGUAGE: 'smartchat_language',
-  RECENT_CHATS: 'smartchat_recent_chats',
-  USER_PREFERENCES: 'smartchat_user_preferences',
+  ACCESS_TOKEN: 'neuralchat_access_token',
+  REFRESH_TOKEN: 'neuralchat_refresh_token',
+  THEME: 'neuralchat_theme',
+  LANGUAGE: 'neuralchat_language',
+  RECENT_CHATS: 'neuralchat_recent_chats',
+  USER_PREFERENCES: 'neuralchat_user_preferences',
 } as const;
 
 // Route paths

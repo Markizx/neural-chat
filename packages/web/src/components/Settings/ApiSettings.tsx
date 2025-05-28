@@ -82,7 +82,7 @@ const ApiSettings: React.FC = () => {
         API Keys
       </Typography>
       <Typography variant="body2" color="text.secondary" paragraph>
-        Manage your API keys for programmatic access to SmartChat.ai
+                      Manage your API keys for programmatic access to NeuralChat
       </Typography>
 
       <Alert severity="info" sx={{ mb: 3 }}>
@@ -184,12 +184,12 @@ const ApiSettings: React.FC = () => {
         <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
           <Typography variant="body2" component="pre" sx={{ fontFamily: 'monospace' }}>
 {`# Install the SDK
-npm install @smartchat/sdk
+npm install @neuralchat/sdk
 
 # Initialize the client
-import { SmartChat } from '@smartchat/sdk';
+import { NeuralChat } from '@neuralchat/sdk';
 
-const client = new SmartChat({
+const client = new NeuralChat({
   apiKey: 'your-api-key'
 });
 
@@ -202,7 +202,7 @@ const response = await client.chat.send({
         </Paper>
         
         <Box sx={{ mt: 2 }}>
-          <Button variant="outlined" href="https://docs.smartchat.ai" target="_blank">
+                      <Button variant="outlined" href="https://docs.neuralchat.pro" target="_blank">
             View Full Documentation
           </Button>
         </Box>

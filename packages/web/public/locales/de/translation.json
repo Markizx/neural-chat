@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "NeuralChat",
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "submit": "Absenden",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "refresh": "Aktualisieren",
+    "yes": "Ja",
+    "no": "Nein",
+    "or": "oder",
+    "and": "und"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "register": "Registrieren",
+    "signIn": "Einloggen",
+    "signUp": "Konto erstellen",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "forgotPassword": "Passwort vergessen?",
+    "resetPassword": "Passwort zurücksetzen",
+    "rememberMe": "Angemeldet bleiben",
+    "dontHaveAccount": "Noch kein Konto?",
+    "alreadyHaveAccount": "Bereits ein Konto?",
+    "signInWith": "Mit {{provider}} anmelden",
+    "signUpWith": "Mit {{provider}} registrieren",
+    "termsAgreement": "Mit der Registrierung stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu"
+  },
+  "navigation": {
+    "home": "Startseite",
+    "chat": "Chat",
+    "newChat": "Neuer Chat",
+    "brainstorm": "Brainstorming",
+    "projects": "Projekte",
+    "subscription": "Abonnement",
+    "settings": "Einstellungen",
+    "profile": "Profil",
+    "help": "Hilfe",
+    "about": "Über uns"
+  },
+  "chat": {
+    "newConversation": "Neue Unterhaltung",
+    "selectModel": "Modell auswählen",
+    "typeMessage": "Nachricht eingeben...",
+    "send": "Senden",
+    "regenerate": "Neu generieren",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "stopGenerating": "Stoppen",
+    "thinking": "Denke nach...",
+    "models": {
+      "claude": "Claude",
+      "grok": "Grok"
+    },
+    "errors": {
+      "failedToSend": "Nachricht konnte nicht gesendet werden",
+      "connectionLost": "Verbindung verloren"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "appearance": "Erscheinungsbild",
+    "notifications": "Benachrichtigungen",
+    "security": "Sicherheit",
+    "language": "Sprache",
+    "theme": "Design",
+    "themes": {
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System"
+    },
+    "fontSize": "Schriftgröße",
+    "defaultModel": "Standard KI-Modell",
+    "saved": "Einstellungen erfolgreich gespeichert"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "currentPlan": "Aktueller Plan",
+    "upgrade": "Upgrade",
+    "downgrade": "Downgrade",
+    "cancel": "Abonnement kündigen",
+    "plans": {
+      "free": {
+        "name": "Kostenlos",
+        "description": "Perfekt zum Ausprobieren von NeuralChat"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Für Power-User und Profis"
+      },
+      "business": {
+        "name": "Business",
+        "description": "Für Teams und Organisationen"
+      }
+    },
+    "features": {
+      "messagesPerDay": "{{count}} Nachrichten pro Tag",
+      "allModels": "Alle KI-Modelle",
+      "prioritySupport": "Prioritäts-Support",
+      "apiAccess": "API-Zugang",
+      "teamCollaboration": "Team-Zusammenarbeit"
+    }
+  },
+  "projects": {
+    "title": "Projekte",
+    "newProject": "Neues Projekt",
+    "noProjects": "Noch keine Projekte",
+    "createFirst": "Erstellen Sie Ihr erstes Projekt",
+    "uploadFiles": "Dateien hochladen",
+    "dragDrop": "Dateien hier ablegen",
+    "maxSize": "Maximale Dateigröße: {{size}}"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen",
+    "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "unauthorized": "Bitte melden Sie sich an, um fortzufahren.",
+    "forbidden": "Sie haben keine Berechtigung für diese Aktion.",
+    "notFound": "Seite nicht gefunden",
+    "serverError": "Serverfehler. Bitte versuchen Sie es später erneut.",
+    "validationError": "Bitte überprüfen Sie Ihre Eingaben und versuchen Sie es erneut."
+  },
+  "success": {
+    "profileUpdated": "Profil erfolgreich aktualisiert",
+    "passwordChanged": "Passwort erfolgreich geändert",
+    "subscriptionUpdated": "Abonnement erfolgreich aktualisiert",
+    "projectCreated": "Projekt erfolgreich erstellt",
+    "fileUploaded": "Datei erfolgreich hochgeladen"
+  }
+} 

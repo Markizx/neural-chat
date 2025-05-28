@@ -69,7 +69,7 @@ export const Logo: React.FC<LogoProps> = ({
         }}
         onClick={onClick}
       >
-        SmartChat
+        NeuralChat
       </Typography>
     );
   }
@@ -104,7 +104,7 @@ export const Logo: React.FC<LogoProps> = ({
           WebkitTextFillColor: color === 'primary' ? 'transparent' : undefined,
         }}
       >
-        SmartChat
+        NeuralChat
       </Typography>
     </Box>
   );

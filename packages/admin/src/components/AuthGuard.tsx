@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { LoadingSpinner } from '@smartchat/ui-kit';
+import { LoadingSpinner } from '@neuralchat/ui-kit';
 
 interface AuthGuardProps {
   children: React.ReactNode;

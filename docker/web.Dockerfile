@@ -22,9 +22,9 @@ COPY packages/ui-kit ./packages/ui-kit
 COPY packages/web ./packages/web
 
 # Build
-RUN npm run build --workspace=@smartchat/shared
-RUN npm run build --workspace=@smartchat/ui-kit
-RUN npm run build --workspace=@smartchat/web
+RUN npm run build --workspace=@neuralchat/shared
+RUN npm run build --workspace=@neuralchat/ui-kit
+RUN npm run build --workspace=@neuralchat/web
 
 # Production stage
 FROM nginx:alpine

@@ -98,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
             fontWeight: 700,
           }}
         >
-          SmartChat.ai
+                      NeuralChat
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

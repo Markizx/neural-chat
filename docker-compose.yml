@@ -14,7 +14,7 @@ services:
     depends_on:
       - redis
     networks:
-      - smartchat-network
+      - neuralchat-network
     restart: unless-stopped
 
   web:
@@ -28,7 +28,7 @@ services:
     depends_on:
       - api
     networks:
-      - smartchat-network
+      - neuralchat-network
     restart: unless-stopped
 
   redis:
@@ -38,7 +38,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - smartchat-network
+      - neuralchat-network
     restart: unless-stopped
     command: redis-server --appendonly yes
 
@@ -46,5 +46,5 @@ volumes:
   redis_data:
 
 networks:
-  smartchat-network:
+  neuralchat-network:
     driver: bridge

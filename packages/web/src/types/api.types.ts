@@ -1,5 +1,5 @@
 // Re-export from shared types
-export * from '@smartchat/shared/types/api.types';
+export * from '@neuralchat/shared/types/api.types';
 
 // Additional web-specific API types
 export interface FileUploadResponse {

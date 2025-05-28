@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "NeuralChat",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "close": "Закрыть",
+    "back": "Назад",
+    "next": "Далее",
+    "submit": "Отправить",
+    "search": "Поиск",
+    "filter": "Фильтр",
+    "refresh": "Обновить",
+    "yes": "Да",
+    "no": "Нет",
+    "or": "или",
+    "and": "и"
+  },
+  "auth": {
+    "login": "Вход",
+    "logout": "Выход",
+    "register": "Регистрация",
+    "signIn": "Войти",
+    "signUp": "Зарегистрироваться",
+    "email": "Email",
+    "password": "Пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "forgotPassword": "Забыли пароль?",
+    "resetPassword": "Сбросить пароль",
+    "rememberMe": "Запомнить меня",
+    "dontHaveAccount": "Нет аккаунта?",
+    "alreadyHaveAccount": "Уже есть аккаунт?",
+    "signInWith": "Войти через {{provider}}",
+    "signUpWith": "Зарегистрироваться через {{provider}}",
+    "termsAgreement": "Регистрируясь, вы соглашаетесь с Условиями использования и Политикой конфиденциальности"
+  },
+  "navigation": {
+    "home": "Главная",
+    "chat": "Чат",
+    "newChat": "Новый чат",
+    "brainstorm": "Мозговой штурм",
+    "projects": "Проекты",
+    "subscription": "Подписка",
+    "settings": "Настройки",
+    "profile": "Профиль",
+    "help": "Помощь",
+    "about": "О нас"
+  },
+  "chat": {
+    "newConversation": "Новая беседа",
+    "selectModel": "Выберите модель",
+    "typeMessage": "Введите сообщение...",
+    "send": "Отправить",
+    "regenerate": "Сгенерировать заново",
+    "copy": "Копировать",
+    "copied": "Скопировано!",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "stopGenerating": "Остановить",
+    "thinking": "Думаю...",
+    "models": {
+      "claude": "Claude",
+      "grok": "Grok"
+    },
+    "errors": {
+      "failedToSend": "Не удалось отправить сообщение",
+      "connectionLost": "Соединение потеряно"
+    }
+  },
+  "settings": {
+    "title": "Настройки",
+    "appearance": "Внешний вид",
+    "notifications": "Уведомления",
+    "security": "Безопасность",
+    "language": "Язык",
+    "theme": "Тема",
+    "themes": {
+      "light": "Светлая",
+      "dark": "Тёмная",
+      "system": "Системная"
+    },
+    "fontSize": "Размер шрифта",
+    "defaultModel": "Модель ИИ по умолчанию",
+    "saved": "Настройки успешно сохранены"
+  },
+  "subscription": {
+    "title": "Подписка",
+    "currentPlan": "Текущий план",
+    "upgrade": "Улучшить",
+    "downgrade": "Понизить",
+    "cancel": "Отменить подписку",
+    "plans": {
+      "free": {
+        "name": "Бесплатный",
+        "description": "Идеально для знакомства с NeuralChat"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Для опытных пользователей и профессионалов"
+      },
+      "business": {
+        "name": "Бизнес",
+        "description": "Для команд и организаций"
+      }
+    },
+    "features": {
+      "messagesPerDay": "{{count}} сообщений в день",
+      "allModels": "Все модели ИИ",
+      "prioritySupport": "Приоритетная поддержка",
+      "apiAccess": "Доступ к API",
+      "teamCollaboration": "Командная работа"
+    }
+  },
+  "projects": {
+    "title": "Проекты",
+    "newProject": "Новый проект",
+    "noProjects": "Проектов пока нет",
+    "createFirst": "Создайте свой первый проект",
+    "uploadFiles": "Загрузить файлы",
+    "dragDrop": "Перетащите файлы сюда",
+    "maxSize": "Максимальный размер файла: {{size}}"
+  },
+  "errors": {
+    "generic": "Что-то пошло не так",
+    "network": "Ошибка сети. Проверьте подключение.",
+    "unauthorized": "Пожалуйста, войдите для продолжения.",
+    "forbidden": "У вас нет прав для выполнения этого действия.",
+    "notFound": "Страница не найдена",
+    "serverError": "Ошибка сервера. Попробуйте позже.",
+    "validationError": "Проверьте введённые данные и попробуйте снова."
+  },
+  "success": {
+    "profileUpdated": "Профиль успешно обновлён",
+    "passwordChanged": "Пароль успешно изменён",
+    "subscriptionUpdated": "Подписка успешно обновлена",
+    "projectCreated": "Проект успешно создан",
+    "fileUploaded": "Файл успешно загружен"
+  }
+} 

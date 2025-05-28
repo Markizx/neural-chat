@@ -39,7 +39,7 @@ const SubscriptionPage: React.FC = () => {
           Choose Your Plan
         </Typography>
         <Typography variant="h6" color="text.secondary">
-          Unlock the full potential of AI with SmartChat.ai
+                      Unlock the full potential of AI with NeuralChat
         </Typography>
       </Box>
 
@@ -96,7 +96,7 @@ const SubscriptionPage: React.FC = () => {
           </Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
             We offer a 7-day money-back guarantee for new subscriptions. Contact support if you're
-            not satisfied with SmartChat.ai.
+                            not satisfied with NeuralChat.
           </Typography>
         </Box>
 
@@ -115,8 +115,8 @@ const SubscriptionPage: React.FC = () => {
       <Box sx={{ mt: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
           Have questions? Contact us at{' '}
-          <a href="mailto:support@smartchat.ai" style={{ color: 'inherit' }}>
-            support@smartchat.ai
+                        <a href="mailto:support@neuralchat.pro" style={{ color: 'inherit' }}>
+                support@neuralchat.pro
           </a>
         </Typography>
       </Box>

@@ -1,5 +1,5 @@
 {
-  "name": "@smartchat/ui-kit",
+  "name": "@neuralchat/ui-kit",
   "version": "1.0.0",
   "private": true,
   "main": "dist/index.js",

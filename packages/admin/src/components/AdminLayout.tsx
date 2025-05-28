@@ -72,7 +72,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     <div>
       <Toolbar>
         <Typography variant="h6" noWrap>
-          SmartChat Admin
+                      NeuralChat Admin
         </Typography>
       </Toolbar>
       <Divider />

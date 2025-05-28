@@ -29,7 +29,7 @@
     "checkJs": false,
     "paths": {
       "@/*": ["./src/*"],
-      "@smartchat/shared": ["../shared"]
+      "@neuralchat/shared": ["../shared"]
     }
   },
   "include": [

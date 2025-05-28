@@ -91,7 +91,7 @@ const Register: React.FC = () => {
           Create Account
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Start using SmartChat.ai today
+                      Start using NeuralChat today
         </Typography>
       </Box>
 

@@ -20,8 +20,8 @@ COPY packages/shared ./packages/shared
 COPY packages/api ./packages/api
 
 # Build
-RUN npm run build --workspace=@smartchat/shared
-RUN npm run build --workspace=@smartchat/api
+RUN npm run build --workspace=@neuralchat/shared
+RUN npm run build --workspace=@neuralchat/api
 
 # Production stage
 FROM node:18-alpine

@@ -1,6 +1,6 @@
-# Getting Started with SmartChat.ai
+# Getting Started with NeuralChat
 
-This guide will help you set up and run SmartChat.ai locally for development.
+This guide will help you set up and run NeuralChat locally for development.
 
 ## Prerequisites
 
@@ -17,8 +17,8 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/smartchat-ai/smartchat-platform.git
-cd smartchat-platform
+git clone https://github.com/NeuralChat-ai/NeuralChat-platform.git
+cd NeuralChat-platform
 2. Install Dependencies
 bashnpm install
 npm run bootstrap
@@ -33,7 +33,7 @@ cp packages/admin/.env.example packages/admin/.env
 Edit the environment files with your configuration:
 packages/api/.env
 env# Database
-MONGODB_URI=mongodb://localhost:27017/smartchat
+MONGODB_URI=mongodb://localhost:27017/NeuralChat
 REDIS_URL=redis://localhost:6379
 
 # AI Services
@@ -51,7 +51,7 @@ EMAIL_FROM=noreply@localhost
 # Storage
 AWS_ACCESS_KEY_ID=your-aws-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret
-AWS_S3_BUCKET=smartchat-uploads
+AWS_S3_BUCKET=NeuralChat-uploads
 AWS_REGION=us-east-1
 
 # Stripe
@@ -166,7 +166,7 @@ Set up Deployment
 ```markdown
 # Architecture Overview
 
-SmartChat.ai is built with a modern, scalable microservices architecture designed for high availability and performance.
+NeuralChat is built with a modern, scalable microservices architecture designed for high availability and performance.
 
 ## System Architecture
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
@@ -441,11 +441,11 @@ CDN for static assets
 ```markdown
 # API Documentation
 
-SmartChat.ai provides a comprehensive RESTful API for all platform functionality.
+NeuralChat provides a comprehensive RESTful API for all platform functionality.
 
 ## Base URL
-Production: https://api.smartchat.ai/api/v1
-Staging: https://staging-api.smartchat.ai/api/v1
+Production: https://api.NeuralChat/api/v1
+Staging: https://staging-api.NeuralChat/api/v1
 Development: http://localhost:5000/api/v1
 
 ## Authentication
@@ -562,9 +562,9 @@ Python
 Go
 
 Example (JavaScript):
-javascriptimport { SmartChatAPI } from '@smartchat/sdk';
+javascriptimport { NeuralChatAPI } from '@NeuralChat/sdk';
 
-const client = new SmartChatAPI({
+const client = new NeuralChatAPI({
   apiKey: 'your_api_key'
 });
 
@@ -597,7 +597,7 @@ Initial API release
 ```markdown
 # Deployment Guide
 
-This guide covers deploying SmartChat.ai to production on AWS.
+This guide covers deploying NeuralChat to production on AWS.
 
 ## Prerequisites
 
@@ -608,7 +608,7 @@ This guide covers deploying SmartChat.ai to production on AWS.
 
 ## Architecture Overview
 
-SmartChat.ai uses the following AWS services:
+NeuralChat uses the following AWS services:
 - **ECS Fargate** - Container orchestration
 - **ALB** - Load balancing
 - **RDS/MongoDB Atlas** - Database
@@ -625,21 +625,21 @@ SmartChat.ai uses the following AWS services:
 
 ```bash
 # Create ECR repositories
-aws ecr create-repository --repository-name smartchat-api
-aws ecr create-repository --repository-name smartchat-web
-aws ecr create-repository --repository-name smartchat-admin
+aws ecr create-repository --repository-name NeuralChat-api
+aws ecr create-repository --repository-name NeuralChat-web
+aws ecr create-repository --repository-name NeuralChat-admin
 
 # Create S3 bucket for uploads
-aws s3 mb s3://smartchat-uploads-production
+aws s3 mb s3://NeuralChat-uploads-production
 2. Configure Secrets
 Store sensitive data in AWS Secrets Manager:
 bash# Create secrets
 aws secretsmanager create-secret \
-  --name smartchat/production/mongodb-uri \
+  --name NeuralChat/production/mongodb-uri \
   --secret-string "mongodb+srv://..."
 
 aws secretsmanager create-secret \
-  --name smartchat/production/jwt-secret \
+  --name NeuralChat/production/jwt-secret \
   --secret-string "your-secret-key"
 
 # Add all other secrets...
@@ -659,11 +659,11 @@ npm install -g aws-cdk
 
 # Deploy infrastructure
 cd infrastructure
-cdk deploy SmartChatStack
+cdk deploy NeuralChatStack
 5. Configure ECS Task Definitions
 Update aws/task-definition.json with your values:
 json{
-  "family": "smartchat-production",
+  "family": "NeuralChat-production",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "2048",
@@ -671,7 +671,7 @@ json{
   "containerDefinitions": [
     {
       "name": "api",
-      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/smartchat-api:latest",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/NeuralChat-api:latest",
       "portMappings": [
         {
           "containerPort": 5000,
@@ -687,7 +687,7 @@ json{
       "secrets": [
         {
           "name": "MONGODB_URI",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:smartchat/production/mongodb-uri"
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:NeuralChat/production/mongodb-uri"
         }
       ]
     }
@@ -699,9 +699,9 @@ aws ecs register-task-definition --cli-input-json file://aws/task-definition.jso
 
 # Create service
 aws ecs create-service \
-  --cluster smartchat-cluster \
-  --service-name smartchat-service \
-  --task-definition smartchat-production:1 \
+  --cluster NeuralChat-cluster \
+  --service-name NeuralChat-service \
+  --task-definition NeuralChat-production:1 \
   --desired-count 2 \
   --launch-type FARGATE \
   --network-configuration "awsvpcConfiguration={subnets=[subnet-xxx],securityGroups=[sg-xxx],assignPublicIp=ENABLED}"
@@ -725,16 +725,16 @@ aws cloudfront create-distribution \
 bash# Create scaling policy
 aws application-autoscaling register-scalable-target \
   --service-namespace ecs \
-  --resource-id service/smartchat-cluster/smartchat-service \
+  --resource-id service/NeuralChat-cluster/NeuralChat-service \
   --scalable-dimension ecs:service:DesiredCount \
   --min-capacity 2 \
   --max-capacity 10
 
 # Create scaling policy
 aws application-autoscaling put-scaling-policy \
-  --policy-name smartchat-cpu-scaling \
+  --policy-name NeuralChat-cpu-scaling \
   --service-namespace ecs \
-  --resource-id service/smartchat-cluster/smartchat-service \
+  --resource-id service/NeuralChat-cluster/NeuralChat-service \
   --scalable-dimension ecs:service:DesiredCount \
   --policy-type TargetTrackingScaling \
   --target-tracking-scaling-policy-configuration file://scaling-policy.json
@@ -742,12 +742,12 @@ aws application-autoscaling put-scaling-policy \
 Configure CloudWatch dashboards and alarms:
 bash# Create dashboard
 aws cloudwatch put-dashboard \
-  --dashboard-name SmartChat-Production \
+  --dashboard-name NeuralChat-Production \
   --dashboard-body file://cloudwatch-dashboard.json
 
 # Create alarms
 aws cloudwatch put-metric-alarm \
-  --alarm-name smartchat-high-cpu \
+  --alarm-name NeuralChat-high-cpu \
   --alarm-description "Alarm when CPU exceeds 80%" \
   --metric-name CPUUtilization \
   --namespace AWS/ECS \
@@ -758,14 +758,14 @@ aws cloudwatch put-metric-alarm \
 Environment-Specific Configuration
 Production
 envNODE_ENV=production
-API_URL=https://api.smartchat.ai
-WEB_URL=https://smartchat.ai
-ADMIN_URL=https://admin.smartchat.ai
+API_URL=https://api.NeuralChat
+WEB_URL=https://NeuralChat
+ADMIN_URL=https://admin.NeuralChat
 Staging
 envNODE_ENV=staging
-API_URL=https://staging-api.smartchat.ai
-WEB_URL=https://staging.smartchat.ai
-ADMIN_URL=https://staging-admin.smartchat.ai
+API_URL=https://staging-api.NeuralChat
+WEB_URL=https://staging.NeuralChat
+ADMIN_URL=https://staging-admin.NeuralChat
 CI/CD Pipeline
 GitHub Actions Workflow
 See .github/workflows/deploy.yml for the complete pipeline.
@@ -788,13 +788,13 @@ Automatic Rollback
 ECS automatically rolls back if health checks fail.
 Manual Rollback
 bash# List task definition revisions
-aws ecs list-task-definitions --family-prefix smartchat-production
+aws ecs list-task-definitions --family-prefix NeuralChat-production
 
 # Update service to previous version
 aws ecs update-service \
-  --cluster smartchat-cluster \
-  --service smartchat-service \
-  --task-definition smartchat-production:PREVIOUS_VERSION
+  --cluster NeuralChat-cluster \
+  --service NeuralChat-service \
+  --task-definition NeuralChat-production:PREVIOUS_VERSION
 Health Checks
 Configure health check endpoints:
 
@@ -906,17 +906,17 @@ Optimize application code
 
 Useful Commands
 bash# View service logs
-aws logs tail /ecs/smartchat-api --follow
+aws logs tail /ecs/NeuralChat-api --follow
 
 # Describe service
 aws ecs describe-services \
-  --cluster smartchat-cluster \
-  --services smartchat-service
+  --cluster NeuralChat-cluster \
+  --services NeuralChat-service
 
 # Force new deployment
 aws ecs update-service \
-  --cluster smartchat-cluster \
-  --service smartchat-service \
+  --cluster NeuralChat-cluster \
+  --service NeuralChat-service \
   --force-new-deployment
 Support
 For deployment support:

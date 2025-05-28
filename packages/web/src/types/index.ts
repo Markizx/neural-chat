@@ -1,5 +1,5 @@
 // Re-export all shared types
-export * from '@smartchat/shared/types';
+export * from '@neuralchat/shared/types';
 
 // Re-export web-specific types
 export * from './api.types';

@@ -73,7 +73,7 @@ export default function Login() {
             Admin Login
           </Typography>
           <Typography variant="body2" align="center" color="text.secondary" gutterBottom>
-            SmartChat.ai Admin Panel
+                          NeuralChat Admin Panel
           </Typography>
 
           {error && (

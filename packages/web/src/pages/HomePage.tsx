@@ -236,7 +236,7 @@ const HomePage: React.FC = () => {
       {/* Advantages Section */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Why SmartChat.ai?
+                      Why NeuralChat?
         </Typography>
       </Box>
       <Grid container spacing={3}>

@@ -74,7 +74,7 @@ const Login: React.FC = () => {
           Welcome Back
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Sign in to continue to SmartChat.ai
+                      Sign in to continue to NeuralChat
         </Typography>
       </Box>
 

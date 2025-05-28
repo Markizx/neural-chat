@@ -13,15 +13,15 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building shared package...
-      - npm run build --workspace=@smartchat/shared
+      - npm run build --workspace=@neuralchat/shared
       
       - echo Building API...
-      - npm run build --workspace=@smartchat/api
+      - npm run build --workspace=@neuralchat/api
       - docker build -t $IMAGE_REPO_NAME_API:$IMAGE_TAG -f docker/api.Dockerfile .
       - docker tag $IMAGE_REPO_NAME_API:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_API:$IMAGE_TAG
       
       - echo Building Web...
-      - npm run build --workspace=@smartchat/web
+      - npm run build --workspace=@neuralchat/web
       - docker build -t $IMAGE_REPO_NAME_WEB:$IMAGE_TAG -f docker/web.Dockerfile .
       - docker tag $IMAGE_REPO_NAME_WEB:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_WEB:$IMAGE_TAG
       

@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "NeuralChat",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "submit": "Soumettre",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "refresh": "Actualiser",
+    "yes": "Oui",
+    "no": "Non",
+    "or": "ou",
+    "and": "et"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "register": "S'inscrire",
+    "signIn": "Se connecter",
+    "signUp": "Créer un compte",
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "dontHaveAccount": "Pas de compte ?",
+    "alreadyHaveAccount": "Déjà un compte ?",
+    "signInWith": "Se connecter avec {{provider}}",
+    "signUpWith": "S'inscrire avec {{provider}}",
+    "termsAgreement": "En vous inscrivant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "chat": "Chat",
+    "newChat": "Nouveau chat",
+    "brainstorm": "Brainstorming",
+    "projects": "Projets",
+    "subscription": "Abonnement",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "help": "Aide",
+    "about": "À propos"
+  },
+  "chat": {
+    "newConversation": "Nouvelle conversation",
+    "selectModel": "Sélectionner un modèle",
+    "typeMessage": "Tapez votre message...",
+    "send": "Envoyer",
+    "regenerate": "Régénérer",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "stopGenerating": "Arrêter",
+    "thinking": "Réflexion...",
+    "models": {
+      "claude": "Claude",
+      "grok": "Grok"
+    },
+    "errors": {
+      "failedToSend": "Échec de l'envoi du message",
+      "connectionLost": "Connexion perdue"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "appearance": "Apparence",
+    "notifications": "Notifications",
+    "security": "Sécurité",
+    "language": "Langue",
+    "theme": "Thème",
+    "themes": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    },
+    "fontSize": "Taille de police",
+    "defaultModel": "Modèle IA par défaut",
+    "saved": "Paramètres enregistrés avec succès"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "currentPlan": "Plan actuel",
+    "upgrade": "Améliorer",
+    "downgrade": "Rétrograder",
+    "cancel": "Annuler l'abonnement",
+    "plans": {
+      "free": {
+        "name": "Gratuit",
+        "description": "Parfait pour essayer NeuralChat"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Pour les utilisateurs avancés et les professionnels"
+      },
+      "business": {
+        "name": "Business",
+        "description": "Pour les équipes et les organisations"
+      }
+    },
+    "features": {
+      "messagesPerDay": "{{count}} messages par jour",
+      "allModels": "Tous les modèles IA",
+      "prioritySupport": "Support prioritaire",
+      "apiAccess": "Accès API",
+      "teamCollaboration": "Collaboration d'équipe"
+    }
+  },
+  "projects": {
+    "title": "Projets",
+    "newProject": "Nouveau projet",
+    "noProjects": "Aucun projet pour le moment",
+    "createFirst": "Créez votre premier projet",
+    "uploadFiles": "Télécharger des fichiers",
+    "dragDrop": "Glissez et déposez les fichiers ici",
+    "maxSize": "Taille maximale du fichier : {{size}}"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite",
+    "network": "Erreur réseau. Vérifiez votre connexion.",
+    "unauthorized": "Veuillez vous connecter pour continuer.",
+    "forbidden": "Vous n'avez pas la permission d'effectuer cette action.",
+    "notFound": "Page non trouvée",
+    "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
+    "validationError": "Veuillez vérifier vos données et réessayer."
+  },
+  "success": {
+    "profileUpdated": "Profil mis à jour avec succès",
+    "passwordChanged": "Mot de passe modifié avec succès",
+    "subscriptionUpdated": "Abonnement mis à jour avec succès",
+    "projectCreated": "Projet créé avec succès",
+    "fileUploaded": "Fichier téléchargé avec succès"
+  }
+} 

@@ -8,7 +8,7 @@ module.exports = {
         '^.+\\.ts$': 'ts-jest',
       },
       moduleNameMapper: {
-        '^@smartchat/shared$': '<rootDir>/packages/shared/src',
+        '^@neuralchat/shared$': '<rootDir>/packages/shared/src',
       },
     },
     {
@@ -19,7 +19,7 @@ module.exports = {
         '^.+\\.(ts|tsx)$': 'ts-jest',
       },
       moduleNameMapper: {
-        '^@smartchat/shared$': '<rootDir>/packages/shared/src',
+        '^@neuralchat/shared$': '<rootDir>/packages/shared/src',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
       },
       setupFilesAfterEnv: ['<rootDir>/packages/web/src/setupTests.ts'],

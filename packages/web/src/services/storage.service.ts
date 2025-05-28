@@ -1,8 +1,8 @@
 class StorageService {
-  private readonly ACCESS_TOKEN_KEY = 'smartchat_access_token';
-  private readonly REFRESH_TOKEN_KEY = 'smartchat_refresh_token';
-  private readonly THEME_KEY = 'smartchat_theme';
-  private readonly LANGUAGE_KEY = 'smartchat_language';
+  private readonly ACCESS_TOKEN_KEY = 'neuralchat_access_token';
+  private readonly REFRESH_TOKEN_KEY = 'neuralchat_refresh_token';
+  private readonly THEME_KEY = 'neuralchat_theme';
+  private readonly LANGUAGE_KEY = 'neuralchat_language';
 
   // Token management
   getAccessToken(): string | null {
