@@ -102,9 +102,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {user && (
+          {user && user.usage && user.subscription && (
             <Chip
-              label={`${user.usage.dailyMessages} / ${
+              label={`${user.usage.dailyMessages || 0} / ${
                 user.subscription.plan === 'free' ? 10 : 
                 user.subscription.plan === 'pro' ? 100 : '∞'
               } messages`}
@@ -131,7 +131,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                   bgcolor: theme.palette.primary.main,
                 }}
               >
-                {user?.name?.[0]?.toUpperCase()}
+                {user?.name?.[0]?.toUpperCase() || 'U'}
               </Avatar>
             </IconButton>
             <Menu

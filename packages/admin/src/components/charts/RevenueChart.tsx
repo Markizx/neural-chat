@@ -40,15 +40,14 @@ export default function RevenueChart() {
   }
 
   const chartData = {
-    labels: data?.labels || [],
+    labels: (data as any)?.labels || [],
     datasets: [
       {
         label: 'Revenue',
-        data: data?.values || [],
-        borderColor: 'rgb(99, 102, 241)',
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-        fill: true,
-        tension: 0.4,
+        data: (data as any)?.data || [],
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.1,
       },
     ],
   };

@@ -20,8 +20,12 @@ export default {
   ],
   plugins: [
     peerDepsExternal(),
-    resolve(),
-    commonjs(),
+    resolve({
+      preferBuiltins: false,
+    }),
+    commonjs({
+      include: /node_modules/,
+    }),
     typescript({
       tsconfig: './tsconfig.json',
       exclude: ['**/*.test.tsx', '**/*.test.ts', '**/*.stories.tsx'],
@@ -29,4 +33,11 @@ export default {
     terser(),
   ],
   external: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
+  onwarn(warning, warn) {
+    // Игнорируем предупреждения о 'use client' директивах
+    if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
+      return;
+    }
+    warn(warning);
+  },
 };

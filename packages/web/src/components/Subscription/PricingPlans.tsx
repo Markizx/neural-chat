@@ -23,7 +23,11 @@ import { useMutation } from '@tanstack/react-query';
 import { apiService } from '../../services/api.service';
 import { loadStripe } from '@stripe/stripe-js';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY!);
+// Безопасная инициализация Stripe только если ключ существует
+const stripePublishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripePublishableKey && stripePublishableKey !== 'pk_test_dummy_key_for_development' 
+  ? loadStripe(stripePublishableKey) 
+  : null;
 
 interface PricingPlansProps {
   currentPlan: string;
@@ -101,8 +105,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ currentPlan }) => {
       return response.data;
     },
     onSuccess: async (data) => {
-      if (data?.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      if ((data as any)?.checkoutUrl) {
+        window.location.href = (data as any).checkoutUrl;
       }
     },
   });

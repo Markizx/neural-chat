@@ -1,31 +1,36 @@
-import { useEffect } from 'react';
+import React from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { LoadingSpinner } from '@neuralchat/ui-kit';
+import { CircularProgress, Box } from '@mui/material';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-export function AuthGuard({ children }: AuthGuardProps) {
-  const router = useRouter();
+const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { data: session, status } = useSession();
+  const router = useRouter();
 
-  useEffect(() => {
-    if (status === 'loading') return; // Still loading
-
-    if (status === 'unauthenticated') {
-      router.push('/auth/login');
-    }
-  }, [router, status]);
-
+  // Если загружается, показываем спиннер
   if (status === 'loading') {
-    return <LoadingSpinner fullScreen message="Loading..." />;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
-  if (status === 'authenticated') {
-    return <>{children}</>;
+  // Если нет сессии, редиректим на логин (только один раз)
+  if (!session) {
+    router.replace('/auth/login');
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
-  return null;
-}
+  return <>{children}</>;
+};
+
+export default AuthGuard;

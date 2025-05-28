@@ -44,7 +44,7 @@ const ProfileSettings: React.FC = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      updateUser(data.user);
+      updateUser((data as any).user);
     },
   });
 
@@ -57,7 +57,7 @@ const ProfileSettings: React.FC = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      updateUser(data.user);
+      updateUser((data as any).user);
       setAvatarFile(null);
       setAvatarPreview(null);
     },

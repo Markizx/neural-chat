@@ -4,7 +4,7 @@ import {
   StartBrainstormRequest,
   BrainstormMessage,
   BrainstormSummaryResponse,
-} from '../types';
+} from '../types/api.types';
 
 interface StartBrainstormResponse {
   chat: any; // Chat type

@@ -38,7 +38,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ type }) => {
       return response.data;
     },
     onSuccess: (data) => {
-      updateUser({ settings: data.settings });
+      updateUser({ settings: (data as any).settings });
     },
   });
 

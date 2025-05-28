@@ -41,8 +41,8 @@ const SubscriptionStatus: React.FC = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      if (data?.portalUrl) {
-        window.location.href = data.portalUrl;
+      if ((data as any)?.portalUrl) {
+        window.location.href = (data as any).portalUrl;
       }
     },
   });
@@ -71,8 +71,8 @@ const SubscriptionStatus: React.FC = () => {
     );
   }
 
-  const subscription = subscriptionData?.subscription || user?.subscription;
-  const stripeSubscription = subscriptionData?.stripeSubscription;
+  const subscription = (subscriptionData as any)?.subscription || user?.subscription;
+  const stripeSubscription = (subscriptionData as any)?.stripeSubscription;
 
   if (!subscription || subscription.plan === 'free') {
     return (

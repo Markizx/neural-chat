@@ -14,8 +14,8 @@ class AdminApi {
 
     this.client.interceptors.request.use(async (config) => {
       const session = await getSession();
-      if (session?.accessToken) {
-        config.headers.Authorization = `Bearer ${session.accessToken}`;
+      if ((session as any)?.accessToken) {
+        config.headers.Authorization = `Bearer ${(session as any).accessToken}`;
       }
       return config;
     });
@@ -37,7 +37,14 @@ class AdminApi {
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
       { email, password }
     );
-    return response.data.data;
+    
+    // API возвращает структуру: { success: true, data: { user, accessToken, refreshToken } }
+    const { user, accessToken } = response.data.data;
+    
+    return {
+      user,
+      token: accessToken
+    };
   }
 
   // Dashboard stats

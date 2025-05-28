@@ -43,12 +43,12 @@ export const useWebSocket = (): UseWebSocketReturn => {
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      console.log('WebSocket connected');
+      // console.log('WebSocket connected');
       setConnected(true);
     });
 
     newSocket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
+      // console.log('WebSocket disconnected');
       setConnected(false);
     });
 

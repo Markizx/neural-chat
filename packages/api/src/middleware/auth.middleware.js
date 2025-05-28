@@ -166,3 +166,25 @@ exports.optionalAuth = async (req, res, next) => {
     next(error);
   }
 };
+
+// Alias for authenticate (for compatibility)
+exports.authenticateToken = exports.authenticate;
+
+// Require admin role
+exports.requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json(apiResponse(false, null, {
+      code: 'UNAUTHORIZED',
+      message: 'Authentication required'
+    }));
+  }
+
+  if (req.user.role !== 'admin') {
+    return res.status(403).json(apiResponse(false, null, {
+      code: 'FORBIDDEN',
+      message: 'Admin access required'
+    }));
+  }
+
+  next();
+};

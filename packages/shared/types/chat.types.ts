@@ -12,6 +12,7 @@ export interface Chat {
   isArchived: boolean;
   sharing: ChatSharing;
   metadata: ChatMetadata;
+  lastMessage?: Message;
   createdAt: string;
   updatedAt: string;
 }

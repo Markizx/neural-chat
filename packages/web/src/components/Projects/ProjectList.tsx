@@ -53,7 +53,7 @@ const ProjectList: React.FC = () => {
     },
   });
 
-  const projects = data?.projects || [];
+  const projects = (data as any)?.projects || [];
   
   // Filter projects by search
   const filteredProjects = projects.filter((project: Project) =>

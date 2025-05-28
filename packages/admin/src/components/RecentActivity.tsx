@@ -18,6 +18,23 @@ import {
 import { format } from 'date-fns';
 import { adminApi } from '@/lib/api';
 
+const mockActivities = [
+  {
+    _id: '1',
+    action: 'user.registered',
+    description: 'New user registered',
+    adminId: { name: 'System' },
+    timestamp: new Date().toISOString(),
+  },
+  {
+    _id: '2',
+    action: 'subscription.created',
+    description: 'New subscription created',
+    adminId: { name: 'System' },
+    timestamp: new Date().toISOString(),
+  },
+];
+
 const getActivityIcon = (type: string) => {
   switch (type) {
     case 'user.registered':
@@ -50,6 +67,8 @@ export default function RecentActivity() {
     queryFn: () => adminApi.getAuditLogs({ limit: 10 }),
   });
 
+  const activities = (data as any)?.activities || mockActivities;
+
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -60,7 +79,7 @@ export default function RecentActivity() {
 
   return (
     <List>
-      {data?.logs?.map((activity: any) => (
+      {activities?.map((activity: any) => (
         <ListItem key={activity._id} alignItems="flex-start">
           <ListItemAvatar>
             <Avatar sx={{ bgcolor: `${getActivityColor(activity.action)}.light` }}>

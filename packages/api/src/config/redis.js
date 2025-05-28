@@ -1,27 +1,32 @@
-const { createClient } = require('redis');
+const redis = require('redis');
 const logger = require('../utils/logger');
 
-let redisClient;
+let redisClient = null;
 
 const connectRedis = async () => {
   try {
-    redisClient = createClient({
+    // Проверяем, нужен ли Redis (для локальной разработки можно отключить)
+    if (process.env.DISABLE_REDIS === 'true') {
+      logger.info('Redis disabled for local development');
+      return null;
+    }
+
+    redisClient = redis.createClient({
       url: process.env.REDIS_URL || 'redis://localhost:6379',
       socket: {
-        connectTimeout: 10000,
+        connectTimeout: 5000, // Уменьшаем таймаут
         reconnectStrategy: (retries) => {
-          if (retries > 10) {
-            logger.error('Redis reconnection failed after 10 attempts');
-            return new Error('Too many retries');
+          if (retries > 3) { // Уменьшаем количество попыток
+            logger.warn('Redis reconnection failed after 3 attempts, continuing without Redis');
+            return false; // Прекращаем попытки
           }
-          // Reconnect after
-          return Math.min(retries * 100, 3000);
+          return Math.min(retries * 100, 1000);
         }
       }
     });
 
     redisClient.on('error', (err) => {
-      logger.error('Redis Client Error:', err);
+      logger.warn('Redis Client Error (continuing without Redis):', err.message);
     });
 
     redisClient.on('connect', () => {
@@ -40,24 +45,24 @@ const connectRedis = async () => {
 
     // Test the connection
     await redisClient.ping();
+    logger.info('Redis connection successful');
     
     return redisClient;
   } catch (error) {
-    logger.error('Redis connection failed:', error);
-    throw error;
+    logger.warn('Redis connection failed, continuing without Redis:', error.message);
+    redisClient = null;
+    return null; // Возвращаем null вместо выброса ошибки
   }
 };
 
 const getRedisClient = () => {
-  if (!redisClient) {
-    throw new Error('Redis client not initialized');
-  }
-  return redisClient;
+  return redisClient; // Может быть null, что нормально
 };
 
-// Cache utilities
+// Cache utilities с проверкой наличия Redis
 const cache = {
   get: async (key) => {
+    if (!redisClient) return null;
     try {
       const value = await redisClient.get(key);
       return value ? JSON.parse(value) : null;
@@ -68,6 +73,7 @@ const cache = {
   },
 
   set: async (key, value, expireSeconds = 3600) => {
+    if (!redisClient) return false;
     try {
       await redisClient.setEx(
         key,
@@ -82,6 +88,7 @@ const cache = {
   },
 
   del: async (key) => {
+    if (!redisClient) return false;
     try {
       await redisClient.del(key);
       return true;
@@ -92,6 +99,7 @@ const cache = {
   },
 
   exists: async (key) => {
+    if (!redisClient) return false;
     try {
       return await redisClient.exists(key);
     } catch (error) {
@@ -101,6 +109,7 @@ const cache = {
   },
 
   expire: async (key, seconds) => {
+    if (!redisClient) return false;
     try {
       await redisClient.expire(key, seconds);
       return true;
@@ -112,6 +121,7 @@ const cache = {
 
   // Pattern operations
   keys: async (pattern) => {
+    if (!redisClient) return [];
     try {
       return await redisClient.keys(pattern);
     } catch (error) {
@@ -122,6 +132,7 @@ const cache = {
 
   // Clear cache by pattern
   clearPattern: async (pattern) => {
+    if (!redisClient) return 0;
     try {
       const keys = await redisClient.keys(pattern);
       if (keys.length > 0) {
@@ -136,6 +147,7 @@ const cache = {
 
   // Increment
   incr: async (key) => {
+    if (!redisClient) return null;
     try {
       return await redisClient.incr(key);
     } catch (error) {
@@ -146,6 +158,7 @@ const cache = {
 
   // Hash operations
   hSet: async (key, field, value) => {
+    if (!redisClient) return false;
     try {
       await redisClient.hSet(key, field, JSON.stringify(value));
       return true;
@@ -156,6 +169,7 @@ const cache = {
   },
 
   hGet: async (key, field) => {
+    if (!redisClient) return null;
     try {
       const value = await redisClient.hGet(key, field);
       return value ? JSON.parse(value) : null;
@@ -166,6 +180,7 @@ const cache = {
   },
 
   hGetAll: async (key) => {
+    if (!redisClient) return {};
     try {
       const data = await redisClient.hGetAll(key);
       const result = {};
@@ -181,6 +196,7 @@ const cache = {
 
   // List operations
   lPush: async (key, value) => {
+    if (!redisClient) return false;
     try {
       await redisClient.lPush(key, JSON.stringify(value));
       return true;
@@ -191,6 +207,7 @@ const cache = {
   },
 
   lRange: async (key, start, stop) => {
+    if (!redisClient) return [];
     try {
       const values = await redisClient.lRange(key, start, stop);
       return values.map(v => JSON.parse(v));

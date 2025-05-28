@@ -62,8 +62,7 @@ const Register: React.FC = () => {
   };
 
   const handleGoogleRegister = () => {
-    // TODO: Implement Google registration
-    console.log('Google register');
+    // console.log('Google register');
   };
 
   return (

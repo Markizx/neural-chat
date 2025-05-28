@@ -8,12 +8,14 @@ import {
 } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import MobileBottomNavigation from './MobileBottomNavigation';
 
 const drawerWidth = 280;
 
 const MainLayout: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery('(max-width: 480px)');
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
@@ -77,6 +79,7 @@ const MainLayout: React.FC = () => {
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
+          position: 'relative',
         }}
       >
         <Box sx={{ height: 64 }} /> {/* Header spacer */}
@@ -85,11 +88,16 @@ const MainLayout: React.FC = () => {
             flexGrow: 1,
             overflow: 'auto',
             backgroundColor: theme.palette.background.default,
+            pb: isMobile ? '90px' : 0, // Добавляем отступ снизу для мобильной навигации
+            position: 'relative',
           }}
         >
           <Outlet />
         </Box>
       </Box>
+
+      {/* Мобильная нижняя навигация */}
+      {isMobile && <MobileBottomNavigation />}
     </Box>
   );
 };

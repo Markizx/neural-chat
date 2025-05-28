@@ -125,7 +125,7 @@ export interface ApiEndpoints {
   CHAT_SHARE: '/api/v1/chats/:id/share';
   
   // Messages
-  MESSAGES: '/api/v1/chats/:chatId/messages';
+  MESSAGES: '/api/v1/messages/chats/:chatId/messages';
   MESSAGE_BY_ID: '/api/v1/messages/:id';
   MESSAGE_FEEDBACK: '/api/v1/messages/:id/feedback';
   MESSAGE_REGENERATE: '/api/v1/messages/:id/regenerate';

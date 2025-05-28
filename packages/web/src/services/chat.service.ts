@@ -1,5 +1,5 @@
 import { apiService } from './api.service';
-import { Chat, Message, CreateChatRequest, SendMessageRequest } from '../types';
+import { Chat, Message, CreateChatRequest, SendMessageRequest } from '../types/api.types';
 
 class ChatService {
   // Chat operations
@@ -96,7 +96,7 @@ class ChatService {
     page?: number;
     limit?: number;
   }): Promise<Message[]> {
-    const response = await apiService.get<{ messages: Message[] }>(`/chats/${chatId}/messages`, params);
+    const response = await apiService.get<{ messages: Message[] }>(`/messages/chats/${chatId}/messages`, params);
     if (!response.success) {
       throw new Error(response.error?.message || 'Failed to get messages');
     }
@@ -109,7 +109,7 @@ class ChatService {
     attachments?: any[]
   ): Promise<{ userMessage: Message; assistantMessage?: Message }> {
     const response = await apiService.post<{ userMessage: Message; assistantMessage?: Message }>(
-      `/chats/${chatId}/messages`,
+      `/messages/chats/${chatId}/messages`,
       { content, attachments }
     );
     if (!response.success) {
@@ -178,7 +178,7 @@ class ChatService {
     }
     
     // Convert response to blob
-    const blob = new Blob([response.data], { 
+    const blob = new Blob([response.data as string], { 
       type: format === 'pdf' ? 'application/pdf' : 
             format === 'json' ? 'application/json' : 
             'text/markdown' 

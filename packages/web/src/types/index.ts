@@ -1,9 +1,7 @@
-// Re-export all shared types
-export * from '@neuralchat/shared/types';
+import React from 'react';
 
-// Re-export web-specific types
+// Re-export web-specific types only (without shared conflicts)
 export * from './api.types';
-export * from './chat.types';
 
 // Artifact type
 export interface Artifact {

@@ -1,4 +1,5 @@
 // packages/shared/types/user.types.ts
+import { SubscriptionPlan, SubscriptionStatus, SubscriptionProvider } from './subscription.types';
 
 export interface User {
   _id: string;
@@ -40,10 +41,6 @@ export interface UserSubscription {
   cancelAtPeriodEnd?: boolean;
   trialEnd?: string;
 }
-
-export type SubscriptionPlan = 'free' | 'pro' | 'business';
-export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing';
-export type SubscriptionProvider = 'stripe' | 'apple' | 'google';
 
 export interface UserUsage {
   dailyMessages: number;

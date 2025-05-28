@@ -170,7 +170,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes
-userSchema.index({ email: 1 });
 userSchema.index({ 'subscription.status': 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ 'metadata.referralCode': 1 });
@@ -238,8 +237,10 @@ userSchema.methods.generateReferralCode = function() {
 userSchema.methods.toJSON = function() {
   const obj = this.toObject();
   delete obj.password;
-  delete obj.security.twoFactorSecret;
-  delete obj.security.passwordResetToken;
+  if (obj.security) {
+    delete obj.security.twoFactorSecret;
+    delete obj.security.passwordResetToken;
+  }
   delete obj.__v;
   return obj;
 };

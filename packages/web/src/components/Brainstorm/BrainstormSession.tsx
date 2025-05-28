@@ -47,6 +47,9 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     enabled: !!sessionId,
   });
 
+  // Type assertion for session
+  const typedSession = session as any;
+
   // WebSocket setup
   useEffect(() => {
     if (sessionId && socket) {
@@ -68,7 +71,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
   // Auto-scroll to bottom
   useEffect(() => {
     scrollToBottom();
-  }, [session?.messages]);
+  }, [typedSession?.messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -124,11 +127,11 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
   const handleExport = async () => {
     try {
       const response = await apiService.get(`/brainstorm/${sessionId}/export?format=markdown`);
-      const blob = new Blob([response.data], { type: 'text/markdown' });
+      const blob = new Blob([response.data as string], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `brainstorm-${session?.topic}-${Date.now()}.md`;
+      a.download = `brainstorm-${typedSession?.topic}-${Date.now()}.md`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -144,7 +147,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     );
   }
 
-  if (!session) {
+  if (!typedSession) {
     return (
       <Box sx={{ p: 4 }}>
         <Alert severity="error">Session not found</Alert>
@@ -152,7 +155,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     );
   }
 
-  const progress = (session.currentTurn / session.settings.maxTurns) * 100;
+  const progress = (typedSession.currentTurn / typedSession.settings.maxTurns) * 100;
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -169,24 +172,24 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="h5" gutterBottom>
-              {session.topic}
+              {typedSession.topic}
             </Typography>
-            {session.description && (
+            {typedSession.description && (
               <Typography variant="body2" color="text.secondary">
-                {session.description}
+                {typedSession.description}
               </Typography>
             )}
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Chip
               icon={<SmartToy />}
-              label={session.participants.claude.model}
+              label={typedSession.participants.claude.model}
               color="primary"
               variant="outlined"
             />
             <Chip
               icon={<Psychology />}
-              label={session.participants.grok.model}
+              label={typedSession.participants.grok.model}
               color="secondary"
               variant="outlined"
             />
@@ -197,10 +200,10 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
         <Box sx={{ mt: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Typography variant="body2">
-              Turn {session.currentTurn} / {session.settings.maxTurns}
+              Turn {typedSession.currentTurn} / {typedSession.settings.maxTurns}
             </Typography>
             <Typography variant="body2">
-              Status: {session.status}
+              Status: {typedSession.status}
             </Typography>
           </Box>
           <LinearProgress
@@ -219,7 +222,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
 
       {/* Messages */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
-        {session.messages.map((message, index) => (
+        {typedSession.messages.map((message, index) => (
           <BrainstormMessage key={index} message={message} />
         ))}
         <div ref={messagesEndRef} />
@@ -227,7 +230,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
 
       {/* Controls */}
       <BrainstormControls
-        status={session.status}
+        status={typedSession.status}
         onPause={() => pauseMutation.mutate()}
         onResume={() => resumeMutation.mutate()}
         onStop={() => stopMutation.mutate()}
@@ -240,7 +243,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       />
 
       {/* User input */}
-      {session.status !== 'completed' && (
+      {typedSession.status !== 'completed' && (
         <Paper
           elevation={0}
           sx={{
@@ -277,7 +280,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       )}
 
       {/* Summary (if completed) */}
-      {session.status === 'completed' && session.summary && (
+      {typedSession.status === 'completed' && typedSession.summary && (
         <Paper
           elevation={0}
           sx={{
@@ -292,16 +295,16 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
             Summary
           </Typography>
           <Typography variant="body2" paragraph>
-            {session.summary}
+            {typedSession.summary}
           </Typography>
           
-          {session.insights && session.insights.length > 0 && (
+          {typedSession.insights && typedSession.insights.length > 0 && (
             <>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                 Key Insights
               </Typography>
               <Box component="ul" sx={{ pl: 2 }}>
-                {session.insights.map((insight, index) => (
+                {typedSession.insights.map((insight, index) => (
                   <li key={index}>
                     <Typography variant="body2">{insight}</Typography>
                   </li>

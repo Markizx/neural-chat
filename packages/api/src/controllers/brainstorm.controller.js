@@ -8,8 +8,14 @@ const { validationResult } = require('express-validator');
 // Start brainstorm session
 exports.startBrainstorm = async (req, res, next) => {
   try {
+    console.log('Starting brainstorm session:', {
+      userId: req.user?._id,
+      body: req.body
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json(apiResponse(false, null, {
         code: 'VALIDATION_ERROR',
         message: 'Invalid input',
@@ -20,10 +26,12 @@ exports.startBrainstorm = async (req, res, next) => {
     const {
       topic,
       description,
-      claudeModel = 'claude-4-opus',
-      grokModel = 'grok-3',
+      claudeModel = 'claude-3.5-sonnet',
+      grokModel = 'grok-2',
       settings = {}
     } = req.body;
+
+    console.log('Creating chat for brainstorm...');
 
     // Create chat
     const chat = new Chat({
@@ -33,6 +41,8 @@ exports.startBrainstorm = async (req, res, next) => {
       title: topic
     });
     await chat.save();
+
+    console.log('Chat created:', chat._id);
 
     // Create brainstorm session
     const session = new BrainstormSession({
@@ -51,23 +61,38 @@ exports.startBrainstorm = async (req, res, next) => {
         }
       },
       settings: {
-        ...session.settings,
+        maxTurns: settings.maxTurns || 10,
+        format: settings.format || 'structured',
         ...settings
       }
     });
 
     await session.save();
 
+    console.log('Brainstorm session created:', session._id);
+
     // Send initial user message
     const initialMessage = `Topic: ${topic}\n${description ? `Description: ${description}` : ''}`;
     session.addMessage('user', initialMessage);
     await session.save();
+
+    console.log('Initial message added, starting AI conversation...');
+
+    // Start the AI conversation
+    try {
+      const nextMessages = await exports.continueBrainstorm(session);
+      console.log('AI conversation started, messages:', nextMessages.length);
+    } catch (aiError) {
+      console.error('AI conversation error:', aiError);
+      // Don't fail the whole request if AI fails
+    }
 
     res.status(201).json(apiResponse(true, {
       chat,
       session
     }));
   } catch (error) {
+    console.error('Brainstorm start error:', error);
     next(error);
   }
 };

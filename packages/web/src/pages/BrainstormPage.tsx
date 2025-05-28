@@ -54,7 +54,7 @@ const BrainstormPage: React.FC = () => {
     },
     onSuccess: (data) => {
       setShowNewSession(false);
-      window.history.pushState(null, '', `/brainstorm/${data.session._id}`);
+      window.history.pushState(null, '', `/brainstorm/${(data as any).session._id}`);
     },
   });
 
@@ -207,7 +207,7 @@ const BrainstormPage: React.FC = () => {
     );
   }
 
-  return <BrainstormSession sessionId={id || session?._id} />;
+  return <BrainstormSession sessionId={id || (session as any)?._id} />;
 };
 
 export default BrainstormPage;

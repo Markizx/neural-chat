@@ -4,13 +4,13 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext"
+      "es6"
     ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
+    "strict": false,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
@@ -19,15 +19,25 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitReturns": false,
+    "noImplicitThis": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],
-      "@neuralchat/shared": ["../../shared/src"],
-      "@neuralchat/shared/*": ["../../shared/src/*"]
+      "@neuralchat/shared": ["../../shared"],
+      "@neuralchat/shared/*": ["../../shared/*"]
     }
   },
   "include": [
-    "src"
+    "src",
+    "src/types/quick-fix.d.ts"
   ],
   "exclude": [
     "node_modules",

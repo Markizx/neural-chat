@@ -2,7 +2,7 @@ import React, { Component, ReactNode } from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { ErrorOutline } from '@mui/icons-material';
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;

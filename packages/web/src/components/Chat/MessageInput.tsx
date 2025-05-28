@@ -13,6 +13,7 @@ import {
   Typography,
   alpha,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Send,
@@ -27,15 +28,19 @@ import {
 import { useDropzone } from 'react-dropzone';
 
 interface MessageInputProps {
-  onSend: (content: string, attachments?: any[]) => void;
+  onSendMessage: (content: string, attachments?: any[]) => void;
   disabled?: boolean;
   projectId?: string;
+  placeholder?: string;
+  isMobile?: boolean;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
-  onSend,
+  onSendMessage,
   disabled = false,
   projectId,
+  placeholder = 'Введите сообщение...',
+  isMobile = false,
 }) => {
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -43,6 +48,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [sending, setSending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const theme = useTheme();
+  const isSmallMobile = useMediaQuery('(max-width: 480px)');
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
@@ -50,6 +56,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     },
     noClick: true,
     noKeyboard: true,
+    disabled: isMobile, // Отключаем drag&drop на мобильных
   });
 
   const handleSend = async () => {
@@ -58,9 +65,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
     setSending(true);
     try {
-      await onSend(message.trim(), attachments);
+      await onSendMessage(message.trim(), attachments);
       setMessage('');
       setAttachments([]);
+    } catch (error) {
+      // Error is already handled in useChat hook, just log for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.error('MessageInput error:', error);
+      }
     } finally {
       setSending(false);
     }
@@ -90,24 +102,27 @@ const MessageInput: React.FC<MessageInputProps> = ({
     return <Description fontSize="small" />;
   };
 
+  const dropzoneProps = isMobile ? {} : getRootProps();
+
   return (
     <Paper
       elevation={0}
       sx={{
-        p: 2,
-        borderTop: 1,
+        p: isMobile ? (isSmallMobile ? 1 : 1.5) : 2,
+        borderTop: isMobile ? 0 : 1,
         borderColor: 'divider',
-        borderRadius: 0,
+        borderRadius: isMobile ? '16px 16px 0 0' : 0,
         background: theme.palette.mode === 'dark' 
-          ? alpha('#1a1a2e', 0.8)
-          : alpha('#ffffff', 0.95),
-        backdropFilter: 'blur(10px)',
+          ? alpha('#1a1a2e', 0.95)
+          : alpha('#ffffff', 0.98),
+        backdropFilter: 'blur(20px)',
+        position: 'relative',
       }}
-      {...getRootProps()}
+      {...dropzoneProps}
     >
-      <input {...getInputProps()} />
+      {!isMobile && <input {...getInputProps()} />}
       
-      {isDragActive && (
+      {isDragActive && !isMobile && (
         <Box
           sx={{
             position: 'absolute',
@@ -133,18 +148,26 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
       {/* Attachments */}
       {attachments.length > 0 && (
-        <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Box sx={{ 
+          mb: isMobile ? 1 : 2, 
+          display: 'flex', 
+          gap: 0.5, 
+          flexWrap: 'wrap',
+          maxHeight: isMobile ? '80px' : 'none',
+          overflow: 'auto',
+        }}>
           {attachments.map((file, index) => (
             <Chip
               key={index}
               icon={getFileIcon(file)}
               label={file.name}
               onDelete={() => removeAttachment(index)}
-              size="small"
+              size={isMobile && isSmallMobile ? "small" : "small"}
               sx={{
                 background: theme.palette.mode === 'dark'
                   ? alpha('#2a2a3e', 0.8)
                   : alpha(theme.palette.primary.main, 0.1),
+                fontSize: isMobile && isSmallMobile ? '0.75rem' : undefined,
                 '& .MuiChip-deleteIcon': {
                   color: theme.palette.mode === 'dark' ? '#6b7280' : theme.palette.text.secondary,
                   '&:hover': {
@@ -157,9 +180,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
         </Box>
       )}
 
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'flex-end', 
+        gap: isMobile ? 0.5 : 1,
+        position: 'relative',
+      }}>
         {/* Project indicator */}
-        {projectId && (
+        {projectId && !isMobile && (
           <Tooltip title="Контекст проекта активен">
             <Folder 
               sx={{ 
@@ -174,15 +202,17 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <IconButton
           component="label"
           disabled={disabled || sending}
+          size={isMobile && isSmallMobile ? "small" : "medium"}
           sx={{
             color: theme.palette.mode === 'dark' ? '#6b7280' : theme.palette.text.secondary,
             '&:hover': {
               color: theme.palette.primary.main,
               background: alpha(theme.palette.primary.main, 0.1),
             },
+            order: isMobile ? 1 : 0,
           }}
         >
-          <AttachFile />
+          <AttachFile fontSize={isMobile && isSmallMobile ? "small" : "medium"} />
           <input
             type="file"
             hidden
@@ -200,137 +230,135 @@ const MessageInput: React.FC<MessageInputProps> = ({
           ref={inputRef}
           fullWidth
           multiline
-          maxRows={4}
-          placeholder="Напишите сообщение..."
+          maxRows={isMobile ? 3 : 4}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
+          placeholder={placeholder}
           disabled={disabled || sending}
+          variant="outlined"
+          size={isMobile && isSmallMobile ? "small" : "medium"}
           sx={{
+            flex: 1,
+            order: isMobile ? 0 : 1,
             '& .MuiOutlinedInput-root': {
-              borderRadius: '30px',
-              background: theme.palette.mode === 'dark'
-                ? alpha('#1a1a2e', 0.5)
-                : alpha('#f3f4f6', 0.8),
-              border: `1px solid ${theme.palette.mode === 'dark' 
-                ? alpha('#6366f1', 0.2)
-                : alpha(theme.palette.divider, 0.5)}`,
-              transition: 'all 0.2s',
-              '& fieldset': {
-                border: 'none',
-              },
+              borderRadius: isMobile ? '20px' : '12px',
+              backgroundColor: theme.palette.mode === 'dark'
+                ? alpha('#2a2a3e', 0.6)
+                : alpha('#f8fafc', 0.8),
+              fontSize: isMobile && isSmallMobile ? '0.875rem' : undefined,
               '&:hover': {
-                borderColor: alpha(theme.palette.primary.main, 0.5),
-                background: theme.palette.mode === 'dark'
-                  ? alpha('#1a1a2e', 0.7)
-                  : alpha('#f3f4f6', 1),
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? alpha('#2a2a3e', 0.8)
+                  : alpha('#f8fafc', 1),
               },
               '&.Mui-focused': {
-                borderColor: theme.palette.primary.main,
-                boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
-                background: theme.palette.mode === 'dark'
-                  ? alpha('#1a1a2e', 0.8)
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? alpha('#2a2a3e', 1)
                   : '#ffffff',
+                boxShadow: theme.palette.mode === 'dark'
+                  ? '0 0 0 2px rgba(99, 102, 241, 0.3)'
+                  : '0 0 0 2px rgba(99, 102, 241, 0.2)',
               },
             },
-            '& .MuiInputBase-input': {
-              fontSize: '0.9375rem',
-              lineHeight: 1.5,
-              padding: '12px 20px',
-              '&::placeholder': {
-                color: theme.palette.mode === 'dark' ? '#6b7280' : '#9ca3af',
-                opacity: 1,
-              },
+            '& .MuiOutlinedInput-input': {
+              padding: isMobile ? (isSmallMobile ? '8px 12px' : '10px 14px') : '12px 16px',
             },
           }}
         />
 
-        {/* Voice input */}
-        <IconButton
-          disabled={disabled || sending}
-          sx={{
-            color: theme.palette.mode === 'dark' ? '#6b7280' : theme.palette.text.secondary,
-            '&:hover': {
-              color: theme.palette.primary.main,
-              background: alpha(theme.palette.primary.main, 0.1),
-            },
-          }}
-        >
-          <Mic />
-        </IconButton>
-
-        {/* Settings */}
-        <IconButton 
-          onClick={handleSettingsClick} 
-          disabled={disabled || sending}
-          sx={{
-            color: theme.palette.mode === 'dark' ? '#6b7280' : theme.palette.text.secondary,
-            '&:hover': {
-              color: theme.palette.primary.main,
-              background: alpha(theme.palette.primary.main, 0.1),
-            },
-          }}
-        >
-          <Settings />
-        </IconButton>
+        {/* Voice input (только на мобильных) */}
+        {isMobile && (
+          <IconButton
+            disabled={disabled || sending}
+            size={isSmallMobile ? "small" : "medium"}
+            sx={{
+              color: theme.palette.mode === 'dark' ? '#6b7280' : theme.palette.text.secondary,
+              '&:hover': {
+                color: theme.palette.primary.main,
+                background: alpha(theme.palette.primary.main, 0.1),
+              },
+              order: 2,
+            }}
+          >
+            <Mic fontSize={isSmallMobile ? "small" : "medium"} />
+          </IconButton>
+        )}
 
         {/* Send button */}
-        <Button
-          variant="contained"
+        <IconButton
           onClick={handleSend}
           disabled={disabled || sending || (!message.trim() && attachments.length === 0)}
-          endIcon={sending ? <CircularProgress size={20} /> : <Send />}
+          size={isMobile && isSmallMobile ? "small" : "medium"}
           sx={{
-            borderRadius: '25px',
-            px: 3,
-            minWidth: 'auto',
-            background: theme.palette.mode === 'dark'
-              ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)'
-              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            boxShadow: theme.palette.mode === 'dark'
-              ? '0 4px 16px rgba(124, 58, 237, 0.3)'
-              : '0 4px 16px rgba(102, 126, 234, 0.25)',
+            background: message.trim() || attachments.length > 0
+              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              : theme.palette.mode === 'dark' ? alpha('#2a2a3e', 0.6) : alpha('#e5e7eb', 0.8),
+            color: message.trim() || attachments.length > 0 ? 'white' : theme.palette.text.disabled,
+            ml: isMobile ? 0.5 : 1,
+            order: isMobile ? 3 : 2,
+            transition: 'all 0.2s ease',
             '&:hover': {
-              background: theme.palette.mode === 'dark'
-                ? 'linear-gradient(135deg, #6d28d9 0%, #db2777 100%)'
-                : 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
-              transform: 'translateY(-2px)',
-              boxShadow: theme.palette.mode === 'dark'
-                ? '0 8px 24px rgba(124, 58, 237, 0.4)'
-                : '0 8px 24px rgba(102, 126, 234, 0.35)',
+              background: message.trim() || attachments.length > 0
+                ? 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)'
+                : theme.palette.mode === 'dark' ? alpha('#2a2a3e', 0.8) : alpha('#e5e7eb', 1),
+              transform: message.trim() || attachments.length > 0 ? 'scale(1.05)' : 'none',
             },
             '&:disabled': {
-              background: theme.palette.action.disabledBackground,
-              boxShadow: 'none',
+              background: theme.palette.mode === 'dark' ? alpha('#2a2a3e', 0.4) : alpha('#e5e7eb', 0.6),
+              color: theme.palette.text.disabled,
             },
           }}
         >
-          {!sending && 'Отправить'}
-        </Button>
-      </Box>
+          {sending ? (
+            <CircularProgress 
+              size={isMobile && isSmallMobile ? 16 : 20} 
+              sx={{ color: 'inherit' }} 
+            />
+          ) : (
+            <Send fontSize={isMobile && isSmallMobile ? "small" : "medium"} />
+          )}
+        </IconButton>
 
-      {/* Settings menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleSettingsClose}
-        PaperProps={{
-          sx: {
-            background: theme.palette.mode === 'dark'
-              ? alpha('#1e1e2e', 0.95)
-              : alpha('#ffffff', 0.98),
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            boxShadow: theme.palette.mode === 'dark'
-              ? '0 8px 32px rgba(0, 0, 0, 0.5)'
-              : '0 4px 16px rgba(0, 0, 0, 0.1)',
-          },
-        }}
-      >
-        <MenuItem onClick={handleSettingsClose}>Настройки модели</MenuItem>
-        <MenuItem onClick={handleSettingsClose}>Системный промпт</MenuItem>
-        <MenuItem onClick={handleSettingsClose}>Параметры</MenuItem>
-      </Menu>
+        {/* Settings (только на десктопе) */}
+        {!isMobile && (
+          <>
+            <IconButton
+              onClick={handleSettingsClick}
+              disabled={disabled || sending}
+              sx={{
+                color: theme.palette.mode === 'dark' ? '#6b7280' : theme.palette.text.secondary,
+                '&:hover': {
+                  color: theme.palette.primary.main,
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+                order: 3,
+              }}
+            >
+              <Settings />
+            </IconButton>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleSettingsClose}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+            >
+              <MenuItem onClick={handleSettingsClose}>
+                <Settings fontSize="small" sx={{ mr: 1 }} />
+                Настройки чата
+              </MenuItem>
+            </Menu>
+          </>
+        )}
+      </Box>
     </Paper>
   );
 };

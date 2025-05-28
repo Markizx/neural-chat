@@ -26,25 +26,23 @@ export default function UsageChart() {
   }
 
   const chartData = {
-    labels: ['Claude 4 Opus', 'Claude 4 Sonnet', 'Claude 3.5 Sonnet', 'Grok 3', 'Grok 2'],
+    labels: ['Claude', 'Grok', 'Brainstorm', 'Projects', 'API'],
     datasets: [
       {
-        data: data?.distribution || [30, 25, 20, 15, 10],
+        data: [
+          (data as any)?.claude || 0,
+          (data as any)?.grok || 0,
+          (data as any)?.brainstorm || 0,
+          (data as any)?.projects || 0,
+          (data as any)?.api || 0,
+        ],
         backgroundColor: [
-          'rgba(99, 102, 241, 0.8)',
-          'rgba(99, 102, 241, 0.6)',
-          'rgba(99, 102, 241, 0.4)',
-          'rgba(236, 72, 153, 0.8)',
-          'rgba(236, 72, 153, 0.6)',
+          '#FF6384',
+          '#36A2EB',
+          '#FFCE56',
+          '#4BC0C0',
+          '#9966FF',
         ],
-        borderColor: [
-          'rgb(99, 102, 241)',
-          'rgb(99, 102, 241)',
-          'rgb(99, 102, 241)',
-          'rgb(236, 72, 153)',
-          'rgb(236, 72, 153)',
-        ],
-        borderWidth: 1,
       },
     ],
   };

@@ -1,5 +1,15 @@
 // Re-export from shared types
-export * from '@neuralchat/shared/types/chat.types';
+// export * from '@neuralchat/shared/types/chat.types';
+
+// Local Artifact type definition
+interface Artifact {
+  id: string;
+  type: string;
+  title?: string;
+  content: string;
+  language?: string;
+  metadata?: any;
+}
 
 // Message type for web
 export interface Message {

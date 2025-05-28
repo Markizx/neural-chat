@@ -1,14 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
+import { chatService } from '../services/chat.service';
 import { apiService } from '../services/api.service';
-import { Chat, Message } from '../types';
+import { Chat, Message } from '@neuralchat/shared/types';
 
 interface UseChatOptions {
   chatId?: string;
   initialChat?: Chat;
+  type?: 'claude' | 'grok';
 }
 
-export const useChat = (chatId?: string, initialChat?: Chat) => {
+interface SendMessageOptions {
+  content: string;
+  attachments?: any[];
+}
+
+export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | 'grok') => {
   const queryClient = useQueryClient();
   const [chat, setChat] = useState<Chat | null>(initialChat || null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -32,7 +39,7 @@ export const useChat = (chatId?: string, initialChat?: Chat) => {
     queryFn: async () => {
       if (!chatId) return [];
       const response = await apiService.get<{ messages: Message[] }>(
-        `/chats/${chatId}/messages`
+        `/messages/chats/${chatId}/messages`
       );
       return response.data?.messages || [];
     },
@@ -57,12 +64,38 @@ export const useChat = (chatId?: string, initialChat?: Chat) => {
     mutationFn: async ({
       content,
       attachments,
+      type,
     }: {
       content: string;
       attachments?: any[];
+      type?: 'claude' | 'grok';
     }) => {
-      if (!chatId) throw new Error('No chat ID');
-      const response = await apiService.post(`/chats/${chatId}/messages`, {
+      let currentChatId = chatId;
+      
+      // If no chatId, create a new chat first
+      if (!currentChatId && type) {
+        const createResponse = await apiService.post<{ chat: Chat }>('/chats', {
+          type,
+          model: type === 'claude' ? 'claude-3-5-sonnet-20241022' : 'grok-2-1212',
+          title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
+        });
+        
+        if (!createResponse.data?.chat) {
+          throw new Error('Failed to create chat');
+        }
+        
+        currentChatId = createResponse.data.chat._id;
+        setChat(createResponse.data.chat);
+        
+        // Update URL to include the new chat ID
+        window.history.replaceState(null, '', `/chat/${type}/${currentChatId}`);
+      }
+      
+      if (!currentChatId) {
+        throw new Error('No chat ID available');
+      }
+      
+      const response = await apiService.post<{ userMessage: Message; assistantMessage: Message }>(`/messages/chats/${currentChatId}/messages`, {
         content,
         attachments,
       });
@@ -76,7 +109,22 @@ export const useChat = (chatId?: string, initialChat?: Chat) => {
       queryClient.invalidateQueries({ queryKey: ['chats'] });
     },
     onError: (error: any) => {
-      setError(error.message || 'Failed to send message');
+      // Log error for debugging
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Send message error:', error);
+      }
+      let errorMessage = 'Failed to send message';
+      
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     },
   });
 
@@ -121,7 +169,7 @@ export const useChat = (chatId?: string, initialChat?: Chat) => {
   // Update chat mutation
   const updateChatMutation = useMutation({
     mutationFn: async ({ chatId, updates }: { chatId: string; updates: any }) => {
-      const response = await apiService.put(`/chats/${chatId}`, updates);
+      const response = await apiService.put<{ chat: Chat }>(`/chats/${chatId}`, updates);
       return response.data;
     },
     onSuccess: (data) => {
@@ -149,12 +197,12 @@ export const useChat = (chatId?: string, initialChat?: Chat) => {
       setLoading(true);
       setError(null);
       try {
-        await sendMessageMutation.mutateAsync({ content, attachments });
+        await sendMessageMutation.mutateAsync({ content, attachments, type });
       } finally {
         setLoading(false);
       }
     },
-    [sendMessageMutation]
+    [sendMessageMutation, type]
   );
 
   const editMessage = useCallback(

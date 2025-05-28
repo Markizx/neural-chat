@@ -3,13 +3,27 @@ const logger = require('../utils/logger');
 
 class EmailService {
   constructor() {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    // В development режиме не инициализируем SendGrid
+    if (process.env.NODE_ENV !== 'development' && process.env.SENDGRID_API_KEY) {
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    }
     this.fromEmail = process.env.EMAIL_FROM || 'noreply@smartchat.ai';
     this.frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   }
 
   async sendEmail(to, subject, html, text) {
     try {
+      // В development режиме просто логируем
+      if (process.env.NODE_ENV === 'development') {
+        logger.info(`[DEV] Email would be sent to ${to}: ${subject}`);
+        return;
+      }
+
+      if (!process.env.SENDGRID_API_KEY) {
+        logger.warn('SendGrid API key not configured, skipping email');
+        return;
+      }
+
       const msg = {
         to,
         from: this.fromEmail,
@@ -22,7 +36,10 @@ class EmailService {
       logger.info(`Email sent to ${to}: ${subject}`);
     } catch (error) {
       logger.error('Email sending failed:', error);
-      throw error;
+      // В development не бросаем ошибку
+      if (process.env.NODE_ENV !== 'development') {
+        throw error;
+      }
     }
   }
 

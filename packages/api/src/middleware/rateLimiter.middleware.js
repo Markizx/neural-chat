@@ -3,6 +3,26 @@ const RedisStore = require('rate-limit-redis').default;
 const { getRedisClient } = require('../config/redis');
 const { apiResponse } = require('../utils/apiResponse');
 
+// Функция для создания store (Redis или memory)
+const createStore = (prefix) => {
+  const redisClient = getRedisClient();
+  
+  if (redisClient && process.env.DISABLE_REDIS !== 'true') {
+    try {
+      return new RedisStore({
+        client: redisClient,
+        prefix: prefix
+      });
+    } catch (error) {
+      console.warn(`Failed to create Redis store for ${prefix}, using memory store:`, error.message);
+      return undefined; // Используем memory store по умолчанию
+    }
+  }
+  
+  // Возвращаем undefined для использования memory store
+  return undefined;
+};
+
 // Default rate limiter
 const defaultLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -18,10 +38,7 @@ const defaultLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  store: new RedisStore({
-    client: getRedisClient(),
-    prefix: 'rl:default:'
-  })
+  store: createStore('rl:default:')
 });
 
 // Auth rate limiter (stricter for auth endpoints)
@@ -37,10 +54,7 @@ const authLimiter = rateLimit({
       })
     );
   },
-  store: new RedisStore({
-    client: getRedisClient(),
-    prefix: 'rl:auth:'
-  })
+  store: createStore('rl:auth:')
 });
 
 // API rate limiter (for authenticated users)
@@ -59,10 +73,7 @@ const apiLimiter = rateLimit({
       })
     );
   },
-  store: new RedisStore({
-    client: getRedisClient(),
-    prefix: 'rl:api:'
-  })
+  store: createStore('rl:api:')
 });
 
 // Message rate limiter (for AI messages)
@@ -80,10 +91,7 @@ const messageLimiter = rateLimit({
       })
     );
   },
-  store: new RedisStore({
-    client: getRedisClient(),
-    prefix: 'rl:message:'
-  })
+  store: createStore('rl:message:')
 });
 
 // File upload rate limiter
@@ -101,10 +109,7 @@ const uploadLimiter = rateLimit({
       })
     );
   },
-  store: new RedisStore({
-    client: getRedisClient(),
-    prefix: 'rl:upload:'
-  })
+  store: createStore('rl:upload:')
 });
 
 // Dynamic rate limiter based on user subscription
@@ -134,10 +139,7 @@ const dynamicLimiter = (req, res, next) => {
         })
       );
     },
-    store: new RedisStore({
-      client: getRedisClient(),
-      prefix: `rl:${userPlan}:`
-    })
+    store: createStore(`rl:${userPlan}:`)
   });
 
   limiter(req, res, next);

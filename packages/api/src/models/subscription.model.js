@@ -55,7 +55,6 @@ const subscriptionSchema = new mongoose.Schema({
 
 // Indexes
 subscriptionSchema.index({ userId: 1, platform: 1 });
-subscriptionSchema.index({ subscriptionId: 1 });
 subscriptionSchema.index({ customerId: 1 });
 subscriptionSchema.index({ status: 1 });
 

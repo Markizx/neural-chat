@@ -24,10 +24,12 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../services/api.service';
+import { useTranslation } from 'react-i18next';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Fetch user stats
   const { data: stats } = useQuery({
@@ -81,8 +83,8 @@ const HomePage: React.FC = () => {
     },
   ];
 
-  const usagePercentage = stats?.usage?.daily
-    ? (stats.usage.daily.messages / stats.usage.daily.limit) * 100
+  const usagePercentage = (stats as any)?.usage?.daily
+    ? ((stats as any).usage.daily.messages / (stats as any).usage.daily.limit) * 100
     : 0;
 
   return (
@@ -116,7 +118,7 @@ const HomePage: React.FC = () => {
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                {stats.usage.daily.messages} / {stats.usage.daily.limit} messages
+                {(stats as any)?.usage?.daily?.messages || 0} / {(stats as any)?.usage?.daily?.limit || 0} messages
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {Math.round(usagePercentage)}%
@@ -141,13 +143,13 @@ const HomePage: React.FC = () => {
               <Typography variant="body2" color="text.secondary">
                 Total Messages
               </Typography>
-              <Typography variant="h5">{stats.usage.total.messages}</Typography>
+              <Typography variant="h5">{(stats as any)?.usage?.total?.messages || 0}</Typography>
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Total Chats
               </Typography>
-              <Typography variant="h5">{stats.usage.total.chats}</Typography>
+              <Typography variant="h5">{(stats as any)?.usage?.total?.chats || 0}</Typography>
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -236,7 +238,7 @@ const HomePage: React.FC = () => {
       {/* Advantages Section */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-                      Why NeuralChat?
+          Why NeuralChat?
         </Typography>
       </Box>
       <Grid container spacing={3}>

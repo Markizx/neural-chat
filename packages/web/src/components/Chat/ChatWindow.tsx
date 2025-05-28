@@ -9,6 +9,8 @@ import {
   Chip,
   CircularProgress,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   MoreVert,
@@ -22,18 +24,26 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { useChat } from '../../hooks/useChat';
 import { useWebSocket } from '../../hooks/useWebSocket';
-import { Chat, Message } from '../../types';
+import { Chat } from '../../types/api.types';
 
 interface ChatWindowProps {
   type: 'claude' | 'grok';
   chatId?: string;
   initialChat?: Chat;
+  isMobile?: boolean;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ type, chatId, initialChat }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ 
+  type, 
+  chatId, 
+  initialChat, 
+  isMobile = false 
+}) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const { socket } = useWebSocket();
+  const theme = useTheme();
+  const isSmallMobile = useMediaQuery('(max-width: 480px)');
   
   const {
     chat,
@@ -46,7 +56,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ type, chatId, initialChat }) =>
     regenerateMessage,
     updateChat,
     deleteChat,
-  } = useChat(chatId, initialChat);
+  } = useChat(chatId, initialChat, type);
 
   useEffect(() => {
     if (chatId && socket) {
@@ -76,7 +86,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ type, chatId, initialChat }) =>
   const handleShare = async () => {
     handleMenuClose();
     if (chat) {
-      await updateChat(chat._id, { sharing: { isPublic: !chat.sharing.isPublic } });
+      const currentIsPublic = chat.sharing?.isPublic || false;
+      await updateChat(chat._id, { sharing: { isPublic: !currentIsPublic } });
     }
   };
 
@@ -96,7 +107,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ type, chatId, initialChat }) =>
 
   const handleDelete = async () => {
     handleMenuClose();
-    if (chat && window.confirm('Are you sure you want to delete this chat?')) {
+    if (chat && window.confirm('Вы уверены, что хотите удалить этот чат?')) {
       await deleteChat(chat._id);
       window.location.href = `/chat/${type}`;
     }
@@ -119,15 +130,32 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ type, chatId, initialChat }) =>
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          p: 4,
+          p: isMobile ? 2 : 4,
+          textAlign: 'center',
         }}
       >
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h5" color="text.secondary" gutterBottom>
-            Start a new {type === 'claude' ? 'Claude' : 'Grok'} chat
+        <Box>
+          <Typography 
+            variant={isMobile ? "h6" : "h5"} 
+            color="text.secondary" 
+            gutterBottom
+            sx={{ 
+              fontSize: isMobile && isSmallMobile ? '1.1rem' : undefined,
+            }}
+          >
+            Начните новый {type === 'claude' ? 'Claude' : 'Grok'} чат
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Select a chat from the sidebar or type a message to begin
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ 
+              fontSize: isMobile && isSmallMobile ? '0.875rem' : undefined,
+            }}
+          >
+            {isMobile 
+              ? 'Выберите чат из списка или создайте новый'
+              : 'Выберите чат из боковой панели или введите сообщение для начала'
+            }
           </Typography>
         </Box>
       </Box>
@@ -135,94 +163,109 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ type, chatId, initialChat }) =>
   }
 
   return (
-    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          borderRadius: 0,
-          borderBottom: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h6">
-            {chat?.title || 'New Chat'}
-          </Typography>
-          <Chip
-            label={getModelName()}
-            size="small"
-            color={type === 'claude' ? 'primary' : 'secondary'}
-          />
-          {chat?.isPinned && <PushPin fontSize="small" />}
-        </Box>
-        
-        {chat && (
-          <>
-            <IconButton onClick={handleMenuClick}>
-              <MoreVert />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-            >
-              <MenuItem onClick={handlePin}>
-                <PushPin fontSize="small" sx={{ mr: 1 }} />
-                {chat.isPinned ? 'Unpin' : 'Pin'} Chat
-              </MenuItem>
-              <MenuItem onClick={handleShare}>
-                <Share fontSize="small" sx={{ mr: 1 }} />
-                {chat.sharing.isPublic ? 'Make Private' : 'Share'}
-              </MenuItem>
-              <MenuItem onClick={handleArchive}>
-                <Archive fontSize="small" sx={{ mr: 1 }} />
-                {chat.isArchived ? 'Unarchive' : 'Archive'}
-              </MenuItem>
-              <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-                <Delete fontSize="small" sx={{ mr: 1 }} />
-                Delete
-              </MenuItem>
-            </Menu>
-          </>
-        )}
-      </Paper>
+    <Box sx={{ 
+      flex: 1, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100%',
+      position: 'relative',
+    }}>
+      {/* Header - скрыт на мобильных, так как используется отдельный заголовок */}
+      {!isMobile && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            borderRadius: 0,
+            borderBottom: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="h6">
+              {chat?.title || 'Новый чат'}
+            </Typography>
+            <Chip
+              label={getModelName()}
+              size="small"
+              color={type === 'claude' ? 'primary' : 'secondary'}
+            />
+            {chat?.isPinned && <PushPin fontSize="small" />}
+          </Box>
+          
+          {chat && (
+            <>
+              <IconButton onClick={handleMenuClick}>
+                <MoreVert />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem onClick={handlePin}>
+                  <PushPin fontSize="small" sx={{ mr: 1 }} />
+                  {chat.isPinned ? 'Открепить' : 'Закрепить'} чат
+                </MenuItem>
+                <MenuItem onClick={handleShare}>
+                  <Share fontSize="small" sx={{ mr: 1 }} />
+                  {chat.sharing?.isPublic ? 'Сделать приватным' : 'Поделиться'}
+                </MenuItem>
+                <MenuItem onClick={handleArchive}>
+                  <Archive fontSize="small" sx={{ mr: 1 }} />
+                  {chat.isArchived ? 'Разархивировать' : 'Архивировать'}
+                </MenuItem>
+                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+                  <Delete fontSize="small" sx={{ mr: 1 }} />
+                  Удалить
+                </MenuItem>
+              </Menu>
+            </>
+          )}
+        </Paper>
+      )}
 
       {/* Messages */}
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+      <Box sx={{ 
+        flex: 1, 
+        overflow: 'auto', 
+        p: isMobile ? (isSmallMobile ? 1 : 2) : 2,
+        pb: isMobile ? 1 : 2,
+      }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
         
-        {loading && messages.length === 0 ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            <MessageList
-              messages={messages}
-              onEdit={editMessage}
-              onDelete={deleteMessage}
-              onRegenerate={regenerateMessage}
-            />
-            <div ref={messagesEndRef} />
-          </>
-        )}
+        <MessageList
+          messages={messages}
+          loading={loading}
+          onDeleteMessage={deleteMessage}
+          onEditMessage={editMessage}
+          onRegenerateMessage={regenerateMessage}
+          isMobile={isMobile}
+        />
+        <div ref={messagesEndRef} />
       </Box>
 
-      {/* Input */}
-      <MessageInput
-        onSend={handleSendMessage}
-        disabled={loading}
-        projectId={chat?.projectId}
-      />
+      {/* Message Input */}
+      <Box sx={{ 
+        borderTop: isMobile ? 0 : 1,
+        borderColor: 'divider',
+        p: isMobile ? (isSmallMobile ? 1 : 1.5) : 2,
+        backgroundColor: theme.palette.background.paper,
+      }}>
+        <MessageInput
+          onSendMessage={handleSendMessage}
+          disabled={loading}
+          placeholder={`Сообщение ${type === 'claude' ? 'Claude' : 'Grok'}...`}
+          isMobile={isMobile}
+        />
+      </Box>
     </Box>
   );
 };

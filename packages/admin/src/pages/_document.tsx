@@ -1,6 +1,6 @@
 import React from 'react';
 import { Html, Head, Main, NextScript } from 'next/document';
-import { ServerStyleSheets } from '@mui/styles';
+import { DocumentContext } from 'next/document';
 import createEmotionServer from '@emotion/server/create-instance';
 import createEmotionCache from '@/lib/createEmotionCache';
 
@@ -23,8 +23,7 @@ export default function Document() {
   );
 }
 
-Document.getInitialProps = async (ctx) => {
-  const sheets = new ServerStyleSheets();
+Document.getInitialProps = async (ctx: DocumentContext) => {
   const originalRenderPage = ctx.renderPage;
 
   const cache = createEmotionCache();
@@ -32,7 +31,7 @@ Document.getInitialProps = async (ctx) => {
 
   ctx.renderPage = () =>
     originalRenderPage({
-      enhanceApp: (App: any) => (props) => sheets.collect(<App emotionCache={cache} {...props} />),
+      enhanceApp: (App: any) => (props) => <App emotionCache={cache} {...props} />,
     });
 
   const initialProps = await ctx.defaultGetInitialProps(ctx);
@@ -49,7 +48,6 @@ Document.getInitialProps = async (ctx) => {
     ...initialProps,
     styles: [
       ...React.Children.toArray(initialProps.styles),
-      sheets.getStyleElement(),
       ...emotionStyleTags,
     ],
   };

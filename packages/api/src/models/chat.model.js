@@ -71,7 +71,6 @@ const chatSchema = new mongoose.Schema({
 chatSchema.index({ userId: 1, createdAt: -1 });
 chatSchema.index({ userId: 1, isPinned: 1 });
 chatSchema.index({ userId: 1, isArchived: 1 });
-chatSchema.index({ 'sharing.shareId': 1 });
 chatSchema.index({ tags: 1 });
 chatSchema.index({ projectId: 1 });
 

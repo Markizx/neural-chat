@@ -34,6 +34,11 @@ import ArtifactViewer from '../Artifacts/ArtifactViewer';
 
 interface MessageListProps {
   messages: Message[];
+  loading?: boolean;
+  isMobile?: boolean;
+  onDeleteMessage?: (messageId: string) => Promise<void>;
+  onEditMessage?: (messageId: string, content: string) => Promise<void>;
+  onRegenerateMessage?: (messageId: string) => Promise<void>;
   onEdit?: (messageId: string, content: string) => void;
   onDelete?: (messageId: string) => void;
   onRegenerate?: (messageId: string) => void;
@@ -403,21 +408,38 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
 const MessageList: React.FC<MessageListProps> = ({
   messages,
+  loading,
+  isMobile,
+  onDeleteMessage,
+  onEditMessage,
+  onRegenerateMessage,
   onEdit,
   onDelete,
   onRegenerate,
 }) => {
+  // Используем async функции если они переданы, иначе обычные
+  const handleEdit = onEditMessage || onEdit;
+  const handleDelete = onDeleteMessage || onDelete;
+  const handleRegenerate = onRegenerateMessage || onRegenerate;
+
   return (
     <Box>
       {messages.map((message) => (
         <MessageItem
           key={message._id}
           message={message}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onRegenerate={onRegenerate}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onRegenerate={handleRegenerate}
         />
       ))}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Генерирую ответ...
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };

@@ -30,7 +30,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Total Users"
-            value={stats?.totalUsers || 0}
+            value={stats?.data?.totalUsers || 0}
             icon={<People />}
             change="+12%"
             color="primary"
@@ -39,7 +39,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Monthly Revenue"
-            value={`$${stats?.monthlyRevenue || 0}`}
+            value={`$${stats?.data?.monthlyRevenue || 0}`}
             icon={<AttachMoney />}
             change="+23%"
             color="success"
@@ -48,7 +48,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Total Messages"
-            value={stats?.totalMessages || 0}
+            value={stats?.data?.totalMessages || 0}
             icon={<Message />}
             change="+18%"
             color="info"
@@ -57,7 +57,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Active Subscriptions"
-            value={stats?.activeSubscriptions || 0}
+            value={stats?.data?.activeSubscriptions || 0}
             icon={<TrendingUp />}
             change="+15%"
             color="warning"

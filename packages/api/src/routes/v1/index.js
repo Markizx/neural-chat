@@ -9,6 +9,7 @@ const projectRoutes = require('./project.routes');
 const brainstormRoutes = require('./brainstorm.routes');
 const subscriptionRoutes = require('./subscription.routes');
 const fileRoutes = require('./file.routes');
+const adminRoutes = require('./admin.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -19,6 +20,7 @@ router.use('/projects', projectRoutes);
 router.use('/brainstorm', brainstormRoutes);
 router.use('/subscription', subscriptionRoutes);
 router.use('/files', fileRoutes);
+router.use('/admin', adminRoutes);
 
 // API info endpoint
 router.get('/', (req, res) => {
@@ -33,7 +35,8 @@ router.get('/', (req, res) => {
       projects: '/api/v1/projects',
       brainstorm: '/api/v1/brainstorm',
       subscription: '/api/v1/subscription',
-      files: '/api/v1/files'
+      files: '/api/v1/files',
+      admin: '/api/v1/admin'
     }
   });
 });

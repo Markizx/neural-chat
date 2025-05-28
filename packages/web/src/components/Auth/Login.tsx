@@ -45,8 +45,7 @@ const Login: React.FC = () => {
   };
 
   const handleGoogleLogin = () => {
-    // TODO: Implement Google login
-    console.log('Google login');
+    // console.log('Google login');
   };
 
   return (

@@ -147,22 +147,22 @@ export interface BrainstormLimits {
 }
 
 export interface BrainstormFormatConfig {
-  [BrainstormFormat.BRAINSTORM]: {
+  brainstorm: {
     name: 'Brainstorming';
     description: 'Creative ideation and solution finding';
     icon: 'lightbulb';
   };
-  [BrainstormFormat.DEBATE]: {
+  debate: {
     name: 'Debate';
     description: 'Structured argumentation on opposing viewpoints';
     icon: 'balance';
   };
-  [BrainstormFormat.ANALYSIS]: {
+  analysis: {
     name: 'Analysis';
     description: 'Systematic examination of complex topics';
     icon: 'chart';
   };
-  [BrainstormFormat.CREATIVE]: {
+  creative: {
     name: 'Creative';
     description: 'Imaginative exploration and artistic expression';
     icon: 'palette';

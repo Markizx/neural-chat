@@ -20,6 +20,9 @@ class WebSocketService {
   };
   private eventHandlers: Map<string, Set<Function>> = new Map();
   private connectionPromise: Promise<void> | null = null;
+  private _isConnected = false;
+  private reconnectAttempts = 0;
+  private callbacks: { onConnect?: () => void } = {};
 
   constructor(config?: WebSocketConfig) {
     if (config) {
@@ -53,7 +56,10 @@ class WebSocketService {
       });
 
       this.socket.on('connect', () => {
-        console.log('WebSocket connected');
+        // console.log('WebSocket connected');
+        this._isConnected = true;
+        this.reconnectAttempts = 0;
+        this.callbacks.onConnect?.();
         this.connectionPromise = null;
         resolve();
       });
@@ -65,7 +71,9 @@ class WebSocketService {
       });
 
       this.socket.on('disconnect', (reason) => {
-        console.log('WebSocket disconnected:', reason);
+        // console.log('WebSocket disconnected:', reason);
+        this._isConnected = false;
+        this.connectionPromise = null;
       });
 
       this.socket.on('error', (error) => {

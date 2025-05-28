@@ -69,9 +69,24 @@ export default function Users() {
     queryFn: () => adminApi.getUsers({ page, limit: pageSize, search: searchQuery }),
   });
 
+  // Обрабатываем данные правильно
+  const users = data?.data?.users || [];
+  const total = data?.data?.total || 0;
+
+  // Преобразуем данные для DataGrid
+  const rows = users.map(user => ({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    subscription: user.subscription || { plan: 'free' },
+    status: user.status || 'active',
+    createdAt: user.createdAt,
+    ...user
+  }));
+
   const handleExport = async () => {
     const csv = await adminApi.exportUsers();
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv.data], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -106,10 +121,10 @@ export default function Users() {
         </Box>
 
         <DataGrid
-          rows={data?.users || []}
+          rows={rows}
           columns={columns}
           loading={isLoading}
-          rowCount={data?.total || 0}
+          rowCount={total}
           pageSizeOptions={[25, 50, 100]}
           paginationModel={{ page, pageSize }}
           onPaginationModelChange={(model) => {

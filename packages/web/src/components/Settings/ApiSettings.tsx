@@ -59,17 +59,13 @@ const ApiSettings: React.FC = () => {
   };
 
   const handleCreateKey = () => {
-    // TODO: Implement API key creation
-    console.log('Create key:', keyName);
-    setCreateDialogOpen(false);
-    setKeyName('');
+    if (keyName.trim()) {
+      setKeyName('');
+    }
   };
 
   const handleDeleteKey = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this API key?')) {
-      // TODO: Implement API key deletion
-      console.log('Delete key:', id);
-    }
+    // console.log('Delete key:', id);
   };
 
   const maskKey = (key: string) => {

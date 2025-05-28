@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createTheme, Theme, PaletteMode } from '@mui/material/styles';
+import { createTheme, Theme } from '@mui/material/styles';
 import { storageService } from '../services/storage.service';
+
+type PaletteMode = 'light' | 'dark';
 
 interface ThemeContextType {
   mode: PaletteMode;
@@ -92,7 +94,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'none',
+          textTransform: 'none' as const,
           fontWeight: 500,
           borderRadius: 8,
         },

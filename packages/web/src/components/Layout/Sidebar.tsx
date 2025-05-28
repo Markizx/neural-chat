@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   List,
@@ -13,10 +14,10 @@ import {
   Chip,
   alpha,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Home,
-  Chat,
   Psychology,
   Folder,
   Settings,
@@ -35,7 +36,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery('(max-width: 480px)');
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -43,16 +47,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   };
 
   const menuItems = [
-    { text: 'Home', icon: <Home />, path: '/' },
+    { text: t('navigation.home'), icon: <Home />, path: '/' },
     { text: 'Claude Chat', icon: <SmartToy />, path: '/chat/claude' },
     { text: 'Grok Chat', icon: <Psychology />, path: '/chat/grok' },
-    { text: 'Brainstorm Mode', icon: <AutoAwesome />, path: '/brainstorm', badge: 'NEW' },
-    { text: 'Projects', icon: <Folder />, path: '/projects' },
+    { text: t('navigation.brainstorm'), icon: <AutoAwesome />, path: '/brainstorm', badge: 'NEW' },
+    { text: t('navigation.projects'), icon: <Folder />, path: '/projects' },
   ];
 
   const bottomMenuItems = [
-    { text: 'Subscription', icon: <CreditCard />, path: '/subscription' },
-    { text: 'Settings', icon: <Settings />, path: '/settings' },
+    { text: t('navigation.subscription'), icon: <CreditCard />, path: '/subscription' },
+    { text: t('navigation.settings'), icon: <Settings />, path: '/settings' },
   ];
 
   return (
@@ -68,12 +72,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       }}
     >
       {/* Logo Section */}
-      <Box sx={{ p: 3, pt: 10 }}>
+      <Box sx={{ 
+        p: isMobile ? (isSmallMobile ? 2 : 3) : 3, 
+        pt: isMobile ? (isSmallMobile ? 8 : 10) : 10,
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
           <Box
             sx={{
-              width: 50,
-              height: 50,
+              width: isMobile && isSmallMobile ? 40 : 50,
+              height: isMobile && isSmallMobile ? 40 : 50,
               borderRadius: '15px',
               background: theme.palette.mode === 'dark'
                 ? 'linear-gradient(135deg, #00d9ff 0%, #6366f1 50%, #ee00ff 100%)'
@@ -101,19 +108,27 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               },
             }}
           >
-            <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
+            <Typography 
+              variant={isMobile && isSmallMobile ? "subtitle1" : "h6"} 
+              sx={{ 
+                color: 'white', 
+                fontWeight: 'bold',
+                fontSize: isMobile && isSmallMobile ? '1rem' : undefined,
+              }}
+            >
               AI
             </Typography>
           </Box>
           <Typography 
-            variant="h6" 
+            variant={isMobile && isSmallMobile ? "subtitle1" : "h6"} 
             sx={{ 
               fontWeight: 300,
               color: theme.palette.text.primary,
               letterSpacing: '-0.5px',
+              fontSize: isMobile && isSmallMobile ? '1.1rem' : undefined,
             }}
           >
-            NexusChat
+            NeuralChat
           </Typography>
         </Box>
 
@@ -122,14 +137,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           variant="contained"
           startIcon={<Add />}
           onClick={() => handleNavigation('/chat/claude')}
+          size={isMobile && isSmallMobile ? "medium" : "large"}
           sx={{
             background: theme.palette.mode === 'dark'
               ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)'
               : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
-            py: 1.5,
+            py: isMobile && isSmallMobile ? 1.2 : 1.5,
             borderRadius: '25px',
-            fontSize: '0.9375rem',
+            fontSize: isMobile && isSmallMobile ? '0.875rem' : '0.9375rem',
             fontWeight: 500,
             boxShadow: theme.palette.mode === 'dark'
               ? '0 8px 32px rgba(124, 58, 237, 0.3)'
@@ -155,7 +171,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             },
           }}
         >
-          ✨ Новая беседа
+          ✨ {t('chat.newConversation')}
         </Button>
       </Box>
 
@@ -170,6 +186,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 borderRadius: '15px',
                 mx: 1,
                 mb: 0.5,
+                py: isMobile && isSmallMobile ? 1 : 1.2,
                 transition: 'all 0.2s ease',
                 position: 'relative',
                 overflow: 'hidden',
@@ -206,16 +223,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               }}
             >
               <ListItemIcon sx={{ 
-                minWidth: 40, 
+                minWidth: isMobile && isSmallMobile ? 36 : 40, 
                 color: theme.palette.mode === 'dark' ? '#9ca3af' : '#6b7280',
                 transition: 'color 0.2s ease',
               }}>
-                {item.icon}
+                {React.cloneElement(item.icon, {
+                  fontSize: isMobile && isSmallMobile ? 'small' : 'medium'
+                })}
               </ListItemIcon>
               <ListItemText 
                 primary={item.text}
                 primaryTypographyProps={{
-                  fontSize: '0.9375rem',
+                  fontSize: isMobile && isSmallMobile ? '0.875rem' : '0.9375rem',
                   fontWeight: location.pathname === item.path ? 500 : 400,
                 }}
               />
@@ -224,8 +243,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   label={item.badge}
                   size="small"
                   sx={{ 
-                    height: 20, 
-                    fontSize: '0.7rem',
+                    height: isMobile && isSmallMobile ? 18 : 20, 
+                    fontSize: isMobile && isSmallMobile ? '0.65rem' : '0.7rem',
                     background: 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
                     color: 'white',
                     fontWeight: 600,
@@ -250,6 +269,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 borderRadius: '15px',
                 mx: 1,
                 mb: 0.5,
+                py: isMobile && isSmallMobile ? 1 : 1.2,
                 transition: 'all 0.2s ease',
                 '&.Mui-selected': {
                   backgroundColor: theme.palette.mode === 'dark'
@@ -262,15 +282,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               }}
             >
               <ListItemIcon sx={{ 
-                minWidth: 40, 
+                minWidth: isMobile && isSmallMobile ? 36 : 40, 
                 color: theme.palette.mode === 'dark' ? '#9ca3af' : '#6b7280' 
               }}>
-                {item.icon}
+                {React.cloneElement(item.icon, {
+                  fontSize: isMobile && isSmallMobile ? 'small' : 'medium'
+                })}
               </ListItemIcon>
               <ListItemText 
                 primary={item.text}
                 primaryTypographyProps={{
-                  fontSize: '0.9375rem',
+                  fontSize: isMobile && isSmallMobile ? '0.875rem' : '0.9375rem',
                 }}
               />
             </ListItemButton>
@@ -279,11 +301,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       </List>
 
       {/* User Plan Info */}
-      {user && (
-        <Box sx={{ p: 2 }}>
+      {user && user.subscription && (
+        <Box sx={{ p: isMobile && isSmallMobile ? 1.5 : 2 }}>
           <Box
             sx={{
-              p: 2,
+              p: isMobile && isSmallMobile ? 1.5 : 2,
               borderRadius: '15px',
               background: theme.palette.mode === 'dark'
                 ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)'
@@ -311,34 +333,35 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               variant="body2" 
               sx={{ 
                 color: theme.palette.mode === 'dark' ? '#9ca3af' : '#6b7280',
-                fontSize: '0.75rem',
+                fontSize: isMobile && isSmallMobile ? '0.7rem' : '0.75rem',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 mb: 0.5,
               }}
             >
-              Текущий план
+              {t('subscription.currentPlan')}
             </Typography>
             <Typography 
-              variant="h6" 
+              variant={isMobile && isSmallMobile ? "subtitle1" : "h6"} 
               sx={{ 
                 textTransform: 'capitalize',
                 fontWeight: 600,
+                fontSize: isMobile && isSmallMobile ? '1rem' : undefined,
                 background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              {user.subscription.plan}
+              {user.subscription.plan || 'free'}
             </Typography>
-            {user.subscription.plan === 'free' && (
+            {(user.subscription.plan === 'free' || !user.subscription.plan) && (
               <Button
-                size="small"
+                size={isMobile && isSmallMobile ? "small" : "small"}
                 onClick={() => handleNavigation('/subscription')}
                 sx={{ 
                   mt: 1,
-                  fontSize: '0.75rem',
+                  fontSize: isMobile && isSmallMobile ? '0.7rem' : '0.75rem',
                   background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                   color: 'white',
                   '&:hover': {
@@ -346,7 +369,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   },
                 }}
               >
-                Обновить план
+                {t('subscription.upgrade')}
               </Button>
             )}
           </Box>

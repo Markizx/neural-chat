@@ -1,5 +1,5 @@
 import { apiService } from './api.service';
-import { Project, CreateProjectRequest, UpdateProjectRequest, ProjectFile } from '../types';
+import { Project, CreateProjectRequest, UpdateProjectRequest, ProjectFile } from '../types/api.types';
 
 interface ProjectsResponse {
   projects: Project[];

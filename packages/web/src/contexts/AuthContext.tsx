@@ -58,7 +58,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const userData = await authService.getProfile();
-      setUser(userData);
+      
+      // Обеспечиваем правильную структуру данных пользователя
+      const normalizedUser: User = {
+        _id: userData._id || userData.id || '',
+        email: userData.email || '',
+        name: userData.name || '',
+        avatar: userData.avatar,
+        subscription: {
+          plan: userData.subscription?.plan || 'free',
+          status: userData.subscription?.status || 'active',
+        },
+        usage: {
+          dailyMessages: userData.usage?.dailyMessages || 0,
+          totalMessages: userData.usage?.totalMessages || 0,
+        },
+        settings: userData.settings || {},
+        security: userData.security || {},
+        metadata: userData.metadata || {},
+        createdAt: userData.createdAt,
+      };
+      
+      setUser(normalizedUser);
     } catch (error) {
       console.error('Auth check failed:', error);
       storageService.clearTokens();
@@ -70,7 +91,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       const response = await authService.login(email, password);
-      setUser(response.user);
+      
+      // Нормализуем данные пользователя
+      const normalizedUser: User = {
+        _id: response.user._id || response.user.id || '',
+        email: response.user.email || '',
+        name: response.user.name || '',
+        avatar: response.user.avatar,
+        subscription: {
+          plan: response.user.subscription?.plan || 'free',
+          status: response.user.subscription?.status || 'active',
+        },
+        usage: {
+          dailyMessages: response.user.usage?.dailyMessages || 0,
+          totalMessages: response.user.usage?.totalMessages || 0,
+        },
+        settings: response.user.settings || {},
+        security: response.user.security || {},
+        metadata: response.user.metadata || {},
+        createdAt: response.user.createdAt,
+      };
+      
+      setUser(normalizedUser);
       storageService.setTokens(response.accessToken, response.refreshToken);
       navigate('/');
     } catch (error) {
@@ -81,7 +123,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (email: string, password: string, name: string) => {
     try {
       const response = await authService.register(email, password, name);
-      setUser(response.user);
+      
+      // Нормализуем данные пользователя
+      const normalizedUser: User = {
+        _id: response.user._id || response.user.id || '',
+        email: response.user.email || '',
+        name: response.user.name || '',
+        avatar: response.user.avatar,
+        subscription: {
+          plan: response.user.subscription?.plan || 'free',
+          status: response.user.subscription?.status || 'active',
+        },
+        usage: {
+          dailyMessages: response.user.usage?.dailyMessages || 0,
+          totalMessages: response.user.usage?.totalMessages || 0,
+        },
+        settings: response.user.settings || {},
+        security: response.user.security || {},
+        metadata: response.user.metadata || {},
+        createdAt: response.user.createdAt,
+      };
+      
+      setUser(normalizedUser);
       storageService.setTokens(response.accessToken, response.refreshToken);
       navigate('/');
     } catch (error) {

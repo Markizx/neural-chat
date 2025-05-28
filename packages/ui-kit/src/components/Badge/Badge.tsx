@@ -2,13 +2,14 @@ import React from 'react';
 import { Badge as MuiBadge, BadgeProps as MuiBadgeProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-export interface BadgeProps extends MuiBadgeProps {
-  variant?: 'standard' | 'dot' | 'number';
+export interface BadgeProps extends Omit<MuiBadgeProps, 'variant'> {
+  variant?: 'standard' | 'dot';
   size?: 'small' | 'medium' | 'large';
   pulse?: boolean;
+  showNumber?: boolean;
 }
 
-const StyledBadge = styled(MuiBadge)<{ pulse?: boolean }>(({ theme, pulse }) => ({
+const StyledBadge = styled(MuiBadge)<{ pulse?: boolean }>(({ pulse }) => ({
   '& .MuiBadge-badge': {
     ...(pulse && {
       '&::after': {
@@ -40,6 +41,7 @@ export const Badge: React.FC<BadgeProps> = ({
   variant = 'standard',
   size = 'medium',
   pulse = false,
+  showNumber = false,
   badgeContent,
   ...props
 }) => {
@@ -77,8 +79,8 @@ export const Badge: React.FC<BadgeProps> = ({
       {...props}
       {...sizeProps}
       pulse={pulse}
-      variant={variant === 'number' ? 'standard' : variant}
-      badgeContent={variant === 'dot' ? undefined : badgeContent}
+      variant={variant}
+      badgeContent={variant === 'dot' ? undefined : (showNumber ? badgeContent : undefined)}
     />
   );
 };

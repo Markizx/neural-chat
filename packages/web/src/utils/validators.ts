@@ -1,3 +1,4 @@
+import React, { useState, useCallback } from 'react';
 import { REGEX_PATTERNS, FILE_UPLOAD_LIMITS } from './constants';
 
 // Email validation
@@ -38,7 +39,7 @@ export const validateFile = (file: File): string | null => {
   if (file.size > FILE_UPLOAD_LIMITS.MAX_SIZE) {
     return `File size must be less than ${FILE_UPLOAD_LIMITS.MAX_SIZE / (1024 * 1024)}MB`;
   }
-  if (!FILE_UPLOAD_LIMITS.ALLOWED_TYPES.includes(file.type)) {
+  if (!FILE_UPLOAD_LIMITS.ALLOWED_TYPES.includes(file.type as any)) {
     return 'File type not allowed';
   }
   return null;
@@ -114,8 +115,6 @@ export const hasFormErrors = (errors: Record<string, string | null>): boolean =>
 };
 
 // Custom validation hook
-import { useState, useCallback } from 'react';
-
 export const useValidation = <T extends Record<string, any>>(
   initialData: T,
   rules: ValidationRule<T>[]
