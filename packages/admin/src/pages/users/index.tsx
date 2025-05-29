@@ -74,7 +74,7 @@ export default function Users() {
   const total = data?.data?.total || 0;
 
   // Преобразуем данные для DataGrid
-  const rows = users.map(user => ({
+  const rows = users.map((user: any) => ({
     id: user._id,
     name: user.name,
     email: user.email,

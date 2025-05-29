@@ -3,20 +3,14 @@ import {
   Box,
   Paper,
   Typography,
-  IconButton,
   Button,
   TextField,
   Chip,
   CircularProgress,
   LinearProgress,
   Alert,
-  Divider,
 } from '@mui/material';
 import {
-  PlayArrow,
-  Pause,
-  Stop,
-  Download,
   Send,
   Psychology,
   SmartToy,
@@ -33,7 +27,6 @@ interface BrainstormSessionProps {
 
 const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
   const [userInput, setUserInput] = useState('');
-  const [isPlaying, setIsPlaying] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const { socket } = useWebSocket();
 
@@ -52,7 +45,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
 
   // WebSocket setup
   useEffect(() => {
-    if (sessionId && socket) {
+    if (sessionId && socket && typedSession) {
       socket.emit('brainstorm:join', sessionId);
 
       socket.on('brainstorm:message', (data) => {
@@ -66,7 +59,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
         socket.off('brainstorm:message');
       };
     }
-  }, [sessionId, socket, refetch]);
+  }, [sessionId, socket, refetch, typedSession]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -93,7 +86,6 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       return apiService.post(`/brainstorm/${sessionId}/pause`);
     },
     onSuccess: () => {
-      setIsPlaying(false);
       refetch();
     },
   });
@@ -103,7 +95,6 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       return apiService.post(`/brainstorm/${sessionId}/resume`);
     },
     onSuccess: () => {
-      setIsPlaying(true);
       refetch();
     },
   });
@@ -113,7 +104,6 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       return apiService.post(`/brainstorm/${sessionId}/stop`);
     },
     onSuccess: () => {
-      setIsPlaying(false);
       refetch();
     },
   });
@@ -135,7 +125,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Export failed:', error);
+      // Export failed silently
     }
   };
 
@@ -155,7 +145,10 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     );
   }
 
-  const progress = (typedSession.currentTurn / typedSession.settings.maxTurns) * 100;
+  // Safe access to settings with defaults
+  const maxTurns = typedSession.settings?.maxTurns || 10;
+  const currentTurn = typedSession.currentTurn || 0;
+  const progress = (currentTurn / maxTurns) * 100;
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -183,13 +176,13 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Chip
               icon={<SmartToy />}
-              label={typedSession.participants.claude.model}
+              label={typedSession.participants?.claude?.model || 'Claude'}
               color="primary"
               variant="outlined"
             />
             <Chip
               icon={<Psychology />}
-              label={typedSession.participants.grok.model}
+              label={typedSession.participants?.grok?.model || 'Grok'}
               color="secondary"
               variant="outlined"
             />
@@ -200,7 +193,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
         <Box sx={{ mt: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Typography variant="body2">
-              Turn {typedSession.currentTurn} / {typedSession.settings.maxTurns}
+              Turn {currentTurn} / {maxTurns}
             </Typography>
             <Typography variant="body2">
               Status: {typedSession.status}
@@ -222,9 +215,9 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
 
       {/* Messages */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
-        {typedSession.messages.map((message, index) => (
+        {typedSession.messages?.map((message, index) => (
           <BrainstormMessage key={index} message={message} />
-        ))}
+        )) || []}
         <div ref={messagesEndRef} />
       </Box>
 
