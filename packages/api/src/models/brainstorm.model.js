@@ -45,6 +45,13 @@ const brainstormSchema = new mongoose.Schema({
       required: true
     },
     content: String,
+    attachments: [{
+      name: String,
+      type: String,
+      size: Number,
+      data: String,
+      mimeType: String
+    }],
     timestamp: {
       type: Date,
       default: Date.now
@@ -99,27 +106,36 @@ brainstormSchema.index({ topic: 'text', description: 'text' });
 
 // Virtual for current turn
 brainstormSchema.virtual('currentTurn').get(function() {
+  if (!this.messages || !Array.isArray(this.messages)) {
+    return 0;
+  }
   return this.messages.filter(m => m.speaker !== 'user').length;
 });
 
 // Virtual for is finished
 brainstormSchema.virtual('isFinished').get(function() {
   return this.status === 'completed' || 
-         this.currentTurn >= this.settings.maxTurns;
+         this.currentTurn >= (this.settings?.maxTurns || 20);
 });
 
 // Add message
-brainstormSchema.methods.addMessage = function(speaker, content, tokens = 0) {
+brainstormSchema.methods.addMessage = function(speaker, content, attachments = [], tokens = 0) {
   const message = {
     id: new mongoose.Types.ObjectId().toString(),
     speaker,
     content,
+    attachments: attachments || [],
     timestamp: new Date(),
     tokens
   };
   
+  // Ensure messages array exists
+  if (!this.messages) {
+    this.messages = [];
+  }
+  
   this.messages.push(message);
-  this.totalTokens += tokens;
+  this.totalTokens = (this.totalTokens || 0) + tokens;
   
   return message;
 };
@@ -135,15 +151,17 @@ brainstormSchema.methods.complete = function() {
 brainstormSchema.methods.generateSummary = function() {
   // This would typically use AI to generate a summary
   // For now, return a basic summary
-  const claudeMessages = this.messages.filter(m => m.speaker === 'claude').length;
-  const grokMessages = this.messages.filter(m => m.speaker === 'grok').length;
+  const messages = this.messages || [];
+  const claudeMessages = messages.filter(m => m.speaker === 'claude').length;
+  const grokMessages = messages.filter(m => m.speaker === 'grok').length;
   
   return `Brainstorm session on "${this.topic}" completed with ${claudeMessages} Claude messages and ${grokMessages} Grok messages.`;
 };
 
 // Get next speaker
 brainstormSchema.methods.getNextSpeaker = function() {
-  const lastMessage = this.messages[this.messages.length - 1];
+  const messages = this.messages || [];
+  const lastMessage = messages[messages.length - 1];
   
   if (!lastMessage || lastMessage.speaker === 'user') {
     // Start with Claude
@@ -159,7 +177,8 @@ brainstormSchema.methods.toExportJSON = function() {
   const obj = this.toObject();
   
   // Format messages for readability
-  obj.messages = obj.messages.map(msg => ({
+  const messages = obj.messages || [];
+  obj.messages = messages.map(msg => ({
     speaker: msg.speaker.toUpperCase(),
     content: msg.content,
     timestamp: msg.timestamp

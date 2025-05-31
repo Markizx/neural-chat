@@ -1,18 +1,14 @@
+/* Базовые стили */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html,
-body {
+html, body {
   height: 100%;
-  overflow: hidden;
-}
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -22,10 +18,10 @@ body {
   height: 100%;
 }
 
-/* Custom scrollbar styles */
+/* Скроллбары */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -33,26 +29,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(128, 128, 128, 0.3);
-  border-radius: 5px;
-  border: 2px solid transparent;
-  background-clip: content-box;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(128, 128, 128, 0.5);
-  background-clip: content-box;
-}
-
-/* Dark mode scrollbar */
-.dark-mode ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  background-clip: content-box;
-}
-
-.dark-mode ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-  background-clip: content-box;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 /* Code block styles */
@@ -280,4 +262,117 @@ button:focus-visible {
 
 .dark-mode .dots-pattern {
   background-image: radial-gradient(circle, rgba(129, 140, 248, 0.1) 1px, transparent 1px);
+}
+
+/* Оптимизация макета для предотвращения скроллинга */
+.chat-layout {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.chat-main-content {
+  height: calc(100vh - 64px) !important;
+  max-height: calc(100vh - 64px) !important;
+  overflow: hidden !important;
+}
+
+.chat-list-container {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.chat-window-container {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.messages-container {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+}
+
+.input-container {
+  flex-shrink: 0 !important;
+}
+
+/* Мобильная оптимизация */
+@media (max-width: 768px) {
+  .chat-main-content {
+    height: calc(100vh - 64px - 90px) !important; /* Учитываем нижнюю навигацию */
+    max-height: calc(100vh - 64px - 90px) !important;
+  }
+}
+
+/* Дополнительные стили для лучшего UX */
+.compact-spacing {
+  padding: 8px !important;
+}
+
+.compact-spacing-small {
+  padding: 4px !important;
+}
+
+/* Принудительный контроль высот - КРИТИЧНО для предотвращения скроллинга */
+.MuiBox-root {
+  max-height: inherit !important;
+}
+
+.chat-container {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.main-content-area {
+  height: calc(100vh - 64px) !important;
+  max-height: calc(100vh - 64px) !important;
+  overflow: hidden !important;
+}
+
+.chat-messages-area {
+  height: calc(100% - 120px) !important;
+  max-height: calc(100% - 120px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.chat-input-area {
+  height: 80px !important;
+  max-height: 120px !important;
+  min-height: 60px !important;
+  flex-shrink: 0 !important;
+}
+
+.sidebar-area {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Принудительное скрытие скроллбаров на основных контейнерах */
+.no-scroll {
+  overflow: hidden !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+/* Мобильная оптимизация - ещё более жёсткий контроль */
+@media (max-width: 768px) {
+  .main-content-area {
+    height: calc(100vh - 64px - 90px) !important;
+    max-height: calc(100vh - 64px - 90px) !important;
+  }
+  
+  .chat-messages-area {
+    height: calc(100% - 100px) !important;
+    max-height: calc(100% - 100px) !important;
+  }
 }

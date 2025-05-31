@@ -12,10 +12,12 @@ import {
   Notifications,
   Security,
   Api,
+  Psychology,
 } from '@mui/icons-material';
 import ProfileSettings from '../components/Settings/ProfileSettings';
 import ApiSettings from '../components/Settings/ApiSettings';
 import SettingsPanel from '../components/Settings/SettingsPanel';
+import SystemPromptSettings from '../components/Settings/SystemPromptSettings';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -39,8 +41,14 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper sx={{ borderRadius: 2, overflow: 'hidden' }}>
+    <Container maxWidth="lg" sx={{ py: 4, height: 'calc(100vh - 100px)' }}>
+      <Paper sx={{ 
+        borderRadius: 2, 
+        overflow: 'hidden',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
@@ -51,16 +59,23 @@ const SettingsPage: React.FC = () => {
             borderBottom: 1,
             borderColor: 'divider',
             bgcolor: 'background.default',
+            flexShrink: 0,
           }}
         >
           <Tab icon={<Person />} label="Profile" />
           <Tab icon={<Palette />} label="Appearance" />
+          <Tab icon={<Psychology />} label="AI Prompts" />
           <Tab icon={<Notifications />} label="Notifications" />
           <Tab icon={<Security />} label="Security" />
           <Tab icon={<Api />} label="API Keys" />
         </Tabs>
 
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ 
+          p: 3, 
+          overflow: 'auto',
+          flex: 1,
+          height: 0 // Это заставляет flex item уменьшаться
+        }}>
           <TabPanel value={activeTab} index={0}>
             <ProfileSettings />
           </TabPanel>
@@ -68,12 +83,15 @@ const SettingsPage: React.FC = () => {
             <SettingsPanel type="appearance" />
           </TabPanel>
           <TabPanel value={activeTab} index={2}>
-            <SettingsPanel type="notifications" />
+            <SystemPromptSettings />
           </TabPanel>
           <TabPanel value={activeTab} index={3}>
-            <SettingsPanel type="security" />
+            <SettingsPanel type="notifications" />
           </TabPanel>
           <TabPanel value={activeTab} index={4}>
+            <SettingsPanel type="security" />
+          </TabPanel>
+          <TabPanel value={activeTab} index={5}>
             <ApiSettings />
           </TabPanel>
         </Box>

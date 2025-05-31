@@ -178,6 +178,12 @@ exports.uploadFiles = async (req, res, next) => {
     const { id } = req.params;
     const files = req.files;
 
+    console.log('📁 Upload files request:', {
+      projectId: id,
+      filesCount: files?.length || 0,
+      files: files?.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype }))
+    });
+
     if (!files || files.length === 0) {
       return res.status(400).json(apiResponse(false, null, {
         code: 'NO_FILES',
@@ -207,21 +213,33 @@ exports.uploadFiles = async (req, res, next) => {
     for (const file of files) {
       const fileData = {
         name: file.originalname,
-        url: file.location || file.path,
+        url: file.location || `/uploads/${file.filename}`, // S3 location или локальный путь
         type: file.mimetype,
         size: file.size
       };
       const addedFile = project.addFile(fileData);
       uploadedFiles.push(addedFile);
+      
+      console.log('✅ File added to project:', {
+        name: fileData.name,
+        url: fileData.url,
+        size: fileData.size
+      });
     }
 
     await project.save();
 
+    // Get storage info for debugging
+    const storageInfo = storageService.getStorageInfo();
+    console.log('💾 Storage info:', storageInfo);
+
     res.json(apiResponse(true, {
       files: uploadedFiles,
-      message: `${uploadedFiles.length} files uploaded successfully`
+      message: `${uploadedFiles.length} files uploaded successfully`,
+      storageType: storageInfo.type
     }));
   } catch (error) {
+    console.error('❌ Upload files error:', error);
     next(error);
   }
 };

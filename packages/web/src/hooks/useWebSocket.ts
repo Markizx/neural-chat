@@ -31,12 +31,16 @@ export const useWebSocket = (): UseWebSocketReturn => {
     const token = storageService.getAccessToken();
     if (!token) return;
 
-    const newSocket = io(process.env.REACT_APP_WS_URL || 'http://localhost:5000', {
+    const wsUrl = process.env.REACT_APP_WS_URL || 'http://localhost:5000';
+    const correctedUrl = wsUrl.replace('ws://', 'http://').replace('wss://', 'https://');
+
+    const newSocket = io(correctedUrl, {
       auth: { token },
-      transports: ['websocket'],
+      autoConnect: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
+      timeout: 10000,
     });
 
     socketRef.current = newSocket;

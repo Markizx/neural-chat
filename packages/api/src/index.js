@@ -1,25 +1,40 @@
 // Исправленная версия packages/api/src/index.js
 require('dotenv').config();
 const http = require('http');
-const app = require('./app');
 const { Server } = require('socket.io');
-const { initWebSocket } = require('./websocket');
 const { connectDB } = require('./config/database');
 const { connectRedis } = require('./config/redis');
 const logger = require('./utils/logger');
+const express = require('express');
 
 const PORT = process.env.API_PORT || 5000;
 
-// Create HTTP server
-const server = http.createServer(app);
+// Create express app first
+const app = express();
 
 // Initialize Socket.IO
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true
   }
 });
+
+// Add io to app instance so it can be used in middleware
+app.set('io', io);
+
+// Middleware to add io to every request - MUST be before loading routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// Now load routes and middleware - they will have access to req.io
+require('./app')(app);
+
+// Load WebSocket handlers
+const { initWebSocket } = require('./websocket');
 
 // Start server
 async function startServer() {

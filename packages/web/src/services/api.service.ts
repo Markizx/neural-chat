@@ -58,7 +58,7 @@ class ApiService {
       async (error: AxiosError<ApiResponse>) => {
         const originalRequest = error.config as any;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
           if (this.isRefreshing) {
             return new Promise((resolve) => {
               this.refreshSubscribers.push((token: string) => {
@@ -77,15 +77,23 @@ class ApiService {
               throw new Error('No refresh token');
             }
 
-            const response = await this.post<{
-              accessToken: string;
-              refreshToken: string;
-            }>('/auth/refresh', { refreshToken });
+            const response = await axios.post(`${process.env.REACT_APP_API_URL || '/api/v1'}/auth/refresh`, 
+              { refreshToken },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
 
-            storageService.setTokens(response.data!.accessToken, response.data!.refreshToken);
-            this.refreshSubscribers.forEach((callback) => callback(response.data!.accessToken));
+            const newAccessToken = response.data.data.accessToken;
+            const newRefreshToken = response.data.data.refreshToken;
+            
+            storageService.setTokens(newAccessToken, newRefreshToken);
+            this.refreshSubscribers.forEach((callback) => callback(newAccessToken));
             this.refreshSubscribers = [];
 
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
             return this.client(originalRequest);
           } catch (refreshError) {
             storageService.clearTokens();

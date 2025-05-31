@@ -1,29 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
-  Paper,
   Typography,
-  IconButton,
   Menu,
   MenuItem,
-  Chip,
   CircularProgress,
   Alert,
   useTheme,
   useMediaQuery,
+  Button,
 } from '@mui/material';
 import {
-  MoreVert,
-  Delete,
-  Share,
-  Archive,
-  PushPin,
-  Edit,
+  Folder,
+  FolderOff,
 } from '@mui/icons-material';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import ModelSelector from './ModelSelector';
 import { useChat } from '../../hooks/useChat';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { useProjects } from '../../hooks/useProjects';
 import { Chat } from '../../types/api.types';
 
 interface ChatWindowProps {
@@ -39,11 +35,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   initialChat, 
   isMobile = false 
 }) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [projectMenuAnchorEl, setProjectMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedModel, setSelectedModel] = useState<string>(
+    type === 'claude' ? 'claude-3.7-sonnet' : 'grok-3'
+  );
+  const [activeProject, setActiveProject] = useState<string | null>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const { socket } = useWebSocket();
   const theme = useTheme();
   const isSmallMobile = useMediaQuery('(max-width: 480px)');
+  const { projects, loading: projectsLoading } = useProjects();
   
   const {
     chat,
@@ -56,6 +57,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     regenerateMessage,
     updateChat,
     deleteChat,
+    streamingMessage,
   } = useChat(chatId, initialChat, type);
 
   useEffect(() => {
@@ -75,88 +77,96 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleProjectMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setProjectMenuAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+  const handleProjectMenuClose = () => {
+    setProjectMenuAnchorEl(null);
   };
 
-  const handleShare = async () => {
-    handleMenuClose();
-    if (chat) {
-      const currentIsPublic = chat.sharing?.isPublic || false;
-      await updateChat(chat._id, { sharing: { isPublic: !currentIsPublic } });
-    }
-  };
-
-  const handleArchive = async () => {
-    handleMenuClose();
-    if (chat) {
-      await updateChat(chat._id, { isArchived: !chat.isArchived });
-    }
-  };
-
-  const handlePin = async () => {
-    handleMenuClose();
-    if (chat) {
-      await updateChat(chat._id, { isPinned: !chat.isPinned });
-    }
-  };
-
-  const handleDelete = async () => {
-    handleMenuClose();
-    if (chat && window.confirm('Вы уверены, что хотите удалить этот чат?')) {
-      await deleteChat(chat._id);
-      window.location.href = `/chat/${type}`;
-    }
+  const handleProjectSelect = (projectId: string | null) => {
+    setActiveProject(projectId);
+    handleProjectMenuClose();
   };
 
   const handleSendMessage = async (content: string, attachments?: any[]) => {
-    await sendMessage(content, attachments);
-  };
-
-  const getModelName = () => {
-    if (!chat) return type === 'claude' ? 'Claude 3.5 Sonnet' : 'Grok 2';
-    return chat.model;
+    let enhancedContent = content;
+    if (activeProject) {
+      const project = projects.find(p => p._id === activeProject);
+      if (project) {
+        enhancedContent = `[Контекст проекта: ${project.name}]\n\n${content}`;
+      }
+    }
+    await sendMessage(enhancedContent, attachments);
   };
 
   if (!chatId) {
     return (
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: isMobile ? 2 : 4,
-          textAlign: 'center',
-        }}
-      >
-        <Box>
-          <Typography 
-            variant={isMobile ? "h6" : "h5"} 
-            color="text.secondary" 
-            gutterBottom
-            sx={{ 
-              fontSize: isMobile && isSmallMobile ? '1.1rem' : undefined,
-            }}
-          >
-            Начните новый {type === 'claude' ? 'Claude' : 'Grok'} чат
-          </Typography>
-          <Typography 
-            variant="body2" 
-            color="text.secondary"
-            sx={{ 
-              fontSize: isMobile && isSmallMobile ? '0.875rem' : undefined,
-            }}
-          >
-            {isMobile 
-              ? 'Выберите чат из списка или создайте новый'
-              : 'Выберите чат из боковой панели или введите сообщение для начала'
-            }
-          </Typography>
+      <Box sx={{ 
+        height: '100%',
+        display: 'flex', 
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: isMobile ? 2 : 4,
+            textAlign: 'center',
+          }}
+        >
+          <Box sx={{ mb: 4 }}>
+            <Typography 
+              variant={isMobile ? "h6" : "h5"} 
+              color="text.secondary" 
+              gutterBottom
+              sx={{ 
+                fontSize: isMobile && isSmallMobile ? '1.1rem' : undefined,
+              }}
+            >
+              Начните новый {type === 'claude' ? 'Claude' : 'Grok'} чат
+            </Typography>
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{ 
+                fontSize: isMobile && isSmallMobile ? '0.875rem' : undefined,
+                mb: 3,
+              }}
+            >
+              {isMobile 
+                ? 'Введите сообщение для начала'
+                : 'Введите сообщение для начала нового чата'
+              }
+            </Typography>
+            
+            <ModelSelector
+              currentModel={selectedModel}
+              type={type}
+              onModelChange={setSelectedModel}
+            />
+          </Box>
+        </Box>
+        
+        <Box 
+          sx={{ 
+            borderTop: `1px solid ${theme.palette.divider}`,
+            backgroundColor: theme.palette.background.paper,
+            flexShrink: 0,
+          }}
+        >
+          <MessageInput
+            onSendMessage={handleSendMessage}
+            disabled={loading}
+            placeholder={`Начните чат с ${type === 'claude' ? 'Claude' : 'Grok'}...`}
+            chatType={type}
+            isMobile={isMobile}
+          />
         </Box>
       </Box>
     );
@@ -164,77 +174,85 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   return (
     <Box sx={{ 
-      flex: 1, 
-      display: 'flex', 
-      flexDirection: 'column', 
       height: '100%',
-      position: 'relative',
+      display: 'flex', 
+      flexDirection: 'column',
+      overflow: 'hidden',
     }}>
-      {/* Header - скрыт на мобильных, так как используется отдельный заголовок */}
       {!isMobile && (
-        <Paper
-          elevation={0}
+        <Box
           sx={{
             p: 2,
-            borderRadius: 0,
-            borderBottom: 1,
-            borderColor: 'divider',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            backgroundColor: theme.palette.background.paper,
+            flexShrink: 0,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="h6">
               {chat?.title || 'Новый чат'}
             </Typography>
-            <Chip
-              label={getModelName()}
-              size="small"
-              color={type === 'claude' ? 'primary' : 'secondary'}
-            />
-            {chat?.isPinned && <PushPin fontSize="small" />}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box>
+                <Button
+                  size="small"
+                  startIcon={activeProject ? <Folder /> : <FolderOff />}
+                  onClick={handleProjectMenuOpen}
+                  sx={{
+                    textTransform: 'none',
+                    color: activeProject ? 'primary.main' : 'text.secondary',
+                  }}
+                >
+                  {activeProject
+                    ? projects.find(p => p._id === activeProject)?.name || 'Проект'
+                    : 'Без проекта'}
+                </Button>
+                <Menu
+                  anchorEl={projectMenuAnchorEl}
+                  open={Boolean(projectMenuAnchorEl)}
+                  onClose={handleProjectMenuClose}
+                >
+                  <MenuItem onClick={() => handleProjectSelect(null)}>
+                    <FolderOff sx={{ mr: 1 }} fontSize="small" />
+                    Без проекта
+                  </MenuItem>
+                  {projectsLoading ? (
+                    <MenuItem disabled>
+                      <CircularProgress size={20} />
+                    </MenuItem>
+                  ) : (
+                    projects.map((project) => (
+                      <MenuItem
+                        key={project._id}
+                        onClick={() => handleProjectSelect(project._id)}
+                        selected={activeProject === project._id}
+                      >
+                        <Folder sx={{ mr: 1 }} fontSize="small" />
+                        {project.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </Menu>
+              </Box>
+              
+              <ModelSelector
+                currentModel={selectedModel}
+                type={type}
+                onModelChange={setSelectedModel}
+                disabled={loading}
+              />
+            </Box>
           </Box>
-          
-          {chat && (
-            <>
-              <IconButton onClick={handleMenuClick}>
-                <MoreVert />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-              >
-                <MenuItem onClick={handlePin}>
-                  <PushPin fontSize="small" sx={{ mr: 1 }} />
-                  {chat.isPinned ? 'Открепить' : 'Закрепить'} чат
-                </MenuItem>
-                <MenuItem onClick={handleShare}>
-                  <Share fontSize="small" sx={{ mr: 1 }} />
-                  {chat.sharing?.isPublic ? 'Сделать приватным' : 'Поделиться'}
-                </MenuItem>
-                <MenuItem onClick={handleArchive}>
-                  <Archive fontSize="small" sx={{ mr: 1 }} />
-                  {chat.isArchived ? 'Разархивировать' : 'Архивировать'}
-                </MenuItem>
-                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-                  <Delete fontSize="small" sx={{ mr: 1 }} />
-                  Удалить
-                </MenuItem>
-              </Menu>
-            </>
-          )}
-        </Paper>
+        </Box>
       )}
 
-      {/* Messages */}
-      <Box sx={{ 
-        flex: 1, 
-        overflow: 'auto', 
-        p: isMobile ? (isSmallMobile ? 1 : 2) : 2,
-        pb: isMobile ? 1 : 2,
-      }}>
+      <Box 
+        sx={{ 
+          flex: 1, 
+          overflow: 'auto', 
+          p: 2,
+        }}
+      >
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -248,17 +266,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           onEditMessage={editMessage}
           onRegenerateMessage={regenerateMessage}
           isMobile={isMobile}
+          streamingMessage={streamingMessage}
         />
         <div ref={messagesEndRef} />
       </Box>
 
-      {/* Message Input */}
-      <Box sx={{ 
-        borderTop: isMobile ? 0 : 1,
-        borderColor: 'divider',
-        p: isMobile ? (isSmallMobile ? 1 : 1.5) : 2,
-        backgroundColor: theme.palette.background.paper,
-      }}>
+      <Box 
+        sx={{ 
+          borderTop: `1px solid ${theme.palette.divider}`,
+          backgroundColor: theme.palette.background.paper,
+          flexShrink: 0,
+        }}
+      >
         <MessageInput
           onSendMessage={handleSendMessage}
           disabled={loading}

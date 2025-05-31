@@ -6,6 +6,9 @@ import {
   BrainstormSummaryResponse,
 } from '../types/api.types';
 
+// Re-export for convenience
+export type { BrainstormSession };
+
 interface StartBrainstormResponse {
   chat: any; // Chat type
   session: BrainstormSession;
@@ -17,9 +20,19 @@ interface BrainstormMessageResponse {
   session: BrainstormSession;
 }
 
+export interface BrainstormSessionsResponse {
+  sessions: BrainstormSession[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 class BrainstormService {
   // Start new brainstorm session
-  async startSession(data: StartBrainstormRequest): Promise<StartBrainstormResponse> {
+  async startSession(data: StartBrainstormRequest): Promise<BrainstormSession> {
     const response = await apiService.post<StartBrainstormResponse>(
       '/brainstorm/start',
       data
@@ -27,55 +40,36 @@ class BrainstormService {
     if (!response.success) {
       throw new Error(response.error?.message || 'Failed to start brainstorm session');
     }
-    return response.data!;
+    return (response.data as any).session;
   }
 
-  // Get session details
+  // Get session by ID
   async getSession(sessionId: string): Promise<BrainstormSession> {
-    const response = await apiService.get<BrainstormSession>(`/brainstorm/${sessionId}`);
+    const response = await apiService.get<StartBrainstormResponse>(`/brainstorm/${sessionId}`);
     if (!response.success) {
       throw new Error(response.error?.message || 'Failed to get brainstorm session');
     }
-    return response.data!;
+    return (response.data as any).session;
   }
 
   // Send user message to session
-  async sendMessage(sessionId: string, content: string): Promise<BrainstormMessageResponse> {
-    const response = await apiService.post<BrainstormMessageResponse>(
-      `/brainstorm/${sessionId}/message`,
-      { content }
-    );
-    if (!response.success) {
-      throw new Error(response.error?.message || 'Failed to send message');
-    }
-    return response.data!;
+  async sendMessage(sessionId: string, content: string): Promise<void> {
+    await apiService.post(`/brainstorm/${sessionId}/message`, { content });
   }
 
   // Pause session
-  async pauseSession(sessionId: string): Promise<BrainstormSession> {
-    const response = await apiService.post<BrainstormSession>(`/brainstorm/${sessionId}/pause`);
-    if (!response.success) {
-      throw new Error(response.error?.message || 'Failed to pause session');
-    }
-    return response.data!;
+  async pauseSession(sessionId: string): Promise<void> {
+    await apiService.post(`/brainstorm/${sessionId}/pause`);
   }
 
   // Resume session
-  async resumeSession(sessionId: string): Promise<BrainstormSession> {
-    const response = await apiService.post<BrainstormSession>(`/brainstorm/${sessionId}/resume`);
-    if (!response.success) {
-      throw new Error(response.error?.message || 'Failed to resume session');
-    }
-    return response.data!;
+  async resumeSession(sessionId: string): Promise<void> {
+    await apiService.post(`/brainstorm/${sessionId}/resume`);
   }
 
   // Stop session
-  async stopSession(sessionId: string): Promise<BrainstormSession> {
-    const response = await apiService.post<BrainstormSession>(`/brainstorm/${sessionId}/stop`);
-    if (!response.success) {
-      throw new Error(response.error?.message || 'Failed to stop session');
-    }
-    return response.data!;
+  async stopSession(sessionId: string): Promise<void> {
+    await apiService.post(`/brainstorm/${sessionId}/stop`);
   }
 
   // Get session summary
@@ -92,13 +86,13 @@ class BrainstormService {
   // Export session
   async exportSession(
     sessionId: string,
-    format: 'json' | 'markdown' = 'markdown'
-  ): Promise<string> {
-    const response = await apiService.get<string>(`/brainstorm/${sessionId}/export`, { format });
+    format: 'json' | 'markdown' = 'json'
+  ): Promise<any> {
+    const response = await apiService.get<any>(`/brainstorm/${sessionId}/export`, { format });
     if (!response.success) {
       throw new Error(response.error?.message || 'Failed to export session');
     }
-    return response.data!;
+    return response.data;
   }
 
   // Get all brainstorm sessions
@@ -106,23 +100,17 @@ class BrainstormService {
     page?: number;
     limit?: number;
     status?: string;
-  }): Promise<{ sessions: BrainstormSession[]; pagination: any }> {
-    const response = await apiService.get<{ sessions: BrainstormSession[]; pagination: any }>(
-      '/brainstorm',
-      params
-    );
+  }): Promise<BrainstormSessionsResponse> {
+    const response = await apiService.get<BrainstormSessionsResponse>('/brainstorm/sessions', params);
     if (!response.success) {
       throw new Error(response.error?.message || 'Failed to get sessions');
     }
-    return response.data!;
+    return response.data;
   }
 
   // Delete session
   async deleteSession(sessionId: string): Promise<void> {
-    const response = await apiService.delete(`/brainstorm/${sessionId}`);
-    if (!response.success) {
-      throw new Error(response.error?.message || 'Failed to delete session');
-    }
+    await apiService.delete(`/brainstorm/${sessionId}`);
   }
 
   // Update session settings

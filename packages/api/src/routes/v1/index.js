@@ -14,6 +14,7 @@ const adminRoutes = require('./admin.routes');
 // Mount routes
 router.use('/auth', authRoutes);
 router.use('/user', userRoutes);
+router.use('/users', userRoutes);
 router.use('/chats', chatRoutes);
 router.use('/messages', messageRoutes);
 router.use('/projects', projectRoutes);

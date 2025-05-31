@@ -2,19 +2,29 @@ const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadO
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
+const fs = require('fs').promises;
+const path = require('path');
 
 class StorageService {
   constructor() {
-    // Используем переименованные переменные
-    this.s3 = new S3Client({
-      region: process.env.S3_REGION || process.env.AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY
-      }
-    });
+    this.isS3Available = !!(
+      process.env.AWS_ACCESS_KEY_ID && 
+      process.env.AWS_SECRET_ACCESS_KEY && 
+      process.env.AWS_S3_BUCKET
+    );
     
-    this.bucket = process.env.S3_BUCKET || process.env.AWS_S3_BUCKET;
+    if (this.isS3Available) {
+      this.s3 = new S3Client({
+        region: process.env.AWS_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        }
+      });
+      this.bucket = process.env.AWS_S3_BUCKET;
+    }
+    
+    this.uploadsDir = path.join(__dirname, '../../uploads');
   }
 
   // Generate unique file key
@@ -99,24 +109,35 @@ class StorageService {
   }
 
   // Delete file
-  async deleteFile(key) {
+  async deleteFile(fileUrl) {
     try {
-      // Handle both full URLs and keys
-      let fileKey = key;
-      if (key.startsWith('http')) {
-        const url = new URL(key);
-        fileKey = url.pathname.substring(1); // Remove leading slash
+      if (this.isS3Available && fileUrl.includes('amazonaws.com')) {
+        // S3 file
+        const key = this.extractS3Key(fileUrl);
+        const command = new DeleteObjectCommand({
+          Bucket: this.bucket,
+          Key: key
+        });
+        await this.s3.send(command);
+        logger.info(`🗑️ Deleted S3 file: ${key}`);
+      } else {
+        // Local file
+        const filename = path.basename(fileUrl);
+        const filePath = path.join(this.uploadsDir, filename);
+        
+        try {
+          await fs.access(filePath);
+          await fs.unlink(filePath);
+          logger.info(`🗑️ Deleted local file: ${filename}`);
+        } catch (error) {
+          if (error.code !== 'ENOENT') {
+            throw error;
+          }
+          // File doesn't exist, that's ok
+        }
       }
-
-      const command = new DeleteObjectCommand({
-        Bucket: this.bucket,
-        Key: fileKey
-      });
-
-      await this.s3.send(command);
-      logger.info(`File deleted: ${fileKey}`);
     } catch (error) {
-      logger.error('File deletion failed:', error);
+      logger.error('❌ Error deleting file:', error);
       throw error;
     }
   }
@@ -211,6 +232,82 @@ class StorageService {
       logger.error('Folder size calculation failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Extract S3 key from URL
+   * @param {string} url - S3 URL
+   */
+  extractS3Key(url) {
+    if (url.includes('amazonaws.com')) {
+      // Extract key from S3 URL
+      const urlParts = url.split('/');
+      const bucketIndex = urlParts.findIndex(part => part.includes('amazonaws.com'));
+      return urlParts.slice(bucketIndex + 1).join('/');
+    }
+    return url;
+  }
+
+  /**
+   * Get a signed URL for private S3 files
+   * @param {string} fileUrl - S3 file URL
+   * @param {number} expiresIn - URL expiration time in seconds (default: 1 hour)
+   */
+  async getSignedUrl(fileUrl, expiresIn = 3600) {
+    if (!this.isS3Available || !fileUrl.includes('amazonaws.com')) {
+      // For local files, return the URL as-is
+      return fileUrl;
+    }
+
+    try {
+      const key = this.extractS3Key(fileUrl);
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key
+      });
+      
+      const signedUrl = await getSignedUrl(this.s3, command, { expiresIn });
+      return signedUrl;
+    } catch (error) {
+      logger.error('❌ Error generating signed URL:', error);
+      return fileUrl; // Fallback to original URL
+    }
+  }
+
+  /**
+   * Get file URL for frontend
+   * @param {string} fileUrl - Original file URL/path
+   */
+  getPublicUrl(fileUrl) {
+    if (this.isS3Available && fileUrl.includes('amazonaws.com')) {
+      // For S3 files, return signed URL
+      return this.getSignedUrl(fileUrl);
+    } else {
+      // For local files, ensure proper URL format
+      if (fileUrl.startsWith('/uploads/')) {
+        return `${process.env.API_URL || 'http://localhost:5000'}${fileUrl}`;
+      }
+      return fileUrl;
+    }
+  }
+
+  /**
+   * Check if storage is using S3
+   */
+  isUsingS3() {
+    return this.isS3Available && process.env.NODE_ENV === 'production';
+  }
+
+  /**
+   * Get storage info
+   */
+  getStorageInfo() {
+    return {
+      type: this.isUsingS3() ? 's3' : 'local',
+      bucket: this.bucket,
+      uploadsDir: this.uploadsDir,
+      isS3Available: this.isS3Available
+    };
   }
 }
 

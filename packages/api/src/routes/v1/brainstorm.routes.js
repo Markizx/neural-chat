@@ -16,7 +16,15 @@ const startBrainstormValidation = [
 
 const sendMessageValidation = [
   param('id').isMongoId(),
-  body('content').notEmpty().trim()
+  body('content').optional().trim(),
+  body('attachments').optional().isArray(),
+  // Custom validation: content OR attachments must be present
+  body().custom((value) => {
+    if (!value.content && (!value.attachments || value.attachments.length === 0)) {
+      throw new Error('Content or attachments must be provided');
+    }
+    return true;
+  })
 ];
 
 // Routes
@@ -24,7 +32,9 @@ router.use(authenticate);
 // router.use(requireSubscription('pro', 'business')); // Temporarily disabled for testing
 
 router.post('/start', startBrainstormValidation, brainstormController.startBrainstorm);
+router.get('/sessions', brainstormController.getBrainstormSessions);
 router.get('/:id', param('id').isMongoId(), brainstormController.getBrainstormSession);
+router.delete('/:id', param('id').isMongoId(), brainstormController.deleteBrainstormSession);
 router.post('/:id/message', sendMessageValidation, brainstormController.sendBrainstormMessage);
 router.post('/:id/pause', param('id').isMongoId(), brainstormController.pauseBrainstorm);
 router.post('/:id/resume', param('id').isMongoId(), brainstormController.resumeBrainstorm);

@@ -16,10 +16,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const { user, token } = await adminApi.login(
+          const response = await adminApi.login(
             credentials.email,
             credentials.password
           );
+
+          const user = response.data?.user || response.user;
+          const token = response.data?.accessToken || response.accessToken;
 
           if (user && user.role === 'admin') {
             return {

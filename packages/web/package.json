@@ -7,6 +7,7 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.15.3",
     "@mui/material": "^5.15.3",
+    "@mui/x-date-pickers": "^8.5.0",
     "@neuralchat/shared": "file:../shared",
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.3.0",
@@ -14,6 +15,7 @@
     "@tanstack/react-query-devtools": "^5.17.9",
     "axios": "^1.6.5",
     "date-fns": "^2.30.0",
+    "framer-motion": "^12.15.0",
     "i18next": "^23.7.16",
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^2.4.2",
@@ -30,7 +32,7 @@
     "react-scripts": "^5.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-use": "^17.4.2",
-    "recharts": "^2.10.3",
+    "recharts": "^2.15.3",
     "remark-gfm": "^4.0.0",
     "socket.io-client": "^4.6.0",
     "typescript": "^4.9.5",
@@ -55,7 +57,12 @@
     "rules": {
       "no-console": "warn",
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ]
     }
   },
   "browserslist": {

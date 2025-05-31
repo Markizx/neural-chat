@@ -20,7 +20,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useMutation } from '@tanstack/react-query';
 import { apiService } from '../../services/api.service';
 import { useTranslation } from '../../hooks/useTranslation';
-import { supportedLanguages } from '../../i18n';
+import { supportedLanguages, syncLanguageWithUserSettings } from '../../i18n';
 
 interface SettingsPanelProps {
   type: 'appearance' | 'notifications' | 'security';
@@ -47,6 +47,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ type }) => {
       ...user?.settings,
       [key]: value,
     };
+    
+    // Синхронизируем язык немедленно если изменился
+    if (key === 'language') {
+      syncLanguageWithUserSettings(newSettings);
+      // Принудительно обновляем страницу для применения переводов
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    }
+    
     updateSettingsMutation.mutate(newSettings);
   };
 

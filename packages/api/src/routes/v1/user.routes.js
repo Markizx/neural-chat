@@ -1,29 +1,96 @@
-const router = require('express').Router();
-const { body } = require('express-validator');
-const userController = require('../../controllers/user.controller');
+const express = require('express');
+const router = express.Router();
+const { body, param, query } = require('express-validator');
 const { authenticate } = require('../../middleware/auth.middleware');
-const { uploadMiddleware } = require('../../middleware/upload.middleware');
+const userController = require('../../controllers/user.controller');
 
-// Validation rules
-const updateProfileValidation = [
-  body('name').optional().trim().notEmpty(),
-  body('settings.theme').optional().isIn(['light', 'dark', 'system']),
-  body('settings.language').optional().isIn(['en', 'ru', 'es', 'fr', 'de', 'zh', 'ja']),
-  body('settings.fontSize').optional().isInt({ min: 12, max: 20 }),
-  body('settings.notifications').optional().isObject()
-];
+// Get current user profile
+router.get('/profile', authenticate, userController.getProfile);
 
-// Routes
-router.use(authenticate);
+// Update current user profile
+router.put('/profile', 
+  authenticate,
+  [
+    body('name').optional().isString().trim(),
+    body('language').optional().isIn(['en', 'ru', 'es', 'fr', 'de', 'zh', 'ja'])
+  ],
+  userController.updateProfile
+);
 
-router.get('/profile', userController.getProfile);
-router.put('/profile', updateProfileValidation, userController.updateProfile);
-router.delete('/profile', userController.deleteProfile);
-router.put('/avatar', uploadMiddleware.single('avatar'), userController.updateAvatar);
-router.put('/settings', userController.updateSettings);
-router.get('/usage', userController.getUsage);
-router.get('/subscription', userController.getSubscription);
-router.get('/invoices', userController.getInvoices);
-router.post('/export-data', userController.exportData);
+// Get user settings
+router.get('/settings', authenticate, userController.getSettings);
+
+// Update user settings
+router.put('/settings',
+  authenticate,
+  [
+    body('theme').optional().isIn(['light', 'dark', 'system']),
+    body('language').optional().isString(),
+    body('notifications.email').optional().isBoolean(),
+    body('notifications.push').optional().isBoolean(),
+    body('defaultModel.claude').optional().isString(),
+    body('defaultModel.grok').optional().isString(),
+    body('systemPrompts.claude').optional().isString().isLength({ max: 2000 }),
+    body('systemPrompts.grok').optional().isString().isLength({ max: 2000 }),
+    body('aiRoles.claude').optional().isString().isLength({ max: 50 }),
+    body('aiRoles.grok').optional().isString().isLength({ max: 50 }),
+    body('brainstormPrompts.claude').optional().isString().isLength({ max: 2000 }),
+    body('brainstormPrompts.grok').optional().isString().isLength({ max: 2000 })
+  ],
+  userController.updateSettings
+);
+
+// Get user projects
+router.get('/projects', authenticate, userController.getProjects);
+
+// Upload avatar
+router.post('/avatar', authenticate, userController.uploadAvatar);
+
+// Delete avatar
+router.delete('/avatar', authenticate, userController.deleteAvatar);
+
+// Get usage statistics
+router.get('/usage', authenticate, userController.getUsage);
+
+// Reset password
+router.post('/reset-password',
+  authenticate,
+  [
+    body('currentPassword').notEmpty(),
+    body('newPassword').isLength({ min: 6 })
+  ],
+  userController.resetPassword
+);
+
+// Enable 2FA
+router.post('/2fa/enable', authenticate, userController.enable2FA);
+
+// Disable 2FA
+router.post('/2fa/disable', 
+  authenticate,
+  [
+    body('code').notEmpty()
+  ],
+  userController.disable2FA
+);
+
+// Verify 2FA
+router.post('/2fa/verify',
+  authenticate,
+  [
+    body('code').notEmpty()
+  ],
+  userController.verify2FA
+);
+
+// Delete account
+router.delete('/account',
+  authenticate,
+  [
+    body('password').notEmpty(),
+    body('confirmation').equals('DELETE')
+  ],
+  userController.deleteAccount
+);
 
 module.exports = router;

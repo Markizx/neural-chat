@@ -24,9 +24,11 @@ class GrokService {
       'grok-3-mini-fast': 'grok-3-mini-fast',
       'grok-2': 'grok-2-1212',
       'grok-2-vision': 'grok-2-vision-1212',
+      'grok-2-image': 'grok-2-image-1212', // Модель для генерации изображений
       // Алиасы для обратной совместимости
       'grok-2-1212': 'grok-2-1212',
-      'grok-2-vision-1212': 'grok-2-vision-1212'
+      'grok-2-vision-1212': 'grok-2-vision-1212',
+      'grok-2-image-1212': 'grok-2-image-1212'
     };
 
     // Ценообразование для расчета стоимости
@@ -36,7 +38,8 @@ class GrokService {
       'grok-3-fast': { input: 0.005, output: 0.025 }, // $5/$25 per 1M tokens
       'grok-3-mini-fast': { input: 0.0006, output: 0.004 }, // $0.60/$4 per 1M tokens
       'grok-2-1212': { input: 0.002, output: 0.01 }, // $2/$10 per 1M tokens
-      'grok-2-vision-1212': { input: 0.002, output: 0.01 } // $2/$10 per 1M tokens
+      'grok-2-vision-1212': { input: 0.002, output: 0.01 }, // $2/$10 per 1M tokens
+      'grok-2-image-1212': { input: 0.002, output: 0.01 } // $2/$10 per 1M tokens
     };
 
     // Лимиты для каждой модели
@@ -46,11 +49,15 @@ class GrokService {
       'grok-3-fast': 10,
       'grok-3-mini-fast': 10,
       'grok-2-1212': 15,
-      'grok-2-vision-1212': 10
+      'grok-2-vision-1212': 10,
+      'grok-2-image-1212': 10
     };
 
     // Поддержка изображений
     this.visionModels = ['grok-2-vision-1212', 'grok-2-vision'];
+    
+    // Поддержка генерации изображений
+    this.imageGenerationModels = ['grok-2-image-1212', 'grok-2-image'];
   }
 
   async createMessage(messages, options = {}) {
@@ -63,7 +70,46 @@ class GrokService {
         stream = false
       } = options;
 
-      const modelId = this.models[model] || model;
+      let modelId = this.models[model] || model;
+      
+      // Автоматически переключаем на vision модель если есть изображения и текущая модель не поддерживает их
+      const hasImages = messages.some(msg => 
+        msg.attachments && msg.attachments.some(att => 
+          att.mimeType && att.mimeType.startsWith('image/')
+        )
+      );
+      
+      if (hasImages && !this.supportsVision(modelId)) {
+        console.log('🔄 Автоматически переключаем с', modelId, 'на grok-2-vision-1212 для обработки изображений');
+        modelId = 'grok-2-vision-1212';
+      }
+      
+      // Автоматически переключаем на image модель если пользователь просит сгенерировать изображение
+      const lastUserMessage = messages.filter(msg => msg.role === 'user').pop();
+      if (lastUserMessage && modelId !== 'grok-2-image-1212') {
+        const imageGenerationKeywords = [
+          'сгенериру', 'создай', 'нарисуй', 'изобрази', 'покажи',
+          'generate', 'create', 'draw', 'show', 'make', 'design',
+          'картин', 'изображен', 'иллюстрац', 'рисун', 'граф',
+          'image', 'picture', 'illustration', 'graphic', 'visual',
+          'фото', 'photo', 'арт', 'art'
+        ];
+        
+        const requestsImageGeneration = imageGenerationKeywords.some(keyword => 
+          lastUserMessage.content.toLowerCase().includes(keyword) && 
+          (lastUserMessage.content.toLowerCase().includes('изображ') ||
+           lastUserMessage.content.toLowerCase().includes('картин') ||
+           lastUserMessage.content.toLowerCase().includes('image') ||
+           lastUserMessage.content.toLowerCase().includes('picture') ||
+           lastUserMessage.content.toLowerCase().includes('фото') ||
+           lastUserMessage.content.toLowerCase().includes('рисун'))
+        );
+        
+        if (requestsImageGeneration) {
+          console.log('🎨 Автоматически переключаем с', modelId, 'на grok-2-image-1212 для генерации изображений');
+          modelId = 'grok-2-image-1212';
+        }
+      }
 
       // Проверяем контекстное окно
       const contextSize = this.getContextSize(modelId);
@@ -167,23 +213,94 @@ class GrokService {
 
       // Handle attachments for vision models
       if (msg.attachments && msg.attachments.length > 0 && this.supportsVision(modelId)) {
+        console.log('🔍 Grok processing attachments (vision):', {
+          count: msg.attachments.length,
+          modelId,
+          attachments: msg.attachments.map(att => ({
+            name: att.name,
+            type: att.type || att.mimeType,
+            size: att.size,
+            hasData: !!att.data
+          }))
+        });
+        
         msg.attachments.forEach(attachment => {
-          if (attachment.type === 'image') {
+          const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+          
+          if (isImage && attachment.data) {
+            // Поддерживаем как data URL, так и чистый base64
+            const imageUrl = attachment.data.startsWith('data:') 
+              ? attachment.data 
+              : `data:${attachment.mimeType};base64,${attachment.data}`;
+              
             formatted.content.push({
               type: 'image_url',
               image_url: {
-                url: attachment.url || attachment.data,
+                url: imageUrl,
                 detail: 'auto'
               }
             });
           }
         });
       } else if (msg.attachments && msg.attachments.length > 0) {
-        // For non-vision models, add attachment references as text
-        const attachmentText = msg.attachments
-          .map(att => `[Attachment: ${att.name}]`)
-          .join('\n');
-        formatted.content[0].text += '\n' + attachmentText;
+        // For non-vision models, add attachment info as text
+        console.log('🔍 Grok processing attachments (non-vision):', {
+          count: msg.attachments.length,
+          modelId,
+          attachments: msg.attachments.map(att => ({
+            name: att.name,
+            type: att.type || att.mimeType,
+            size: att.size,
+            hasData: !!att.data
+          }))
+        });
+        
+        const attachmentTexts = msg.attachments.map(att => {
+          if (att.mimeType && att.mimeType.startsWith('image/')) {
+            return `[Изображение: ${att.name} (${att.mimeType}, ${att.size ? Math.round(att.size / 1024) + ' KB' : 'размер неизвестен'})]`;
+          } else if (att.mimeType && att.mimeType.startsWith('text/')) {
+            let content = att.content || '';
+            
+            // Если есть data (base64), пытаемся декодировать
+            if (!content && att.data) {
+              try {
+                if (att.data.includes(',')) {
+                  const base64Data = att.data.split(',')[1];
+                  content = Buffer.from(base64Data, 'base64').toString('utf-8');
+                } else {
+                  content = Buffer.from(att.data, 'base64').toString('utf-8');
+                }
+              } catch (e) {
+                console.error('Failed to decode text file:', e);
+                content = '[Не удалось декодировать содержимое файла]';
+              }
+            }
+            
+            return `📄 Файл: ${att.name}\n\`\`\`\n${content || '[Файл пуст]'}\n\`\`\``;
+          } else if (att.mimeType && (att.mimeType.includes('json') || att.mimeType.includes('xml') || 
+                     att.mimeType.includes('yaml') || att.mimeType.includes('markdown'))) {
+            let content = '';
+            
+            if (att.data) {
+              try {
+                const base64Data = att.data.includes(',') 
+                  ? att.data.split(',')[1] 
+                  : att.data;
+                content = Buffer.from(base64Data, 'base64').toString('utf-8');
+              } catch (e) {
+                console.error('Failed to decode file:', e);
+              }
+            }
+            
+            return `📄 Файл: ${att.name} (${att.mimeType})\n\`\`\`\n${content || '[Не удалось прочитать файл]'}\n\`\`\``;
+          } else {
+            return `📎 Файл: ${att.name} (${att.mimeType || 'неизвестный тип'}, ${att.size ? Math.round(att.size / 1024) + ' KB' : 'размер неизвестен'})`;
+          }
+        });
+        
+        if (attachmentTexts.length > 0) {
+          formatted.content[0].text += '\n\n' + attachmentTexts.join('\n');
+        }
       }
 
       // If content array has only one text item, simplify to string
@@ -210,6 +327,28 @@ class GrokService {
         type: 'code',
         language: match[1] || 'plain',
         content: match[2].trim()
+      });
+    }
+    
+    // Extract generated images (например: [Generated Image: description])
+    const imageRegex = /\[Generated Image: ([^\]]+)\]/g;
+    while ((match = imageRegex.exec(content)) !== null) {
+      artifacts.push({
+        id: `artifact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: 'generated-image',
+        description: match[1].trim(),
+        // URL изображения должен быть предоставлен API
+      });
+    }
+    
+    // Extract image URLs в markdown формате
+    const imageUrlRegex = /!\[([^\]]*)\]\(([^\)]+)\)/g;
+    while ((match = imageUrlRegex.exec(content)) !== null) {
+      artifacts.push({
+        id: `artifact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: 'image',
+        alt: match[1].trim(),
+        url: match[2].trim()
       });
     }
 
@@ -241,6 +380,11 @@ class GrokService {
   supportsVision(model) {
     const modelId = this.models[model] || model;
     return this.visionModels.includes(modelId);
+  }
+
+  supportsImageGeneration(model) {
+    const modelId = this.models[model] || model;
+    return this.imageGenerationModels.includes(modelId);
   }
 
   getRateLimit(model) {
@@ -327,6 +471,15 @@ class GrokService {
         contextSize: 32768,
         supportsVision: true,
         pricing: { input: '$2.00/1M', output: '$10.00/1M', image: '$2.00/1M' },
+        rateLimit: '10 rps'
+      },
+      {
+        id: 'grok-2-image',
+        name: 'Grok 2 Image',
+        description: 'Model for image generation',
+        contextSize: 131072,
+        supportsImageGeneration: true,
+        pricing: { input: '$2.00/1M', output: '$10.00/1M' },
         rateLimit: '10 rps'
       }
     ];

@@ -52,9 +52,24 @@ export interface UserUsage {
 export interface UserSettings {
   theme: 'light' | 'dark' | 'system';
   language: 'en' | 'ru' | 'es' | 'fr' | 'de' | 'zh' | 'ja';
-  defaultModel: string;
+  defaultModel: {
+    claude: string;
+    grok: string;
+  };
   fontSize: number;
   notifications: NotificationSettings;
+  systemPrompts: {
+    claude: string;
+    grok: string;
+  };
+  aiRoles: {
+    claude: string;
+    grok: string;
+  };
+  brainstormPrompts: {
+    claude: string;
+    grok: string;
+  };
 }
 
 export interface NotificationSettings {

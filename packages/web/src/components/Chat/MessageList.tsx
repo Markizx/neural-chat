@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -14,6 +14,7 @@ import {
   Button,
   alpha,
   useTheme,
+  LinearProgress,
 } from '@mui/material';
 import {
   Person,
@@ -23,14 +24,13 @@ import {
   Delete,
   Refresh,
   ContentCopy,
-  ThumbUp,
-  ThumbDown,
   Code,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
-import { Message, Artifact } from '../../types';
-import ArtifactViewer from '../Artifacts/ArtifactViewer';
+import { Message } from '../../types';
+import ArtifactRenderer from './ArtifactRenderer';
+import AnimatedMessage from './AnimatedMessage';
 
 interface MessageListProps {
   messages: Message[];
@@ -42,13 +42,21 @@ interface MessageListProps {
   onEdit?: (messageId: string, content: string) => void;
   onDelete?: (messageId: string) => void;
   onRegenerate?: (messageId: string) => void;
+  streamingMessage?: {
+    id: string;
+    role: 'assistant';
+    content: string;
+    model?: string;
+    isStreaming: boolean;
+  } | null;
 }
 
 interface MessageItemProps {
-  message: Message;
+  message: Message | any;
   onEdit?: (messageId: string, content: string) => void;
   onDelete?: (messageId: string) => void;
   onRegenerate?: (messageId: string) => void;
+  isStreaming?: boolean;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
@@ -56,6 +64,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onEdit,
   onDelete,
   onRegenerate,
+  isStreaming = false,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -118,6 +127,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         mb: 3,
         flexDirection: isUser ? 'row-reverse' : 'row',
         animation: 'fadeInUp 0.3s ease-out',
+        opacity: isStreaming ? 0.9 : 1,
         '@keyframes fadeInUp': {
           from: {
             opacity: 0,
@@ -145,6 +155,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
           boxShadow: !isUser && theme.palette.mode === 'dark' 
             ? '0 4px 16px rgba(99, 102, 241, 0.3)' 
             : '0 2px 8px rgba(0, 0, 0, 0.1)',
+          animation: isStreaming ? 'pulse 2s ease-in-out infinite' : 'none',
+          '@keyframes pulse': {
+            '0%, 100%': { transform: 'scale(1)' },
+            '50%': { transform: 'scale(1.05)' },
+          },
         }}
       >
         {isUser ? <Person /> : <SmartToy />}
@@ -170,25 +185,43 @@ const MessageItem: React.FC<MessageItemProps> = ({
             {isUser ? 'You' : message.model || 'Assistant'}
           </Typography>
           <Typography variant="caption" sx={{ color: theme.palette.mode === 'dark' ? '#6b7280' : '#9ca3af' }}>
-            {format(new Date(message.createdAt), 'HH:mm')}
+            {format(new Date(message.createdAt || Date.now()), 'HH:mm')}
           </Typography>
           {message.isEdited && (
             <Typography variant="caption" sx={{ color: theme.palette.mode === 'dark' ? '#6b7280' : '#9ca3af' }}>
               (edited)
             </Typography>
           )}
-          <IconButton 
-            size="small" 
-            onClick={handleMenuClick}
-            sx={{
-              opacity: 0.5,
-              '&:hover': {
-                opacity: 1,
-              },
-            }}
-          >
-            <MoreVert fontSize="small" />
-          </IconButton>
+          {isStreaming && (
+            <Chip
+              label="generating..."
+              size="small"
+              color="primary"
+              sx={{ 
+                height: 18,
+                fontSize: '10px',
+                animation: 'blink 1.5s ease-in-out infinite',
+                '@keyframes blink': {
+                  '0%, 100%': { opacity: 1 },
+                  '50%': { opacity: 0.5 },
+                },
+              }}
+            />
+          )}
+          {!isStreaming && (
+            <IconButton 
+              size="small" 
+              onClick={handleMenuClick}
+              sx={{
+                opacity: 0.5,
+                '&:hover': {
+                  opacity: 1,
+                },
+              }}
+            >
+              <MoreVert fontSize="small" />
+            </IconButton>
+          )}
         </Box>
 
         <Paper
@@ -214,7 +247,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
             borderTopLeftRadius: !isUser ? '4px' : '20px',
             borderTopRightRadius: isUser ? '4px' : '20px',
             position: 'relative',
-            overflow: 'visible',
+            overflow: 'hidden',
             '&::before': !isUser && {
               content: '""',
               position: 'absolute',
@@ -250,8 +283,51 @@ const MessageItem: React.FC<MessageItemProps> = ({
           ) : (
             <>
               <ReactMarkdown className="markdown-body">
-                {message.content}
+                {message.content || (isStreaming ? '...' : '')}
               </ReactMarkdown>
+
+              {/* Streaming cursor */}
+              {isStreaming && message.content && (
+                <Box
+                  component="span"
+                  sx={{
+                    display: 'inline-block',
+                    width: '2px',
+                    height: '1.2em',
+                    bgcolor: 'primary.main',
+                    animation: 'cursor-blink 1s ease-in-out infinite',
+                    verticalAlign: 'text-bottom',
+                    ml: 0.5,
+                    '@keyframes cursor-blink': {
+                      '0%, 50%': { opacity: 1 },
+                      '51%, 100%': { opacity: 0 },
+                    },
+                  }}
+                />
+              )}
+
+              {/* Streaming progress bar */}
+              {isStreaming && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 2,
+                  }}
+                >
+                  <LinearProgress 
+                    color="primary"
+                    sx={{
+                      height: 2,
+                      '& .MuiLinearProgress-bar': {
+                        animationDuration: '1.5s',
+                      },
+                    }}
+                  />
+                </Box>
+              )}
 
               {/* Attachments */}
               {message.attachments && message.attachments.length > 0 && (
@@ -275,14 +351,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
               {/* Artifacts */}
               {message.artifacts && message.artifacts.length > 0 && (
                 <Box sx={{ mt: 2 }}>
-                  {message.artifacts.map((artifact, index) => (
-                    <ArtifactViewer key={index} artifact={artifact} />
-                  ))}
+                  <ArtifactRenderer artifacts={message.artifacts} />
                 </Box>
               )}
 
               {/* Usage info */}
-              {message.usage && (
+              {message.usage && !isStreaming && (
                 <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
                   <Typography 
                     variant="caption" 
@@ -324,13 +398,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
                         display: 'inline-block',
                       }}
                     />
-                    Cost: ${message.usage.cost.toFixed(4)}
+                    Cost: ${message.usage.cost?.toFixed(4) || '0.0000'}
                   </Typography>
                 </Box>
               )}
 
               {/* Feedback for assistant messages */}
-              {!isUser && (
+              {!isUser && !isStreaming && (
                 <Box sx={{ mt: 2 }}>
                   <Button
                     size="small"
@@ -416,28 +490,69 @@ const MessageList: React.FC<MessageListProps> = ({
   onEdit,
   onDelete,
   onRegenerate,
+  streamingMessage,
 }) => {
   // Используем async функции если они переданы, иначе обычные
   const handleEdit = onEditMessage || onEdit;
   const handleDelete = onDeleteMessage || onDelete;
   const handleRegenerate = onRegenerateMessage || onRegenerate;
 
+  // Определяем тип чата из первого сообщения assistant
+  const chatType = messages.find(m => m.role === 'assistant')?.model?.toLowerCase().includes('claude') 
+    ? 'claude' 
+    : messages.find(m => m.role === 'assistant')?.model?.toLowerCase().includes('grok')
+    ? 'grok'
+    : 'general';
+
   return (
-    <Box>
-      {messages.map((message) => (
-        <MessageItem
+    <Box sx={{ pb: 2 }}>
+      {/* Существующие сообщения с улучшенной анимацией */}
+      {messages.map((message, index) => (
+        <AnimatedMessage
           key={message._id}
-          message={message}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onRegenerate={handleRegenerate}
+          message={{
+            id: message._id,
+            role: message.role,
+            content: message.content,
+            model: message.model,
+            createdAt: new Date(message.createdAt),
+          }}
+          index={index}
+          chatType={chatType as 'claude' | 'grok' | 'general'}
         />
       ))}
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Генерирую ответ...
-          </Typography>
+
+      {/* Streaming сообщение */}
+      {streamingMessage && (
+        <AnimatedMessage
+          message={{
+            id: streamingMessage.id,
+            role: 'assistant',
+            content: streamingMessage.content,
+            model: 'assistant',
+            isStreaming: true,
+          }}
+          index={messages.length}
+          chatType={chatType as 'claude' | 'grok' | 'general'}
+        />
+      )}
+
+      {/* Индикатор загрузки */}
+      {loading && !streamingMessage && (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            py: 4,
+          }}
+        >
+          <Box sx={{ textAlign: 'center' }}>
+            <LinearProgress sx={{ width: 100, mb: 2 }} />
+            <Typography variant="body2" color="text.secondary">
+              Thinking...
+            </Typography>
+          </Box>
         </Box>
       )}
     </Box>

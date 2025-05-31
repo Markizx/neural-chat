@@ -18,7 +18,8 @@
     "yes": "Yes",
     "no": "No",
     "or": "or",
-    "and": "and"
+    "and": "and",
+    "comingSoon": "Coming soon"
   },
   "auth": {
     "login": "Login",
@@ -74,8 +75,24 @@
   "settings": {
     "title": "Settings",
     "appearance": "Appearance",
+    "appearanceDescription": "Customize how NeuralChat looks and feels",
     "notifications": "Notifications",
+    "notificationsDescription": "Choose what notifications you want to receive",
+    "emailNotifications": "Email Notifications",
+    "pushNotifications": "Push Notifications",
+    "chatNotifications": "Chat Message Notifications",
+    "brainstormNotifications": "Brainstorm Session Updates",
+    "marketingEmails": "Marketing and Promotional Emails",
     "security": "Security",
+    "securityDescription": "Keep your account secure",
+    "password": "Password",
+    "passwordDescription": "Change your password regularly to keep your account secure",
+    "changePassword": "Change Password",
+    "twoFactor": "Two-Factor Authentication",
+    "twoFactorDescription": "Add an extra layer of security to your account",
+    "enableTwoFactor": "Enable Two-Factor Authentication",
+    "deleteAccount": "Delete Account",
+    "deleteAccountWarning": "Permanently delete your account and all associated data. This action cannot be undone.",
     "language": "Language",
     "theme": "Theme",
     "themes": {

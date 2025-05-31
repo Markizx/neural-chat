@@ -157,18 +157,24 @@ exports.handleDeleteMessage = async (io, socket, data) => {
 // Brainstorm handlers
 exports.handleJoinBrainstorm = async (socket, sessionId) => {
   try {
+    console.log('🔍 Brainstorm join attempt:', { sessionId, userId: socket.userId });
+    
     const session = await BrainstormSession.findOne({
       _id: sessionId,
       userId: socket.userId
     });
 
+    console.log('🔍 Session found:', !!session);
+    
     if (!session) {
+      console.log('❌ Session not found for:', { sessionId, userId: socket.userId });
       socket.emit('error', { message: 'Brainstorm session not found' });
       return;
     }
 
     socket.join(`brainstorm:${sessionId}`);
     socket.emit('brainstorm:joined', { sessionId });
+    console.log('✅ Successfully joined brainstorm:', sessionId);
   } catch (error) {
     logger.error('Error joining brainstorm:', error);
     socket.emit('error', { message: 'Failed to join brainstorm' });

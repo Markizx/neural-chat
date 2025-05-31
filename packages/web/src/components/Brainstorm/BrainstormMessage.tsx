@@ -5,6 +5,7 @@ import {
   Typography,
   Avatar,
   Chip,
+  LinearProgress,
 } from '@mui/material';
 import {
   Person,
@@ -21,10 +22,12 @@ interface BrainstormMessageProps {
     content: string;
     timestamp: string;
     tokens?: number;
+    isStreaming?: boolean;
   };
+  isStreaming?: boolean;
 }
 
-const BrainstormMessage: React.FC<BrainstormMessageProps> = ({ message }) => {
+const BrainstormMessage: React.FC<BrainstormMessageProps> = ({ message, isStreaming = false }) => {
   const getSpeakerInfo = () => {
     switch (message.speaker) {
       case 'claude':
@@ -60,6 +63,12 @@ const BrainstormMessage: React.FC<BrainstormMessageProps> = ({ message }) => {
         gap: 2,
         mb: 3,
         alignItems: 'flex-start',
+        opacity: isStreaming ? 0.9 : 1,
+        animation: isStreaming ? 'pulse 1.5s ease-in-out infinite' : 'none',
+        '@keyframes pulse': {
+          '0%, 100%': { opacity: 0.9 },
+          '50%': { opacity: 1 },
+        },
       }}
     >
       <Avatar
@@ -80,12 +89,28 @@ const BrainstormMessage: React.FC<BrainstormMessageProps> = ({ message }) => {
           <Typography variant="caption" color="text.secondary">
             {format(new Date(message.timestamp), 'HH:mm:ss')}
           </Typography>
-          {message.tokens && (
+          {message.tokens && !isStreaming && (
             <Chip
               label={`${message.tokens} tokens`}
               size="small"
               variant="outlined"
               sx={{ height: 20, fontSize: '0.7rem' }}
+            />
+          )}
+          {isStreaming && (
+            <Chip
+              label="typing..."
+              size="small"
+              color={speakerInfo.color as any}
+              sx={{ 
+                height: 20, 
+                fontSize: '0.7rem',
+                animation: 'blink 1s ease-in-out infinite',
+                '@keyframes blink': {
+                  '0%, 100%': { opacity: 1 },
+                  '50%': { opacity: 0.5 },
+                },
+              }}
             />
           )}
         </Box>
@@ -99,11 +124,54 @@ const BrainstormMessage: React.FC<BrainstormMessageProps> = ({ message }) => {
             borderColor: 'divider',
             borderLeft: 4,
             borderLeftColor: `${speakerInfo.color}.main`,
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
           <ReactMarkdown className="markdown-body">
-            {message.content}
+            {message.content || (isStreaming ? '...' : '')}
           </ReactMarkdown>
+          
+          {isStreaming && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 2,
+              }}
+            >
+              <LinearProgress 
+                color={speakerInfo.color as any}
+                sx={{
+                  height: 2,
+                  '& .MuiLinearProgress-bar': {
+                    animationDuration: '1s',
+                  },
+                }}
+              />
+            </Box>
+          )}
+          
+          {isStreaming && message.content && (
+            <Box
+              component="span"
+              sx={{
+                display: 'inline-block',
+                width: '2px',
+                height: '1.2em',
+                bgcolor: 'text.primary',
+                animation: 'cursor-blink 1s ease-in-out infinite',
+                verticalAlign: 'text-bottom',
+                ml: 0.5,
+                '@keyframes cursor-blink': {
+                  '0%, 50%': { opacity: 1 },
+                  '51%, 100%': { opacity: 0 },
+                },
+              }}
+            />
+          )}
         </Paper>
       </Box>
     </Box>

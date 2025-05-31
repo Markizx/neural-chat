@@ -11,6 +11,7 @@ export default {
       file: 'dist/index.js',
       format: 'cjs',
       sourcemap: true,
+      exports: 'named',
     },
     {
       file: 'dist/index.esm.js',
@@ -22,6 +23,7 @@ export default {
     peerDepsExternal(),
     resolve({
       preferBuiltins: false,
+      browser: true,
     }),
     commonjs({
       include: /node_modules/,
@@ -32,7 +34,15 @@ export default {
     }),
     terser(),
   ],
-  external: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
+  external: (id) => {
+    // Исключаем все Material-UI импорты
+    if (id.startsWith('@mui/')) return true;
+    if (id.startsWith('@emotion/')) return true;
+    if (id === 'react' || id === 'react-dom') return true;
+    if (id.startsWith('react/')) return true;
+    if (id.startsWith('react-dom/')) return true;
+    return false;
+  },
   onwarn(warning, warn) {
     // Игнорируем предупреждения о 'use client' директивах
     if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {

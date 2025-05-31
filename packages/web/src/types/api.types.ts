@@ -83,11 +83,13 @@ interface BrainstormSession {
     format: 'debate' | 'brainstorm' | 'analysis' | 'creative';
   };
   currentTurn: number;
+  maxTurns?: number;
   summary?: string;
   insights?: string[];
   duration?: number;
   totalTokens: number;
   createdAt: string;
+  updatedAt?: string;
   completedAt?: string;
 }
 

@@ -68,10 +68,9 @@
     "install:packages": "npm install",
     "check:env": "node scripts/check-env.js",
     "setup:env": "node scripts/setup-env.js",
-    "bootstrap": "lerna bootstrap",
+    "bootstrap": "npx lerna exec npm install",
     "version": "lerna version",
-    "publish": "lerna publish",
-    "postinstall": "lerna bootstrap"
+    "publish": "lerna publish"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.4.3",
@@ -94,6 +93,7 @@
     "lint-staged": "^15.2.0",
     "npm-check-updates": "^16.14.12",
     "prettier": "^3.1.1",
+    "sharp": "^0.34.2",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "typedoc": "^0.25.6",

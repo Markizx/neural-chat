@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -6,10 +6,8 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  ListItemIcon,
   IconButton,
   Typography,
-  Chip,
   Menu,
   MenuItem,
   Divider,
@@ -18,8 +16,12 @@ import {
   Button,
   useTheme,
   useMediaQuery,
-  Tooltip,
   TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  ListItemIcon,
 } from '@mui/material';
 import {
   Add,
@@ -27,9 +29,12 @@ import {
   FilterList,
   Archive,
   PushPin,
+  MoreVert,
+  Delete,
+  Edit,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../../services/api.service';
 import { Chat } from '../../types';
 
@@ -37,6 +42,7 @@ interface ChatListProps {
   type: 'claude' | 'grok';
   selectedChatId?: string;
   onSelectChat: (chatId: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onNewChat: () => void;
   isMobile?: boolean;
 }
@@ -54,6 +60,7 @@ const ChatList: React.FC<ChatListProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch chats
   const { data, isLoading } = useQuery({
@@ -98,8 +105,29 @@ const ChatList: React.FC<ChatListProps> = ({
     },
   });
 
+  // Delete chat mutation
+  const deleteChatMutation = useMutation({
+    mutationFn: async (chatId: string) => {
+      await apiService.delete(`/chats/${chatId}`);
+    },
+    onSuccess: (_, deletedChatId) => {
+      queryClient.invalidateQueries({ queryKey: ['chats', type] });
+      // If deleted chat was selected, navigate to chat list
+      if (selectedChatId === deletedChatId) {
+        navigate(`/chat/${type}`);
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to delete chat:', error);
+    },
+  });
+
   const handleCreateChat = async () => {
     createChatMutation.mutate();
+  };
+
+  const handleDeleteChat = (chatId: string) => {
+    deleteChatMutation.mutate(chatId);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -112,20 +140,24 @@ const ChatList: React.FC<ChatListProps> = ({
       sx={{
         width: isMobile ? '100%' : 300,
         height: '100%',
+        maxHeight: '100%',
         borderRight: isMobile ? 0 : 1,
         borderColor: 'divider',
         display: 'flex',
         flexDirection: 'column',
         bgcolor: 'background.paper',
         position: isMobile ? 'relative' : 'static',
+        overflow: 'hidden',
       }}
     >
       {/* Header */}
       <Box sx={{ 
-        p: isMobile ? (isSmallMobile ? 1.5 : 2) : 2,
+        p: isMobile ? (isSmallMobile ? 1 : 1.5) : 1,
         borderBottom: isMobile ? `1px solid ${theme.palette.divider}` : 'none',
+        flexShrink: 0,
+        maxHeight: '120px',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
           <Typography 
             variant={isMobile ? (isSmallMobile ? "subtitle1" : "h6") : "h6"} 
             sx={{ 
@@ -154,13 +186,14 @@ const ChatList: React.FC<ChatListProps> = ({
         {/* Search */}
         <TextField
           fullWidth
-          size={isMobile && isSmallMobile ? "small" : "small"}
+          size="small"
           placeholder="Поиск чатов..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: isMobile ? '12px' : '8px',
+              height: '36px',
             },
           }}
           InputProps={{
@@ -222,6 +255,7 @@ const ChatList: React.FC<ChatListProps> = ({
                     chat={chat}
                     isSelected={chat._id === selectedChatId}
                     onClick={() => onSelectChat(chat._id)}
+                    onDelete={handleDeleteChat}
                     isMobile={isMobile}
                   />
                 ))}
@@ -237,6 +271,7 @@ const ChatList: React.FC<ChatListProps> = ({
                   chat={chat}
                   isSelected={chat._id === selectedChatId}
                   onClick={() => onSelectChat(chat._id)}
+                  onDelete={handleDeleteChat}
                   isMobile={isMobile}
                 />
               ))
@@ -277,6 +312,7 @@ interface ChatListItemProps {
   chat: Chat;
   isSelected: boolean;
   onClick: () => void;
+  onDelete: (chatId: string) => void;
   isMobile?: boolean;
 }
 
@@ -284,100 +320,182 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
   chat, 
   isSelected, 
   onClick, 
+  onDelete, 
   isMobile = false 
 }) => {
   const theme = useTheme();
   const isSmallMobile = useMediaQuery('(max-width: 480px)');
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   const formatChatDate = (date: string) => {
     return format(new Date(date), isMobile ? 'dd.MM' : 'MMM d');
   };
 
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setMenuAnchor(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleDeleteConfirm = () => {
+    onDelete(chat._id);
+    setDeleteDialogOpen(false);
+  };
+
   return (
-    <ListItem disablePadding>
-      <ListItemButton
-        selected={isSelected}
-        onClick={onClick}
-        sx={{
-          px: isMobile ? (isSmallMobile ? 1.5 : 2) : 2,
-          py: isMobile ? 1.5 : 1,
-          borderRadius: isMobile ? '12px' : '8px',
-          mx: isMobile ? 1 : 0.5,
-          mb: isMobile ? 0.5 : 0.25,
-          transition: 'all 0.2s ease',
-          '&.Mui-selected': {
-            backgroundColor: theme.palette.mode === 'dark'
-              ? 'rgba(99, 102, 241, 0.15)'
-              : 'rgba(99, 102, 241, 0.08)',
-            '&:hover': {
+    <>
+      <ListItem disablePadding>
+        <ListItemButton
+          selected={isSelected}
+          onClick={onClick}
+          sx={{
+            px: isMobile ? (isSmallMobile ? 1.5 : 2) : 2,
+            py: isMobile ? 1.5 : 1,
+            borderRadius: isMobile ? '12px' : '8px',
+            mx: isMobile ? 1 : 0.5,
+            mb: isMobile ? 0.5 : 0.25,
+            transition: 'all 0.2s ease',
+            '&.Mui-selected': {
               backgroundColor: theme.palette.mode === 'dark'
-                ? 'rgba(99, 102, 241, 0.2)'
-                : 'rgba(99, 102, 241, 0.12)',
+                ? 'rgba(99, 102, 241, 0.15)'
+                : 'rgba(99, 102, 241, 0.08)',
+              '&:hover': {
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? 'rgba(99, 102, 241, 0.2)'
+                  : 'rgba(99, 102, 241, 0.12)',
+              },
             },
-          },
-          '&:hover': {
-            backgroundColor: theme.palette.action.hover,
-          },
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            },
+          }}
+        >
+          <ListItemText
+            primary={
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span
+                  style={{
+                    fontWeight: isSelected ? 600 : 400,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flex: 1,
+                    fontSize: isMobile && isSmallMobile ? '0.875rem' : '1rem',
+                    color: theme.palette.text.primary,
+                  }}
+                >
+                  {chat.title}
+                </span>
+                {chat.isPinned && (
+                  <PushPin 
+                    fontSize={isMobile && isSmallMobile ? "small" : "small"} 
+                    sx={{ color: 'primary.main' }} 
+                  />
+                )}
+              </span>
+            }
+            secondary={
+              <span style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginTop: '4px',
+              }}>
+                <span
+                  style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flex: 1,
+                    marginRight: '8px',
+                    fontSize: '0.75rem',
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {chat.lastMessage?.content || 'Новый чат'}
+                </span>
+                <span
+                  style={{ 
+                    fontSize: isMobile && isSmallMobile ? '0.7rem' : '0.75rem',
+                    whiteSpace: 'nowrap',
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {formatChatDate(chat.updatedAt)}
+                </span>
+              </span>
+            }
+          />
+          
+          {/* Menu button */}
+          <IconButton
+            size="small"
+            onClick={handleMenuOpen}
+            sx={{
+              opacity: 0.7,
+              '&:hover': {
+                opacity: 1,
+              },
+            }}
+          >
+            <MoreVert fontSize="small" />
+          </IconButton>
+        </ListItemButton>
+      </ListItem>
+
+      {/* Context Menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
         }}
       >
-        <ListItemText
-          primary={
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  fontWeight: isSelected ? 600 : 400,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  flex: 1,
-                  fontSize: isMobile && isSmallMobile ? '0.875rem' : '1rem',
-                  color: 'text.primary',
-                }}
-              >
-                {chat.title}
-              </Box>
-              {chat.isPinned && (
-                <PushPin 
-                  fontSize={isMobile && isSmallMobile ? "small" : "small"} 
-                  sx={{ color: 'primary.main' }} 
-                />
-              )}
-            </Box>
-          }
-          secondary={
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              mt: 0.5,
-            }}>
-              <Box
-                sx={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  flex: 1,
-                  mr: 1,
-                  fontSize: '0.75rem',
-                  color: 'text.secondary',
-                }}
-              >
-                {chat.lastMessage?.content || 'Новый чат'}
-              </Box>
-              <Box
-                sx={{ 
-                  fontSize: isMobile && isSmallMobile ? '0.7rem' : '0.75rem',
-                  whiteSpace: 'nowrap',
-                  color: 'text.secondary',
-                }}
-              >
-                {formatChatDate(chat.updatedAt)}
-              </Box>
-            </Box>
-          }
-        />
-      </ListItemButton>
-    </ListItem>
+        <MenuItem onClick={handleDeleteClick}>
+          <ListItemIcon>
+            <Delete fontSize="small" />
+          </ListItemIcon>
+          Удалить
+        </MenuItem>
+      </Menu>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Удалить чат?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы уверены, что хотите удалить чат "{chat.title}"? 
+            Это действие нельзя отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm}
+            color="error"
+          >
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

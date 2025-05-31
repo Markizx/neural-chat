@@ -11,6 +11,7 @@ import { useRouter } from 'next/router';
 import createEmotionCache from '@/lib/createEmotionCache';
 import theme from '@/lib/theme';
 import AuthGuard from '@/components/AuthGuard';
+import AdminLayout from '@/components/AdminLayout';
 
 const clientSideEmotionCache = createEmotionCache();
 const queryClient = new QueryClient({
@@ -29,6 +30,28 @@ interface MyAppProps extends AppProps {
 // Страницы которые не требуют аутентификации
 const publicPages = ['/auth/login', '/auth/register'];
 
+// Получение заголовка страницы
+const getPageTitle = (pathname: string): string => {
+  switch (pathname) {
+    case '/dashboard':
+      return 'Dashboard';
+    case '/users':
+      return 'Users Management';
+    case '/analytics':
+      return 'Analytics';
+    case '/subscriptions':
+      return 'Subscriptions';
+    case '/plans':
+      return 'Plans Management';
+    case '/chats':
+      return 'Chats Overview';
+    case '/settings':
+      return 'Settings';
+    default:
+      return 'Admin Panel';
+  }
+};
+
 export default function App({
   Component,
   emotionCache = clientSideEmotionCache,
@@ -36,6 +59,7 @@ export default function App({
 }: MyAppProps) {
   const router = useRouter();
   const isPublicPage = publicPages.includes(router.pathname);
+  const pageTitle = getPageTitle(router.pathname);
 
   return (
     <CacheProvider value={emotionCache}>
@@ -47,7 +71,9 @@ export default function App({
               <Component {...pageProps} />
             ) : (
               <AuthGuard>
-                <Component {...pageProps} />
+                <AdminLayout title={pageTitle}>
+                  <Component {...pageProps} />
+                </AdminLayout>
               </AuthGuard>
             )}
             <Toaster position="top-right" />

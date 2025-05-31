@@ -1,6 +1,4 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
   Box,
   List,
@@ -8,373 +6,310 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider,
   Typography,
+  Divider,
   Button,
   Chip,
-  alpha,
   useTheme,
   useMediaQuery,
+  alpha,
 } from '@mui/material';
 import {
-  Home,
+  Chat,
   Psychology,
+  AutoAwesome,
   Folder,
   Settings,
-  CreditCard,
   Add,
-  AutoAwesome,
-  SmartToy,
+  Home,
+  Psychology as BrainIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
   onClose?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const { t } = useTranslation();
-  const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isSmallMobile = useMediaQuery('(max-width: 480px)');
 
   const handleNavigation = (path: string) => {
     navigate(path);
-    onClose?.();
+    if (onClose) onClose();
   };
 
   const menuItems = [
-    { text: t('navigation.home'), icon: <Home />, path: '/' },
-    { text: 'Claude Chat', icon: <SmartToy />, path: '/chat/claude' },
-    { text: 'Grok Chat', icon: <Psychology />, path: '/chat/grok' },
-    { text: t('navigation.brainstorm'), icon: <AutoAwesome />, path: '/brainstorm', badge: 'NEW' },
-    { text: t('navigation.projects'), icon: <Folder />, path: '/projects' },
-  ];
-
-  const bottomMenuItems = [
-    { text: t('navigation.subscription'), icon: <CreditCard />, path: '/subscription' },
-    { text: t('navigation.settings'), icon: <Settings />, path: '/settings' },
+    { 
+      text: 'Главная', 
+      icon: <Home />, 
+      path: '/',
+      isActive: location.pathname === '/',
+    },
+    { 
+      text: 'Claude Chat', 
+      icon: <Chat />, 
+      path: '/chat/claude',
+      isActive: location.pathname.includes('/chat/claude'),
+    },
+    { 
+      text: 'Grok Chat', 
+      icon: <Psychology />, 
+      path: '/chat/grok',
+      isActive: location.pathname.includes('/chat/grok'),
+    },
+    { 
+      text: 'Brainstorm Mode', 
+      icon: <AutoAwesome />, 
+      path: '/brainstorm',
+      isActive: location.pathname.includes('/brainstorm'),
+      badge: 'NEW',
+    },
+    { 
+      text: 'Проекты', 
+      icon: <Folder />, 
+      path: '/projects',
+      isActive: location.pathname.includes('/projects'),
+    },
+    { 
+      text: 'Настройки', 
+      icon: <Settings />, 
+      path: '/settings',
+      isActive: location.pathname.includes('/settings'),
+    },
   ];
 
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
+    <Box
+      sx={{
         height: '100%',
-        background: theme.palette.mode === 'dark' 
-          ? 'rgba(22, 22, 37, 0.95)'
-          : 'rgba(255, 255, 255, 0.98)',
-        backdropFilter: 'blur(20px)',
+        display: 'flex',
+        flexDirection: 'column',
+        p: 3,
       }}
     >
-      {/* Logo Section */}
-      <Box sx={{ 
-        p: isMobile ? (isSmallMobile ? 2 : 3) : 3, 
-        pt: isMobile ? (isSmallMobile ? 8 : 10) : 10,
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-          <Box
-            sx={{
-              width: isMobile && isSmallMobile ? 40 : 50,
-              height: isMobile && isSmallMobile ? 40 : 50,
-              borderRadius: '15px',
-              background: theme.palette.mode === 'dark'
-                ? 'linear-gradient(135deg, #00d9ff 0%, #6366f1 50%, #ee00ff 100%)'
-                : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: theme.palette.mode === 'dark'
-                ? '0 8px 32px rgba(99, 102, 241, 0.4)'
-                : '0 4px 16px rgba(99, 102, 241, 0.25)',
-              position: 'relative',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                inset: -1,
-                borderRadius: '15px',
-                padding: '1px',
-                background: theme.palette.mode === 'dark'
-                  ? 'linear-gradient(135deg, #00d9ff 0%, #6366f1 50%, #ee00ff 100%)'
-                  : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                WebkitMaskComposite: 'xor',
-                maskComposite: 'exclude',
-                opacity: 0.5,
-              },
-            }}
-          >
-            <Typography 
-              variant={isMobile && isSmallMobile ? "subtitle1" : "h6"} 
-              sx={{ 
-                color: 'white', 
-                fontWeight: 'bold',
-                fontSize: isMobile && isSmallMobile ? '1rem' : undefined,
-              }}
-            >
-              AI
-            </Typography>
-          </Box>
-          <Typography 
-            variant={isMobile && isSmallMobile ? "subtitle1" : "h6"} 
+      {/* Logo */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mb: 4,
+          p: 1.5,
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(139, 92, 246, 0.1)'
+            : 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)',
+          borderRadius: '12px',
+          border: `1px solid ${theme.palette.mode === 'dark'
+            ? 'rgba(139, 92, 246, 0.2)'
+            : 'rgba(139, 92, 246, 0.15)'
+          }`,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            cursor: 'pointer',
+          }}
+          onClick={() => handleNavigation('/')}
+        >
+          <BrainIcon 
             sx={{ 
-              fontWeight: 300,
-              color: theme.palette.text.primary,
-              letterSpacing: '-0.5px',
-              fontSize: isMobile && isSmallMobile ? '1.1rem' : undefined,
+              fontSize: 32, 
+              color: '#8b5cf6',
+            }} 
+          />
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
             }}
           >
             NeuralChat
           </Typography>
         </Box>
-
-        <Button
-          fullWidth
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleNavigation('/chat/claude')}
-          size={isMobile && isSmallMobile ? "medium" : "large"}
-          sx={{
-            background: theme.palette.mode === 'dark'
-              ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)'
-              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            py: isMobile && isSmallMobile ? 1.2 : 1.5,
-            borderRadius: '25px',
-            fontSize: isMobile && isSmallMobile ? '0.875rem' : '0.9375rem',
-            fontWeight: 500,
-            boxShadow: theme.palette.mode === 'dark'
-              ? '0 8px 32px rgba(124, 58, 237, 0.3)'
-              : '0 4px 16px rgba(102, 126, 234, 0.25)',
-            '&:hover': {
-              background: theme.palette.mode === 'dark'
-                ? 'linear-gradient(135deg, #6d28d9 0%, #db2777 100%)'
-                : 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
-              transform: 'translateY(-2px)',
-              boxShadow: theme.palette.mode === 'dark'
-                ? '0 12px 48px rgba(124, 58, 237, 0.4)'
-                : '0 8px 24px rgba(102, 126, 234, 0.35)',
-            },
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              inset: 0,
-              borderRadius: '25px',
-              background: 'inherit',
-              filter: 'blur(20px)',
-              opacity: 0.4,
-              zIndex: -1,
-            },
-          }}
-        >
-          ✨ {t('chat.newConversation')}
-        </Button>
       </Box>
 
-      {/* Menu Items */}
-      <List sx={{ px: 1, flexGrow: 1 }}>
-        {menuItems.map((item) => (
-          <ListItem key={item.path} disablePadding>
-            <ListItemButton
-              selected={location.pathname === item.path}
-              onClick={() => handleNavigation(item.path)}
-              sx={{
-                borderRadius: '15px',
-                mx: 1,
-                mb: 0.5,
-                py: isMobile && isSmallMobile ? 1 : 1.2,
-                transition: 'all 0.2s ease',
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: '3px',
-                  background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
-                  transform: 'scaleY(0)',
-                  transition: 'transform 0.2s ease',
-                },
-                '&.Mui-selected': {
-                  backgroundColor: theme.palette.mode === 'dark'
-                    ? alpha('#6366f1', 0.15)
-                    : alpha('#6366f1', 0.08),
-                  '&::before': {
-                    transform: 'scaleY(1)',
-                  },
-                  '& .MuiListItemIcon-root': {
-                    color: theme.palette.primary.main,
-                  },
+      {/* New Chat Button */}
+      <Button
+        fullWidth
+        variant="contained"
+        startIcon={<Add />}
+        onClick={() => handleNavigation('/')}
+        sx={{
+          mb: 3,
+          py: 1.75,
+          px: 2.5,
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+          borderRadius: '12px',
+          fontWeight: 500,
+          fontSize: '15px',
+          textTransform: 'none',
+          boxShadow: '0 4px 12px rgba(139, 92, 246, 0.25)',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)',
+            transform: 'translateY(-2px)',
+            boxShadow: '0 6px 20px rgba(139, 92, 246, 0.35)',
+          },
+          transition: 'all 0.3s ease',
+        }}
+      >
+        Новая беседа
+      </Button>
+
+      {/* Navigation Menu */}
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        <List sx={{ p: 0 }}>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} sx={{ p: 0, mb: 0.5 }}>
+              <ListItemButton
+                onClick={() => handleNavigation(item.path)}
+                sx={{
+                  borderRadius: '10px',
+                  py: 1.5,
+                  px: 2,
+                  minHeight: '48px',
+                  background: item.isActive
+                    ? theme.palette.mode === 'dark'
+                      ? 'rgba(139, 92, 246, 0.15)'
+                      : 'linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%)'
+                    : 'transparent',
+                  border: item.isActive
+                    ? `1px solid ${theme.palette.mode === 'dark'
+                      ? 'rgba(139, 92, 246, 0.3)'
+                      : 'rgba(139, 92, 246, 0.2)'
+                    }`
+                    : '1px solid transparent',
+                  color: item.isActive
+                    ? '#8b5cf6'
+                    : theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.7)'
+                      : '#4b5563',
                   '&:hover': {
-                    backgroundColor: theme.palette.mode === 'dark'
-                      ? alpha('#6366f1', 0.2)
-                      : alpha('#6366f1', 0.12),
+                    background: theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.04)',
+                    color: theme.palette.mode === 'dark' ? 'white' : '#1a1a1a',
                   },
-                },
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                },
-              }}
-            >
-              <ListItemIcon sx={{ 
-                minWidth: isMobile && isSmallMobile ? 36 : 40, 
-                color: theme.palette.mode === 'dark' ? '#9ca3af' : '#6b7280',
-                transition: 'color 0.2s ease',
-              }}>
-                {React.cloneElement(item.icon, {
-                  fontSize: isMobile && isSmallMobile ? 'small' : 'medium'
-                })}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.text}
-                primaryTypographyProps={{
-                  fontSize: isMobile && isSmallMobile ? '0.875rem' : '0.9375rem',
-                  fontWeight: location.pathname === item.path ? 500 : 400,
-                }}
-              />
-              {item.badge && (
-                <Chip
-                  label={item.badge}
-                  size="small"
-                  sx={{ 
-                    height: isMobile && isSmallMobile ? 18 : 20, 
-                    fontSize: isMobile && isSmallMobile ? '0.65rem' : '0.7rem',
-                    background: 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
-                    color: 'white',
-                    fontWeight: 600,
-                  }}
-                />
-              )}
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-
-      <Divider sx={{ mx: 2, borderColor: alpha(theme.palette.divider, 0.1) }} />
-
-      {/* Bottom Menu */}
-      <List sx={{ px: 1, pb: 2 }}>
-        {bottomMenuItems.map((item) => (
-          <ListItem key={item.path} disablePadding>
-            <ListItemButton
-              selected={location.pathname === item.path}
-              onClick={() => handleNavigation(item.path)}
-              sx={{
-                borderRadius: '15px',
-                mx: 1,
-                mb: 0.5,
-                py: isMobile && isSmallMobile ? 1 : 1.2,
-                transition: 'all 0.2s ease',
-                '&.Mui-selected': {
-                  backgroundColor: theme.palette.mode === 'dark'
-                    ? alpha('#6366f1', 0.15)
-                    : alpha('#6366f1', 0.08),
-                },
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                },
-              }}
-            >
-              <ListItemIcon sx={{ 
-                minWidth: isMobile && isSmallMobile ? 36 : 40, 
-                color: theme.palette.mode === 'dark' ? '#9ca3af' : '#6b7280' 
-              }}>
-                {React.cloneElement(item.icon, {
-                  fontSize: isMobile && isSmallMobile ? 'small' : 'medium'
-                })}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.text}
-                primaryTypographyProps={{
-                  fontSize: isMobile && isSmallMobile ? '0.875rem' : '0.9375rem',
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-
-      {/* User Plan Info */}
-      {user && user.subscription && (
-        <Box sx={{ p: isMobile && isSmallMobile ? 1.5 : 2 }}>
-          <Box
-            sx={{
-              p: isMobile && isSmallMobile ? 1.5 : 2,
-              borderRadius: '15px',
-              background: theme.palette.mode === 'dark'
-                ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)'
-                : 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '1px',
-                background: 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent)',
-                animation: 'shimmer 3s infinite',
-              },
-              '@keyframes shimmer': {
-                '0%': { transform: 'translateX(-100%)' },
-                '100%': { transform: 'translateX(100%)' },
-              },
-            }}
-          >
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: theme.palette.mode === 'dark' ? '#9ca3af' : '#6b7280',
-                fontSize: isMobile && isSmallMobile ? '0.7rem' : '0.75rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                mb: 0.5,
-              }}
-            >
-              {t('subscription.currentPlan')}
-            </Typography>
-            <Typography 
-              variant={isMobile && isSmallMobile ? "subtitle1" : "h6"} 
-              sx={{ 
-                textTransform: 'capitalize',
-                fontWeight: 600,
-                fontSize: isMobile && isSmallMobile ? '1rem' : undefined,
-                background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              {user.subscription.plan || 'free'}
-            </Typography>
-            {(user.subscription.plan === 'free' || !user.subscription.plan) && (
-              <Button
-                size={isMobile && isSmallMobile ? "small" : "small"}
-                onClick={() => handleNavigation('/subscription')}
-                sx={{ 
-                  mt: 1,
-                  fontSize: isMobile && isSmallMobile ? '0.7rem' : '0.75rem',
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  color: 'white',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                  },
+                  transition: 'all 0.2s ease',
                 }}
               >
-                {t('subscription.upgrade')}
-              </Button>
-            )}
-          </Box>
+                <ListItemIcon
+                  sx={{
+                    minWidth: '32px',
+                    color: 'inherit',
+                    opacity: 0.8,
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontSize: '14px',
+                    fontWeight: item.isActive ? 500 : 400,
+                  }}
+                />
+                {item.badge && (
+                  <Chip
+                    label={item.badge}
+                    size="small"
+                    sx={{
+                      height: '20px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)',
+                      color: 'white',
+                      ml: 'auto',
+                    }}
+                  />
+                )}
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+
+      {/* Bottom Section */}
+      <Box
+        sx={{
+          mt: 'auto',
+          pt: 3,
+          borderTop: `1px solid ${theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.1)'
+            : 'rgba(0, 0, 0, 0.06)'
+          }`,
+        }}
+      >
+        {/* Plan Info */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            p: 2,
+            mb: 2,
+            background: theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.05)'
+              : 'rgba(0, 0, 0, 0.02)',
+            borderRadius: '12px',
+            border: `1px solid ${theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.1)'
+              : 'rgba(0, 0, 0, 0.06)'
+            }`,
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: theme.palette.mode === 'dark'
+                ? 'rgba(255, 255, 255, 0.6)'
+                : '#6b7280',
+            }}
+          >
+            Текущий план
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 500,
+              color: '#8b5cf6',
+            }}
+          >
+            Free
+          </Typography>
         </Box>
-      )}
+
+        {/* Upgrade Link */}
+        <Button
+          fullWidth
+          variant="text"
+          onClick={() => handleNavigation('/subscription')}
+          sx={{
+            py: 1,
+            color: theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.6)'
+              : '#6b7280',
+            fontSize: '13px',
+            textTransform: 'none',
+            '&:hover': {
+              color: '#8b5cf6',
+              background: 'transparent',
+            },
+            transition: 'color 0.2s ease',
+          }}
+        >
+          Обновить план →
+        </Button>
+      </Box>
     </Box>
   );
 };

@@ -198,7 +198,13 @@ const ChatPage: React.FC = () => {
 
   // Десктопная версия
   return (
-    <Box sx={{ display: 'flex', height: '100%' }}>
+    <Box sx={{ 
+      display: 'flex', 
+      height: '100%',
+      maxHeight: '100%',
+      overflow: 'hidden',
+      position: 'relative',
+    }}>
       <ChatList
         type={type!}
         selectedChatId={selectedChatId}

@@ -18,12 +18,20 @@ const subscriptionSchema = new mongoose.Schema({
   },
   plan: {
     type: String,
-    enum: ['free', 'pro', 'business'],
+    enum: ['free', 'pro', 'premium', 'business'],
     required: true
   },
   status: {
     type: String,
     required: true
+  },
+  amount: {
+    type: Number,
+    default: 0
+  },
+  currency: {
+    type: String,
+    default: 'USD'
   },
   priceId: String,
   productId: String,
@@ -40,6 +48,15 @@ const subscriptionSchema = new mongoose.Schema({
   currentPeriodEnd: Date,
   canceledAt: Date,
   cancelReason: String,
+  refundedAmount: {
+    type: Number,
+    default: 0
+  },
+  refundedAt: Date,
+  cancelAtPeriodEnd: {
+    type: Boolean,
+    default: false
+  },
   metadata: Object,
   history: [{
     action: String,

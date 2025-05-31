@@ -2,33 +2,115 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const { S3Client } = require('@aws-sdk/client-s3');
 const path = require('path');
+const fs = require('fs');
 const { apiResponse } = require('../utils/apiResponse');
 
-// Configure AWS S3
-const s3 = new S3Client({
-  region: process.env.S3_REGION || process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY
+// Ensure uploads directory exists for development
+const uploadsDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('📁 Created uploads directory:', uploadsDir);
+}
+
+// Configure AWS S3 (only if credentials are provided)
+let s3 = null;
+let s3Available = false;
+
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_S3_BUCKET) {
+  try {
+    s3 = new S3Client({
+      region: process.env.AWS_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    });
+    s3Available = true;
+    console.log('☁️ AWS S3 configured for file storage');
+  } catch (error) {
+    console.warn('⚠️ AWS S3 configuration failed, falling back to local storage:', error.message);
   }
-});
+} else {
+  console.log('📁 Using local file storage (AWS credentials not provided)');
+}
 
 // Allowed file types
 const allowedMimeTypes = {
-  images: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
-  documents: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-  text: ['text/plain', 'text/markdown', 'text/csv', 'application/json', 'application/xml'],
-  code: ['text/javascript', 'text/typescript', 'text/python', 'text/html', 'text/css'],
-  archives: ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed']
+  images: [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 
+    'image/svg+xml', 'image/bmp', 'image/tiff', 'image/ico'
+  ],
+  documents: [
+    'application/pdf', 
+    'application/msword', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/rtf'
+  ],
+  text: [
+    'text/plain', 'text/markdown', 'text/csv', 'text/tab-separated-values',
+    'application/json', 'application/xml', 'text/xml',
+    'text/html', 'text/css', 'text/javascript', 'application/javascript',
+    'text/typescript', 'application/typescript'
+  ],
+  code: [
+    'text/javascript', 'application/javascript',
+    'text/typescript', 'application/typescript', 
+    'text/python', 'application/x-python-code',
+    'text/html', 'text/css', 'text/scss', 'text/sass', 'text/less',
+    'application/x-php', 'text/x-php',
+    'text/x-java-source', 'text/x-c', 'text/x-c++', 'text/x-csharp',
+    'application/x-ruby', 'text/x-ruby',
+    'application/x-go', 'text/x-go',
+    'application/x-rust', 'text/x-rust',
+    'text/x-sql', 'application/sql'
+  ],
+  archives: [
+    'application/zip', 'application/x-zip-compressed',
+    'application/x-rar-compressed', 'application/x-rar',
+    'application/x-7z-compressed',
+    'application/x-tar', 'application/gzip'
+  ],
+  other: [
+    'application/octet-stream', // Для файлов без расширения
+    'text/x-readme', // README файлы
+    'application/x-yaml', 'text/yaml', 'text/x-yaml' // YAML файлы
+  ]
 };
 
 // File filter
-const fileFilter = (allowedTypes = [...allowedMimeTypes.images, ...allowedMimeTypes.documents, ...allowedMimeTypes.text]) => {
+const fileFilter = (allowedTypes = [
+  ...allowedMimeTypes.images, 
+  ...allowedMimeTypes.documents, 
+  ...allowedMimeTypes.text,
+  ...allowedMimeTypes.code,
+  ...allowedMimeTypes.archives,
+  ...allowedMimeTypes.other
+]) => {
   return (req, file, cb) => {
+    console.log('🔍 File filter check:', {
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      allowed: allowedTypes.includes(file.mimetype)
+    });
+    
+    // Специальная обработка для файлов без расширения или с неопределенным MIME типом
+    const filename = file.originalname.toLowerCase();
+    const isReadmeFile = filename.includes('readme') || filename === 'readme';
+    const isConfigFile = filename.includes('config') || filename.includes('.env') || filename.includes('dockerfile');
+    const isCodeFile = /\.(js|ts|jsx|tsx|py|java|cpp|c|h|php|rb|go|rs|sql|html|css|scss|sass|less|json|xml|yaml|yml|md|txt)$/i.test(filename);
+    
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
+    } else if (isReadmeFile || isConfigFile || isCodeFile || file.mimetype === 'application/octet-stream') {
+      // Разрешаем файлы по расширению, даже если MIME тип неопределен
+      console.log('✅ File allowed by extension/name:', filename);
+      cb(null, true);
     } else {
-      cb(new Error(`File type not allowed. Allowed types: ${allowedTypes.join(', ')}`), false);
+      cb(new Error(`File type not allowed: ${file.mimetype}. Allowed types: ${allowedTypes.join(', ')}`), false);
     }
   };
 };
@@ -41,9 +123,9 @@ const fileSizeLimits = {
 };
 
 // S3 storage configuration
-const s3Storage = multerS3({
+const s3Storage = s3Available ? multerS3({
   s3: s3,
-  bucket: process.env.S3_BUCKET || process.env.AWS_S3_BUCKET,
+  bucket: process.env.AWS_S3_BUCKET,
   acl: 'private',
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
@@ -61,12 +143,13 @@ const s3Storage = multerS3({
       uploadedBy: req.user._id.toString()
     });
   }
-});
+}) : null;
 
 // Local storage configuration (for development)
 const localStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    const uploadDir = path.join(__dirname, '../../uploads');
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const userId = req.user._id.toString();
@@ -81,13 +164,16 @@ const localStorage = multer.diskStorage({
 // Create multer instance
 const createUploader = (options = {}) => {
   const {
-    storage = process.env.NODE_ENV === 'production' ? s3Storage : localStorage,
+    storage = (process.env.NODE_ENV === 'production' && s3Available) ? s3Storage : localStorage,
     fileSize = fileSizeLimits.default,
     allowedTypes = [...allowedMimeTypes.images, ...allowedMimeTypes.documents, ...allowedMimeTypes.text]
   } = options;
 
+  // Fallback to localStorage if S3 storage is not available
+  const finalStorage = storage || localStorage;
+
   return multer({
-    storage,
+    storage: finalStorage,
     limits: {
       fileSize
     },

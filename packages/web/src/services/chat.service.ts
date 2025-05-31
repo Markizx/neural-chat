@@ -108,9 +108,31 @@ class ChatService {
     content: string,
     attachments?: any[]
   ): Promise<{ userMessage: Message; assistantMessage?: Message }> {
+    // Конвертируем File объекты в base64
+    const processedAttachments = await Promise.all(
+      (attachments || []).map(async (file) => {
+        if (file instanceof File) {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              resolve({
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                data: reader.result as string,
+                mimeType: file.type
+              });
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+        return file;
+      })
+    );
+
     const response = await apiService.post<{ userMessage: Message; assistantMessage?: Message }>(
       `/messages/chats/${chatId}/messages`,
-      { content, attachments }
+      { content, attachments: processedAttachments }
     );
     if (!response.success) {
       throw new Error(response.error?.message || 'Failed to send message');

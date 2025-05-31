@@ -11,9 +11,9 @@ import {
   Divider,
   CircularProgress,
 } from '@mui/material';
-import { Google as GoogleIcon } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../hooks/useAuth';
+import GoogleSignIn from './GoogleSignIn';
 
 interface LoginForm {
   email: string;
@@ -44,8 +44,12 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // console.log('Google login');
+  const handleGoogleSuccess = () => {
+    // Успешный Google Sign-In - пользователь будет перенаправлен AuthContext
+  };
+
+  const handleGoogleError = (error: string) => {
+    setError(error);
   };
 
   return (
@@ -147,16 +151,11 @@ const Login: React.FC = () => {
         </Typography>
       </Divider>
 
-      <Button
-        fullWidth
-        variant="outlined"
-        size="large"
-        startIcon={<GoogleIcon />}
-        onClick={handleGoogleLogin}
-        sx={{ py: 1.5 }}
-      >
-        Continue with Google
-      </Button>
+      <GoogleSignIn
+        onSuccess={handleGoogleSuccess}
+        onError={handleGoogleError}
+        disabled={loading}
+      />
 
       <Box sx={{ mt: 3, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">

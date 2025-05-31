@@ -6,6 +6,8 @@ const grokService = require('../services/grok.service');
 const brainstormService = require('../services/brainstorm.service');
 const { apiResponse } = require('../utils/apiResponse');
 const { validationResult } = require('express-validator');
+const User = require('../models/user.model');
+const mongoose = require('mongoose');
 
 // Helper functions
 async function checkUsageLimits(userId) {
@@ -79,6 +81,17 @@ exports.sendMessage = async (req, res, next) => {
 
     // Debug: проверяем req.user
     console.log('req.user:', req.user ? { id: req.user._id, email: req.user.email } : 'undefined');
+    
+    // Debug: проверяем attachments
+    console.log('📎 Attachments received:', {
+      count: attachments ? attachments.length : 0,
+      attachments: attachments ? attachments.map(att => ({
+        name: att.name,
+        type: att.type || att.mimeType,
+        size: att.size,
+        hasData: !!att.data
+      })) : []
+    });
 
     // Validate required fields
     if (!chatId || !content) {
@@ -122,121 +135,16 @@ exports.sendMessage = async (req, res, next) => {
     chat.lastActivity = new Date();
     await chat.save();
 
-    // Get chat history for context
-    const history = await Message.find({ chatId })
-      .sort({ createdAt: 1 })
-      .limit(50);
-    
-    // Prepare messages for AI
-    const messages = history.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
+    // Отправляем пользовательское сообщение немедленно
+    res.json({
+      success: true,
+      userMessage,
+      message: 'Message sent, AI response is being generated'
+    });
 
-    let aiResponse;
-    
-    try {
-      switch (chat.type) {
-        case 'claude':
-          aiResponse = await claudeService.createMessage(messages, {
-            model: chat.model || 'claude-3.5-sonnet',
-            maxTokens: 4000
-          });
-          break;
-          
-        case 'grok':
-          aiResponse = await grokService.createMessage(messages, {
-            model: chat.model || 'grok-3',
-            maxTokens: 4000
-          });
-          break;
-          
-        case 'brainstorm':
-          aiResponse = await brainstormService.generateIdeas(content, {
-            context: messages.slice(-5) // Last 5 messages for context
-          });
-          break;
-          
-        default:
-          return res.status(400).json({ error: 'Invalid chat type' });
-      }
+    // Генерируем ответ AI в фоне с streaming
+    generateAIResponseWithStreaming(chatId, req.user._id, chat, req.io);
 
-      if (!aiResponse || !aiResponse.content) {
-        throw new Error('Empty response from AI service');
-      }
-
-      // Create assistant message
-      const assistantMessage = new Message({
-        chatId,
-        content: aiResponse.content,
-        role: 'assistant',
-        userId: req.user._id,
-        metadata: {
-          model: chat.model,
-          tokens: aiResponse.usage || {},
-          processingTime: aiResponse.processingTime
-        }
-      });
-
-      // Дополнительная проверка перед сохранением
-      if (!assistantMessage.userId) {
-        console.error('Assistant message missing userId:', {
-          chatId,
-          userId: req.user._id,
-          userExists: !!req.user
-        });
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to create assistant message - missing user ID'
-        });
-      }
-
-      await assistantMessage.save();
-
-      // Update usage tracking
-      await updateUsageTracking(req.user._id, {
-        tokensUsed: aiResponse.usage?.totalTokens || 0,
-        requestType: chat.type
-      });
-
-      // Emit real-time update if WebSocket is available
-      if (req.io) {
-        req.io.to(`chat_${chatId}`).emit('new_message', {
-          message: assistantMessage,
-          chatId
-        });
-      }
-
-      res.json({
-        success: true,
-        userMessage,
-        assistantMessage,
-        usage: aiResponse.usage
-      });
-
-    } catch (aiError) {
-      console.error('AI service error:', aiError);
-      
-      // Return a user-friendly error message
-      let errorMessage = 'Failed to get AI response';
-      
-      if (aiError.message) {
-        if (aiError.message.includes('rate limit') || aiError.message.includes('quota')) {
-          errorMessage = 'AI service rate limit exceeded. Please try again later.';
-        } else if (aiError.message.includes('authentication') || aiError.message.includes('API key')) {
-          errorMessage = 'AI service authentication failed. Please contact support.';
-        } else if (aiError.message.includes('timeout')) {
-          errorMessage = 'AI service timeout. Please try again.';
-        } else {
-          errorMessage = aiError.message;
-        }
-      }
-      
-      return res.status(500).json({
-        success: false,
-        error: errorMessage
-      });
-    }
   } catch (error) {
     console.error('Send message error:', error);
     
@@ -251,6 +159,262 @@ exports.sendMessage = async (req, res, next) => {
     });
   }
 };
+
+// Функция для генерации AI ответа с streaming
+async function generateAIResponseWithStreaming(chatId, userId, chat, io) {
+  console.log('🤖 Starting AI response generation:', { chatId, userId, chatType: chat.type });
+  
+  try {
+    // Get chat history for context
+    const history = await Message.find({ chatId })
+      .sort({ createdAt: 1 })
+      .limit(50);
+    
+    console.log('📚 Chat history loaded:', { messageCount: history.length });
+    
+    // Debug: проверяем attachments в истории
+    const attachmentDebug = history.map(msg => ({
+      messageId: msg._id,
+      hasAttachments: !!(msg.attachments && msg.attachments.length > 0),
+      attachmentCount: msg.attachments?.length || 0,
+      attachmentTypes: msg.attachments?.map(att => att.type) || [],
+      attachmentDataPresent: msg.attachments?.map(att => !!att.data) || []
+    })).filter(debug => debug.hasAttachments);
+    
+    if (attachmentDebug.length > 0) {
+      console.log('📎 Attachments in history:', attachmentDebug);
+    }
+    
+    // Prepare messages for AI
+    const messages = history.map(msg => {
+      const processedAttachments = (msg.attachments || []).map(att => {
+        const hasData = !!(att.data);
+        console.log(`📁 Processing attachment: ${att.name}, hasData: ${hasData}, type: ${att.type}`);
+        return {
+          name: att.name,
+          type: att.type,
+          mimeType: att.mimeType,
+          size: att.size,
+          data: att.data, // Сохраняем данные файла
+          url: att.url
+        };
+      });
+      
+      return {
+        role: msg.role,
+        content: msg.content,
+        attachments: processedAttachments
+      };
+    });
+
+    // Получаем персональный системный промпт пользователя
+    const user = await User.findById(userId);
+    const userSystemPrompt = chat.type === 'claude' 
+      ? user?.settings?.systemPrompts?.claude 
+      : user?.settings?.systemPrompts?.grok;
+
+    // Получаем кастомную роль ИИ из настроек пользователя
+    const aiRole = chat.type === 'claude'
+      ? user?.settings?.aiRoles?.claude || 'Assistant'
+      : user?.settings?.aiRoles?.grok || 'Assistant';
+
+    console.log('👤 User system prompt:', { 
+      hasPrompt: !!userSystemPrompt, 
+      promptLength: userSystemPrompt?.length || 0 
+    });
+
+    console.log('🎭 AI Role:', { role: aiRole, chatType: chat.type });
+
+    // Создаем временный ID для сообщения
+    const tempMessageId = new mongoose.Types.ObjectId().toString();
+
+    // Отправляем начало streaming
+    if (io) {
+      console.log('🔄 Emitting streamStart event');
+      io.to(`chat:${chatId}`).emit('message:streamStart', {
+        chatId,
+        messageId: tempMessageId,
+        model: chat.model || chat.type
+      });
+    } else {
+      console.log('❌ No io object available for streaming');
+    }
+
+    let fullContent = '';
+    let aiResponse;
+
+    try {
+      console.log('🎯 Calling AI service:', { type: chat.type, model: chat.model });
+      
+      // Debug: логируем финальные сообщения перед отправкой в AI
+      console.log('📨 Messages to be sent to AI:', {
+        count: messages.length,
+        hasAttachments: messages.some(m => m.attachments && m.attachments.length > 0),
+        attachmentDetails: messages.flatMap(m => 
+          (m.attachments || []).map(att => ({
+            name: att.name,
+            type: att.type,
+            mimeType: att.mimeType,
+            size: att.size,
+            hasData: !!att.data,
+            dataPreview: att.data ? att.data.substring(0, 50) + '...' : 'no data'
+          }))
+        )
+      });
+      
+      switch (chat.type) {
+        case 'claude':
+          // Используем Claude streaming
+          if (claudeService.createStreamingMessage) {
+            console.log('📡 Using Claude streaming API');
+            const stream = await claudeService.createStreamingMessage(messages, {
+              model: chat.model || 'claude-3.5-sonnet',
+              maxTokens: 4000,
+              systemPrompt: userSystemPrompt || undefined,
+              temperature: 0.7
+            });
+
+            // Обрабатываем поток
+            for await (const chunk of stream) {
+              if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
+                fullContent += chunk.delta.text;
+                
+                // Отправляем частичный контент через WebSocket
+                if (io) {
+                  io.to(`chat:${chatId}`).emit('message:streamChunk', {
+                    chatId,
+                    messageId: tempMessageId,
+                    content: chunk.delta.text
+                  });
+                }
+              }
+            }
+
+            aiResponse = {
+              content: fullContent,
+              usage: { totalTokens: Math.ceil(fullContent.length / 4) } // Примерная оценка
+            };
+          } else {
+            console.log('📞 Using Claude regular API (fallback)');
+            // Fallback к обычному API
+            aiResponse = await claudeService.createMessage(messages, {
+              model: chat.model || 'claude-3.5-sonnet',
+              maxTokens: 4000,
+              systemPrompt: userSystemPrompt || undefined
+            });
+            fullContent = aiResponse.content;
+
+            // Эмулируем streaming для единообразия UX
+            await simulateStreaming(fullContent, tempMessageId, chatId, io);
+          }
+          break;
+          
+        case 'grok':
+          console.log('🚀 Using Grok API');
+          // Grok пока не поддерживает streaming, используем обычный вызов
+          aiResponse = await grokService.createMessage(messages, {
+            model: chat.model || 'grok-3',
+            maxTokens: 4000,
+            systemPrompt: userSystemPrompt || undefined
+          });
+          fullContent = aiResponse.content;
+
+          // Эмулируем streaming для единообразия UX
+          await simulateStreaming(fullContent, tempMessageId, chatId, io);
+          break;
+          
+        default:
+          throw new Error('Invalid chat type');
+      }
+
+      console.log('✅ AI response received:', { 
+        contentLength: aiResponse?.content?.length || 0,
+        hasUsage: !!aiResponse?.usage 
+      });
+
+      if (!aiResponse || !aiResponse.content) {
+        throw new Error('Empty response from AI service');
+      }
+
+      // Create assistant message
+      const assistantMessage = new Message({
+        chatId,
+        content: aiResponse.content,
+        role: 'assistant',
+        userId: userId,
+        model: aiRole,
+        metadata: {
+          originalModel: chat.model,
+          customRole: aiRole,
+          tokens: aiResponse.usage || {},
+          processingTime: aiResponse.processingTime
+        }
+      });
+
+      await assistantMessage.save();
+      console.log('💾 Assistant message saved:', assistantMessage._id);
+
+      // Update usage tracking
+      await updateUsageTracking(userId, {
+        tokensUsed: aiResponse.usage?.totalTokens || 0,
+        requestType: chat.type
+      });
+
+      // Отправляем завершение streaming
+      if (io) {
+        console.log('🏁 Emitting streamComplete event');
+        io.to(`chat:${chatId}`).emit('message:streamComplete', {
+          chatId,
+          messageId: tempMessageId,
+          message: assistantMessage
+        });
+      }
+
+    } catch (aiError) {
+      console.error('❌ AI service error:', aiError);
+      
+      // Отправляем ошибку через WebSocket
+      if (io) {
+        io.to(`chat:${chatId}`).emit('message:streamError', {
+          chatId,
+          messageId: tempMessageId,
+          error: aiError.message || 'AI service error'
+        });
+      }
+    }
+
+  } catch (error) {
+    console.error('💥 Error in generateAIResponseWithStreaming:', error);
+    
+    if (io) {
+      io.to(`chat:${chatId}`).emit('message:streamError', {
+        chatId,
+        error: error.message || 'Unknown error'
+      });
+    }
+  }
+}
+
+// Функция для эмуляции streaming (для API без нативной поддержки)
+async function simulateStreaming(content, messageId, chatId, io) {
+  if (!io) return;
+
+  const words = content.split(' ');
+  const chunkSize = 3; // Отправляем по 3 слова за раз
+  
+  for (let i = 0; i < words.length; i += chunkSize) {
+    const chunk = words.slice(i, i + chunkSize).join(' ') + ' ';
+    
+    io.to(`chat:${chatId}`).emit('message:streamChunk', {
+      chatId,
+      messageId,
+      content: chunk
+    });
+    
+    // Небольшая задержка для эмуляции печати
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+}
 
 // Get message by ID
 exports.getMessage = async (req, res, next) => {

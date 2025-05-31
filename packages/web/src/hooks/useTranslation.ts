@@ -9,8 +9,8 @@ export const useTranslation = () => {
 
   // Sync language with user settings
   useEffect(() => {
-    if (user?.settings?.language) {
-      syncLanguageWithUserSettings(user.settings.language);
+    if (user?.settings) {
+      syncLanguageWithUserSettings(user.settings);
     }
   }, [user?.settings?.language]);
 

@@ -1,158 +1,260 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
 import { getSession } from 'next-auth/react';
 
+const API_URL = 'http://localhost:5000/api/v1';
+
+// Debug: Логируем API URL для отладки
+console.log('Admin API URL:', API_URL);
+
+// Создаем axios instance
+const api = axios.create({
+  baseURL: API_URL,
+});
+
+// Interceptor для добавления токена к каждому запросу
+api.interceptors.request.use(async (config) => {
+  if (typeof window !== 'undefined') {
+    const session = await getSession();
+    if (session?.accessToken) {
+      config.headers.Authorization = `Bearer ${session.accessToken}`;
+      console.log('API Request with token:', { 
+        url: config.url,
+        hasToken: true,
+        tokenPreview: session.accessToken.substring(0, 20) + '...'
+      });
+    } else {
+      console.log('API Request without token:', { url: config.url });
+    }
+  }
+  return config;
+});
+
 class AdminApi {
-  private client: AxiosInstance;
-
-  constructor() {
-    this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL + '/api/v1/admin',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    this.client.interceptors.request.use(async (config) => {
-      const session = await getSession();
-      if ((session as any)?.accessToken) {
-        config.headers.Authorization = `Bearer ${(session as any).accessToken}`;
-      }
-      return config;
-    });
-
-    this.client.interceptors.response.use(
-      (response) => response.data,
-      (error) => {
-        if (error.response?.status === 401) {
-          window.location.href = '/auth/login';
-        }
-        return Promise.reject(error);
-      }
-    );
-  }
-
-  // Auth
   async login(email: string, password: string) {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
-      { email, password }
-    );
-    
-    // API возвращает структуру: { success: true, data: { user, accessToken, refreshToken } }
-    const { user, accessToken } = response.data.data;
-    
-    return {
-      user,
-      token: accessToken
-    };
+    try {
+      console.log('Admin login attempt:', { email, url: `${API_URL}/auth/login` });
+      const response = await api.post('/auth/login', { email, password });
+      console.log('Admin login response:', response.data);
+      
+      // Проверяем успешность ответа
+      if (!response.data || !response.data.success) {
+        throw new Error(response.data?.message || 'Login failed');
+      }
+      
+      // Проверяем, что пользователь имеет роль admin
+      const user = response.data.data?.user || response.data.user;
+      if (!user || user.role !== 'admin') {
+        throw new Error('Access denied: Admin role required');
+      }
+      
+      // Токен будет сохранен в NextAuth сессии, не нужно сохранять в localStorage
+      return response.data;
+    } catch (error: any) {
+      console.error('Admin login error:', error);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
   }
 
-  // Dashboard stats
+  // Dashboard Stats
   async getStats() {
-    return this.client.get('/analytics/overview');
+    const response = await api.get('/admin/stats');
+    return response.data;
   }
 
-  async getRevenue(period: string = 'month') {
-    return this.client.get('/analytics/revenue', { params: { period } });
+  // Users Management
+  async getUsers(params?: { page?: number; limit?: number; search?: string }) {
+    const response = await api.get('/admin/users', { params });
+    return response.data;
   }
 
-  async getUsage(period: string = 'month') {
-    return this.client.get('/analytics/usage', { params: { period } });
+  async getUserById(userId: string) {
+    const response = await api.get(`/admin/users/${userId}`);
+    return response.data;
   }
 
-  // Users
-  async getUsers(params?: any) {
-    return this.client.get('/users', { params });
+  async getUserActivity(userId: string) {
+    const response = await api.get(`/admin/users/${userId}/activity`);
+    return response.data;
   }
 
-  async getUser(id: string) {
-    return this.client.get(`/users/${id}`);
+  async updateUser(userId: string, data: any) {
+    const response = await api.put(`/admin/users/${userId}`, data);
+    return response.data;
   }
 
-  async updateUser(id: string, data: any) {
-    return this.client.put(`/users/${id}`, data);
+  async deleteUser(userId: string) {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
   }
 
-  async suspendUser(id: string) {
-    return this.client.post(`/users/${id}/suspend`);
-  }
-
-  async activateUser(id: string) {
-    return this.client.post(`/users/${id}/activate`);
-  }
-
-  async deleteUser(id: string) {
-    return this.client.delete(`/users/${id}`);
-  }
-  async resetUserPassword(userId: string) {
-  return this.client.post(`/users/${userId}/reset-password`);
-  }
   async exportUsers() {
-    const response = await this.client.get('/users/export', {
+    const response = await api.get('/admin/users/export', {
       responseType: 'blob',
     });
     return response;
   }
 
-  // Subscriptions
-  async getSubscriptions(params?: any) {
-    return this.client.get('/subscriptions', { params });
+  async createUser(data: any) {
+    const response = await api.post('/admin/users', data);
+    return response.data;
   }
 
-  async updateSubscription(id: string, data: any) {
-    return this.client.put(`/subscriptions/${id}`, data);
+  // Chats Management
+  async getChats(params?: { page?: number; limit?: number; type?: string }) {
+    const response = await api.get('/admin/chats', { params });
+    return response.data;
   }
 
-  async cancelSubscription(id: string) {
-    return this.client.post(`/subscriptions/${id}/cancel`);
+  async getChatById(chatId: string) {
+    const response = await api.get(`/admin/chats/${chatId}`);
+    return response.data;
   }
 
-  // Chats
-  async getChats(params?: any) {
-    return this.client.get('/chats', { params });
+  async deleteChat(chatId: string) {
+    const response = await api.delete(`/admin/chats/${chatId}`);
+    return response.data;
   }
 
-  async getChat(id: string) {
-    return this.client.get(`/chats/${id}`);
+  // Analytics
+  async getAnalytics(timeframe: string = '7d') {
+    const response = await api.get('/admin/analytics', {
+      params: { timeframe },
+    });
+    return response.data;
   }
 
-  async deleteChat(id: string) {
-    return this.client.delete(`/chats/${id}`);
+  async getRevenue(period: string = 'month') {
+    const response = await api.get('/admin/analytics/revenue', {
+      params: { period },
+    });
+    return response.data;
   }
 
-  // Content
-  async getContent(page: string) {
-    return this.client.get(`/content/${page}`);
+  async getUsage(type: string = 'distribution') {
+    const response = await api.get('/admin/analytics/usage', {
+      params: { type },
+    });
+    return response.data;
   }
 
-  async updateContent(page: string, content: string) {
-    return this.client.put(`/content/${page}`, { content });
+  async getUsageStats(params?: { startDate?: string; endDate?: string }) {
+    const response = await api.get('/admin/analytics/usage', { params });
+    return response.data;
   }
 
-  // System
+  // Subscriptions Management
+  async getSubscriptions(params?: { page?: number; limit?: number; status?: string }) {
+    const response = await api.get('/admin/subscriptions', { params });
+    return response.data;
+  }
+
+  async getSubscriptionStats() {
+    const response = await api.get('/admin/subscriptions/stats');
+    return response.data;
+  }
+
+  async updateSubscription(subscriptionId: string, data: any) {
+    const response = await api.put(`/admin/subscriptions/${subscriptionId}`, data);
+    return response.data;
+  }
+
+  async cancelSubscription(subscriptionId: string) {
+    const response = await api.post(`/admin/subscriptions/${subscriptionId}/cancel`);
+    return response.data;
+  }
+
+  // System Settings
+  async getSettings() {
+    const response = await api.get('/admin/settings');
+    return response.data;
+  }
+
+  async updateSettings(settings: any) {
+    const response = await api.put('/admin/settings', settings);
+    return response.data;
+  }
+
+  // API Keys Management
+  async getApiKeys() {
+    const response = await api.get('/admin/api-keys');
+    return response.data;
+  }
+
+  async updateApiKey(service: string, apiKey: string) {
+    const response = await api.put(`/admin/api-keys/${service}`, { apiKey });
+    return response.data;
+  }
+
+  // Logs and Monitoring
+  async getLogs(params?: { level?: string; limit?: number }) {
+    const response = await api.get('/admin/logs', { params });
+    return response.data;
+  }
+
+  async getAuditLogs(params?: { limit?: number }) {
+    const response = await api.get('/admin/audit-logs', { params });
+    return response.data;
+  }
+
   async getSystemHealth() {
-    return this.client.get('/system/health');
+    const response = await api.get('/admin/health');
+    return response.data;
   }
 
-  async getSystemLogs(params?: any) {
-    return this.client.get('/system/logs', { params });
+  // User Actions
+  async suspendUser(userId: string) {
+    const response = await api.post(`/admin/users/${userId}/suspend`);
+    return response.data;
   }
 
-  async clearCache() {
-    return this.client.post('/system/cache/clear');
+  async activateUser(userId: string) {
+    const response = await api.post(`/admin/users/${userId}/activate`);
+    return response.data;
   }
 
-  async getConfig() {
-    return this.client.get('/system/config');
+  async resetUserPassword(userId: string) {
+    const response = await api.post(`/admin/users/${userId}/reset-password`);
+    return response.data;
   }
 
-  async updateConfig(config: any) {
-    return this.client.put('/system/config', config);
+  // Plans Management
+  async getPlans() {
+    const response = await api.get('/admin/plans');
+    return response.data;
   }
 
-  // Audit
-  async getAuditLogs(params?: any) {
-    return this.client.get('/audit/logs', { params });
+  async createPlan(data: any) {
+    const response = await api.post('/admin/plans', data);
+    return response.data;
+  }
+
+  async updatePlan(planId: string, data: any) {
+    const response = await api.put(`/admin/plans/${planId}`, data);
+    return response.data;
+  }
+
+  async deletePlan(planId: string) {
+    const response = await api.delete(`/admin/plans/${planId}`);
+    return response.data;
+  }
+
+  // Subscription Actions
+  async changeUserPlan(userId: string, planId: string) {
+    const response = await api.post(`/admin/users/${userId}/change-plan`, { planId });
+    return response.data;
+  }
+
+  async extendSubscription(subscriptionId: string, days: number) {
+    const response = await api.post(`/admin/subscriptions/${subscriptionId}/extend`, { days });
+    return response.data;
+  }
+
+  async refundSubscription(subscriptionId: string, amount?: number) {
+    const response = await api.post(`/admin/subscriptions/${subscriptionId}/refund`, { amount });
+    return response.data;
   }
 }
 

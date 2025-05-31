@@ -144,17 +144,38 @@ exports.updateAvatar = async (req, res, next) => {
   }
 };
 
+// Get user settings
+exports.getSettings = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select('settings');
+
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    res.json(apiResponse(true, user.settings));
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Update settings
 exports.updateSettings = async (req, res, next) => {
   try {
-    const { settings } = req.body;
-
-    if (!settings || typeof settings !== 'object') {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
       return res.status(400).json(apiResponse(false, null, {
-        code: 'INVALID_SETTINGS',
-        message: 'Invalid settings format'
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input',
+        details: errors.array()
       }));
     }
+
+    const updates = req.body;
 
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -164,18 +185,53 @@ exports.updateSettings = async (req, res, next) => {
       }));
     }
 
-    // Merge settings
-    user.settings = {
-      ...user.settings.toObject(),
-      ...settings
-    };
+    // Обновляем только переданные настройки
+    if (updates.theme !== undefined) {
+      user.settings.theme = updates.theme;
+    }
+    
+    if (updates.language !== undefined) {
+      user.settings.language = updates.language;
+    }
+    
+    if (updates.notifications !== undefined) {
+      user.settings.notifications = {
+        ...user.settings.notifications,
+        ...updates.notifications
+      };
+    }
+    
+    if (updates.defaultModel !== undefined) {
+      user.settings.defaultModel = {
+        ...user.settings.defaultModel,
+        ...updates.defaultModel
+      };
+    }
+    
+    if (updates.systemPrompts !== undefined) {
+      user.settings.systemPrompts = {
+        ...user.settings.systemPrompts,
+        ...updates.systemPrompts
+      };
+    }
+    
+    if (updates.aiRoles !== undefined) {
+      user.settings.aiRoles = {
+        ...user.settings.aiRoles,
+        ...updates.aiRoles
+      };
+    }
+    
+    if (updates.brainstormPrompts !== undefined) {
+      user.settings.brainstormPrompts = {
+        ...user.settings.brainstormPrompts,
+        ...updates.brainstormPrompts
+      };
+    }
 
     await user.save();
 
-    res.json(apiResponse(true, {
-      settings: user.settings,
-      message: 'Settings updated successfully'
-    }));
+    res.json(apiResponse(true, user.settings));
   } catch (error) {
     next(error);
   }
@@ -310,6 +366,170 @@ exports.exportData = async (req, res, next) => {
     );
 
     res.json(exportData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get user projects
+exports.getProjects = async (req, res, next) => {
+  try {
+    const projects = await Project.find({ userId: req.user._id })
+      .select('name description filesCount createdAt updatedAt')
+      .sort('-updatedAt');
+
+    res.json(apiResponse(true, { projects }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Upload avatar
+exports.uploadAvatar = async (req, res, next) => {
+  try {
+    // TODO: Implement file upload logic
+    res.json(apiResponse(true, { message: 'Avatar upload not implemented yet' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete avatar
+exports.deleteAvatar = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    user.avatar = null;
+    await user.save();
+
+    res.json(apiResponse(true, { message: 'Avatar deleted successfully' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Reset password
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json(apiResponse(false, null, {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input',
+        details: errors.array()
+      }));
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    const isPasswordValid = await user.comparePassword(currentPassword);
+    if (!isPasswordValid) {
+      return res.status(401).json(apiResponse(false, null, {
+        code: 'INVALID_PASSWORD',
+        message: 'Current password is incorrect'
+      }));
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json(apiResponse(true, { message: 'Password updated successfully' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Enable 2FA
+exports.enable2FA = async (req, res, next) => {
+  try {
+    // TODO: Implement 2FA logic
+    res.json(apiResponse(true, { message: '2FA not implemented yet' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Disable 2FA
+exports.disable2FA = async (req, res, next) => {
+  try {
+    // TODO: Implement 2FA logic
+    res.json(apiResponse(true, { message: '2FA not implemented yet' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Verify 2FA
+exports.verify2FA = async (req, res, next) => {
+  try {
+    // TODO: Implement 2FA logic
+    res.json(apiResponse(true, { message: '2FA not implemented yet' }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete account
+exports.deleteAccount = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json(apiResponse(false, null, {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input',
+        details: errors.array()
+      }));
+    }
+
+    const { password, confirmation } = req.body;
+
+    if (confirmation !== 'DELETE') {
+      return res.status(400).json(apiResponse(false, null, {
+        code: 'INVALID_CONFIRMATION',
+        message: 'Please type DELETE to confirm'
+      }));
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json(apiResponse(false, null, {
+        code: 'INVALID_PASSWORD',
+        message: 'Invalid password'
+      }));
+    }
+
+    // Delete all user data
+    await Promise.all([
+      Chat.deleteMany({ userId: user._id }),
+      Message.deleteMany({ userId: user._id }),
+      Project.deleteMany({ userId: user._id })
+    ]);
+
+    await user.deleteOne();
+
+    res.json(apiResponse(true, { message: 'Account deleted successfully' }));
   } catch (error) {
     next(error);
   }

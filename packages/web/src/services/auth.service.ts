@@ -101,6 +101,11 @@ class AuthService {
 
     return response.data;
   }
+
+  // Псевдоним для Google Login
+  async googleLogin(idToken: string): Promise<LoginResponse> {
+    return this.googleAuth(idToken);
+  }
 }
 
 export const authService = new AuthService();

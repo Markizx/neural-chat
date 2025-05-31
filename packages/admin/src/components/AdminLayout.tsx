@@ -27,6 +27,7 @@ import {
   Settings,
   Logout,
   Person,
+  Star,
 } from '@mui/icons-material';
 import { signOut, useSession } from 'next-auth/react';
 
@@ -36,6 +37,7 @@ const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
   { text: 'Users', icon: <People />, path: '/users' },
   { text: 'Subscriptions', icon: <CreditCard />, path: '/subscriptions' },
+  { text: 'Plans', icon: <Star />, path: '/plans' },
   { text: 'Chats', icon: <Message />, path: '/chats' },
   { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
   { text: 'Settings', icon: <Settings />, path: '/settings' },

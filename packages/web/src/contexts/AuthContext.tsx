@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { storageService } from '../services/storage.service';
+import { syncLanguageWithUserSettings } from '../i18n';
 
 interface User {
   _id: string;
@@ -32,6 +33,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
@@ -80,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       setUser(normalizedUser);
+      syncLanguageWithUserSettings(normalizedUser.settings);
     } catch (error) {
       console.error('Auth check failed:', error);
       storageService.clearTokens();
@@ -114,6 +117,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(normalizedUser);
       storageService.setTokens(response.accessToken, response.refreshToken);
+      syncLanguageWithUserSettings(normalizedUser.settings);
+      navigate('/');
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const googleLogin = async (idToken: string) => {
+    try {
+      const response = await authService.googleLogin(idToken);
+      
+      // Нормализуем данные пользователя
+      const normalizedUser: User = {
+        _id: response.user._id || response.user.id || '',
+        email: response.user.email || '',
+        name: response.user.name || '',
+        avatar: response.user.avatar,
+        subscription: {
+          plan: response.user.subscription?.plan || 'free',
+          status: response.user.subscription?.status || 'active',
+        },
+        usage: {
+          dailyMessages: response.user.usage?.dailyMessages || 0,
+          totalMessages: response.user.usage?.totalMessages || 0,
+        },
+        settings: response.user.settings || {},
+        security: response.user.security || {},
+        metadata: response.user.metadata || {},
+        createdAt: response.user.createdAt,
+      };
+      
+      setUser(normalizedUser);
+      storageService.setTokens(response.accessToken, response.refreshToken);
+      syncLanguageWithUserSettings(normalizedUser.settings);
       navigate('/');
     } catch (error) {
       throw error;
@@ -146,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(normalizedUser);
       storageService.setTokens(response.accessToken, response.refreshToken);
+      syncLanguageWithUserSettings(normalizedUser.settings);
       navigate('/');
     } catch (error) {
       throw error;
@@ -191,6 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     loading,
     login,
+    googleLogin,
     register,
     logout,
     updateUser,

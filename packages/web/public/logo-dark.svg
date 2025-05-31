@@ -1,0 +1,75 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="brainGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#a78bfa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f472b6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradientDark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f9fafb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d1d5db;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glowDark">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Main brain/neural network icon -->
+  <g transform="translate(5, 5)">
+    <!-- Outer circle with gradient -->
+    <circle cx="25" cy="25" r="23" fill="url(#brainGradientDark)" opacity="0.2"/>
+    <circle cx="25" cy="25" r="20" fill="none" stroke="url(#brainGradientDark)" stroke-width="2"/>
+    
+    <!-- Neural network nodes -->
+    <circle cx="15" cy="15" r="3" fill="url(#brainGradientDark)" filter="url(#glowDark)"/>
+    <circle cx="35" cy="15" r="3" fill="url(#brainGradientDark)" filter="url(#glowDark)"/>
+    <circle cx="25" cy="25" r="4" fill="url(#brainGradientDark)" filter="url(#glowDark)"/>
+    <circle cx="15" cy="35" r="3" fill="url(#brainGradientDark)" filter="url(#glowDark)"/>
+    <circle cx="35" cy="35" r="3" fill="url(#brainGradientDark)" filter="url(#glowDark)"/>
+    
+    <!-- Neural connections -->
+    <path d="M15 15 L25 25 L35 15" stroke="url(#brainGradientDark)" stroke-width="2" fill="none" opacity="0.8"/>
+    <path d="M15 35 L25 25 L35 35" stroke="url(#brainGradientDark)" stroke-width="2" fill="none" opacity="0.8"/>
+    <path d="M15 15 L15 35" stroke="url(#brainGradientDark)" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M35 15 L35 35" stroke="url(#brainGradientDark)" stroke-width="1.5" fill="none" opacity="0.6"/>
+    
+    <!-- Chat bubble overlay -->
+    <path d="M35 8 Q42 8 42 15 Q42 22 35 22 L30 22 L32 26 L28 22 Q21 22 21 15 Q21 8 28 8 Z" 
+          fill="url(#brainGradientDark)" opacity="0.9"/>
+    <circle cx="26" cy="15" r="1.5" fill="#1f2937"/>
+    <circle cx="31" cy="15" r="1.5" fill="#1f2937"/>
+    <circle cx="36" cy="15" r="1.5" fill="#1f2937"/>
+  </g>
+  
+  <!-- Text -->
+  <g transform="translate(60, 0)">
+    <!-- Neural -->
+    <text x="0" y="25" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" 
+          font-size="18" font-weight="700" fill="url(#textGradientDark)">Neural</text>
+    
+    <!-- Chat -->
+    <text x="0" y="45" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" 
+          font-size="18" font-weight="400" fill="url(#textGradientDark)">Chat</text>
+    
+    <!-- Subtitle -->
+    <text x="80" y="35" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" 
+          font-size="10" font-weight="300" fill="#9ca3af">AI Assistant</text>
+  </g>
+  
+  <!-- Decorative elements -->
+  <g opacity="0.4">
+    <circle cx="170" cy="15" r="2" fill="url(#brainGradientDark)">
+      <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="180" cy="25" r="1.5" fill="url(#brainGradientDark)">
+      <animate attributeName="opacity" values="0.9;0.4;0.9" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="175" cy="35" r="1" fill="url(#brainGradientDark)">
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg> 

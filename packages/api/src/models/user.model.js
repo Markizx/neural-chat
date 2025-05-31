@@ -61,62 +61,68 @@ const userSchema = new mongoose.Schema({
     trialEnd: Date
   },
   usage: {
-    dailyMessages: {
-      type: Number,
-      default: 0
-    },
-    resetDate: Date,
-    totalMessages: {
-      type: Number,
-      default: 0
-    },
-    totalTokens: {
-      type: Number,
-      default: 0
-    }
+    totalMessages: { type: Number, default: 0 },
+    totalTokens: { type: Number, default: 0 },
+    dailyTokens: { type: Number, default: 0 },
+    dailyMessages: { type: Number, default: 0 },
+    lastResetDate: { type: Date, default: Date.now },
+    monthlyTokens: { type: Number, default: 0 }
   },
   settings: {
-    theme: {
-      type: String,
-      enum: ['light', 'dark', 'system'],
-      default: 'system'
-    },
-    language: {
-      type: String,
-      enum: ['en', 'ru', 'es', 'fr', 'de', 'zh', 'ja'],
-      default: 'en'
+    theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
+    language: { type: String, default: 'en' },
+    notifications: {
+      email: { type: Boolean, default: true },
+      push: { type: Boolean, default: false }
     },
     defaultModel: {
-      type: String,
-      default: 'claude-4-sonnet'
+      claude: { type: String, default: 'claude-3.7-sonnet' },
+      grok: { type: String, default: 'grok-3' }
+    },
+    // Персональные системные промпты
+    systemPrompts: {
+      claude: {
+        type: String,
+        default: '',
+        maxlength: 2000
+      },
+      grok: {
+        type: String,
+        default: '',
+        maxlength: 2000
+      }
+    },
+    // Настройки ролей для ИИ
+    aiRoles: {
+      claude: {
+        type: String,
+        default: 'Assistant',
+        maxlength: 50
+      },
+      grok: {
+        type: String,
+        default: 'Assistant',
+        maxlength: 50
+      }
+    },
+    // Настройки для Brainstorm
+    brainstormPrompts: {
+      claude: {
+        type: String,
+        default: '',
+        maxlength: 2000
+      },
+      grok: {
+        type: String,
+        default: '',
+        maxlength: 2000
+      }
     },
     fontSize: {
       type: Number,
       default: 14,
       min: 12,
       max: 20
-    },
-    notifications: {
-      email: {
-        type: Boolean,
-        default: true
-      },
-      push: {
-        type: Boolean,
-        default: true
-      },
-      chatMessages: {
-        type: Boolean,
-        default: true
-      },
-      brainstormUpdates: {
-        type: Boolean,
-        default: true
-      },
-      marketing: {
-        type: Boolean,
-        default: false
-      }
     }
   },
   devices: [{
@@ -144,8 +150,16 @@ const userSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'suspended', 'deleted'],
+    enum: ['active', 'suspended', 'deleted', 'banned', 'inactive'],
     default: 'active'
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now
+  },
+  deletedAt: {
+    type: Date,
+    default: null
   },
   metadata: {
     lastLogin: Date,
@@ -164,7 +178,11 @@ const userSchema = new mongoose.Schema({
       medium: String,
       campaign: String
     }
-  }
+  },
+  projects: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Project'
+  }]
 }, {
   timestamps: true
 });
