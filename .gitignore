@@ -11,6 +11,13 @@ dist/
 packages/*/build/
 packages/*/dist/
 
+# Next.js
+.next/
+*/.next/
+packages/*/.next/
+next-env.d.ts
+packages/*/next-env.d.ts
+
 # Environment files
 .env
 .env.local
