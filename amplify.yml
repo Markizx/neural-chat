@@ -7,7 +7,7 @@ applications:
             # Install dependencies with dev dependencies for build tools
             - npm ci --legacy-peer-deps --production=false
             # Install dependencies for all workspaces
-            - npx lerna exec --parallel -- npm install
+            - npm run bootstrap
             
             # Build shared packages first
             - npm run build --workspace=@neuralchat/shared
