@@ -68,7 +68,7 @@
     "install:packages": "npm install",
     "check:env": "node scripts/check-env.js",
     "setup:env": "node scripts/setup-env.js",
-    "bootstrap": "npx lerna exec npm install",
+    "bootstrap": "npx lerna exec --parallel -- npm install",
     "version": "lerna version",
     "publish": "lerna publish"
   },
