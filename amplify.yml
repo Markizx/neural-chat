@@ -6,8 +6,8 @@ applications:
           commands:
             # Install dependencies with dev dependencies for build tools
             - npm ci --legacy-peer-deps --production=false
-            # Install dependencies for all workspaces using lerna
-            - npx lerna bootstrap --npm-client=npm --hoist
+            # Install dependencies for all workspaces
+            - npm install --workspaces --if-present
             
             # Build shared packages first
             - npm run build --workspace=@neuralchat/shared
