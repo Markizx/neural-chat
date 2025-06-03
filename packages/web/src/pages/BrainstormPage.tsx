@@ -38,7 +38,7 @@ const BrainstormPage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [format, setFormat] = useState<'brainstorm' | 'debate' | 'analysis' | 'creative'>('brainstorm');
   const [claudeModel, setClaudeModel] = useState('claude-4-sonnet');
-  const [grokModel, setGrokModel] = useState('grok-3');
+  const [grokModel, setGrokModel] = useState('grok-2-1212');
 
   // Fetch existing session
   const { isLoading } = useQuery({
@@ -54,25 +54,37 @@ const BrainstormPage: React.FC = () => {
   // Start new session mutation
   const startMutation = useMutation({
     mutationFn: async () => {
+      console.log('📤 Sending brainstorm request...');
       const response = await apiService.post('/brainstorm', {
         topic,
         description,
+        participants: {
+          claude: { model: claudeModel },
+          grok: { model: grokModel }
+        },
         settings: {
           format,
-          claudeModel,
-          grokModel,
           maxTurns: 20,
         },
       });
-      return (response.data as any).data.sessionId;
+      console.log('📥 Brainstorm response:', response);
+      const sessionId = (response.data as any).data.sessionId;
+      console.log('🆔 Session ID:', sessionId);
+      return sessionId;
     },
     onSuccess: (sessionId) => {
+      console.log('✅ Brainstorm session created, navigating to:', `/brainstorm/${sessionId}`);
+      setShowNewSession(false); // Скрываем форму
       navigate(`/brainstorm/${sessionId}`);
+    },
+    onError: (error) => {
+      console.error('❌ Brainstorm creation failed:', error);
     },
   });
 
   const handleStart = () => {
     if (topic.trim()) {
+      console.log('🚀 Starting brainstorm session with:', { topic, description, format });
       startMutation.mutate();
     }
   };
@@ -415,9 +427,8 @@ const BrainstormPage: React.FC = () => {
                       onChange={(e) => setGrokModel(e.target.value)}
                       label="🚀 Grok модель"
                     >
-                      <MenuItem value="grok-3">🚀 Grok 3</MenuItem>
-                      <MenuItem value="grok-2-image">🎨 Grok 2 Image</MenuItem>
-                      <MenuItem value="grok-2-vision">👁️ Grok 2 Vision</MenuItem>
+                      <MenuItem value="grok-2-1212">🚀 Grok 2 Latest</MenuItem>
+                      <MenuItem value="grok-2-vision-1212">👁️ Grok 2 Vision</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>

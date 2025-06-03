@@ -123,6 +123,7 @@ exports.startBrainstorm = async (req, res, next) => {
     }
 
     res.status(201).json(apiResponse(true, {
+      sessionId: session._id,
       chat,
       session
     }));

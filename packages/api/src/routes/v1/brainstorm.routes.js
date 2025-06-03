@@ -31,6 +31,7 @@ const sendMessageValidation = [
 router.use(authenticate);
 // router.use(requireSubscription('pro', 'business')); // Temporarily disabled for testing
 
+router.post('/', startBrainstormValidation, brainstormController.startBrainstorm);
 router.post('/start', startBrainstormValidation, brainstormController.startBrainstorm);
 router.get('/sessions', brainstormController.getBrainstormSessions);
 router.get('/:id', param('id').isMongoId(), brainstormController.getBrainstormSession);
