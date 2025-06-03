@@ -19,6 +19,8 @@
     "no": "No",
     "or": "or",
     "and": "and",
+    "you": "You",
+    "status": "Status",
     "comingSoon": "Coming soon"
   },
   "auth": {
@@ -62,10 +64,16 @@
     "delete": "Delete",
     "edit": "Edit",
     "stopGenerating": "Stop",
-    "thinking": "Thinking...",
+    "thinking": "typing...",
+    "startNewChat": "Start a new {{type}} chat",
+    "enterMessage": "Enter a message to start",
+    "enterMessageFull": "Enter a message to start a new chat",
+    "startChatWith": "Start chat with {{type}}...",
+    "messageTo": "Message {{type}}...",
     "models": {
       "claude": "Claude",
-      "grok": "Grok"
+      "grok": "Grok",
+      "assistant": "Assistant"
     },
     "errors": {
       "failedToSend": "Failed to send message",
@@ -140,6 +148,25 @@
     "uploadFiles": "Upload Files",
     "dragDrop": "Drag and drop files here",
     "maxSize": "Max file size: {{size}}"
+  },
+  "brainstorm": {
+    "title": "Brainstorm",
+    "newSession": "New Session",
+    "currentSession": "Current Session",
+    "history": "History",
+    "topic": "Topic",
+    "enterTopic": "Enter a topic to discuss...",
+    "start": "Start",
+    "turn": "Turn {{current}} / {{max}}",
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "paused": "Paused"
+    },
+    "summary": "Session Summary",
+    "keyInsights": "Key Insights",
+    "export": "Export",
+    "share": "Share"
   },
   "errors": {
     "generic": "Something went wrong",

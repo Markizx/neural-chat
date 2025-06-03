@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { 
-  Box, 
+import {
+  Box,
   CircularProgress, 
-  useTheme, 
+  useTheme,
   useMediaQuery,
   Fab,
   Slide,
@@ -14,11 +14,11 @@ import {
 } from '@mui/material';
 import { 
   ArrowBack, 
-  Chat as ChatIcon,
   List as ListIcon 
 } from '@mui/icons-material';
 import ChatWindow from '../components/Chat/ChatWindow';
 import ChatList from '../components/Chat/ChatList';
+import PageContainer from '../components/common/PageContainer';
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../services/api.service';
 import { Chat } from '../types';
@@ -101,18 +101,27 @@ const ChatPage: React.FC = () => {
 
   if (isMobile) {
     return (
-      <Box sx={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+      <PageContainer className="chat-page-mobile">
+        <Box 
+          sx={{ 
+            height: '100%', 
+            position: 'relative', 
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
         {/* Мобильный заголовок */}
         {selectedChatId && !showChatList && (
           <AppBar 
             position="static" 
             elevation={0}
-            sx={{ 
+            sx={{
               backgroundColor: theme.palette.background.paper,
               borderBottom: `1px solid ${theme.palette.divider}`,
+              flexShrink: 0,
             }}
           >
-            <Toolbar sx={{ minHeight: '56px !important' }}>
+            <Toolbar sx={{ minHeight: '56px !important', height: '56px' }}>
               <IconButton
                 edge="start"
                 onClick={handleBackToList}
@@ -160,8 +169,11 @@ const ChatPage: React.FC = () => {
         {/* Окно чата */}
         <Box
           sx={{
-            height: selectedChatId && !showChatList ? 'calc(100% - 56px)' : '100%',
-            display: showChatList ? 'none' : 'block',
+            flex: 1,
+            display: showChatList ? 'none' : 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            minHeight: 0,
           }}
         >
           <ChatWindow
@@ -192,31 +204,49 @@ const ChatPage: React.FC = () => {
             <ListIcon />
           </Fab>
         )}
-      </Box>
+        </Box>
+      </PageContainer>
     );
   }
 
-  // Десктопная версия
+  // Desktop layout
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      height: '100%',
-      maxHeight: '100%',
-      overflow: 'hidden',
-      position: 'relative',
-    }}>
-      <ChatList
-        type={type!}
-        selectedChatId={selectedChatId}
-        onSelectChat={handleSelectChat}
-        onNewChat={handleNewChat}
-      />
-      <ChatWindow
-        type={type!}
-        chatId={selectedChatId}
-        initialChat={chat as any}
-      />
-    </Box>
+    <PageContainer className="chat-page-desktop">
+      <Box
+        sx={{
+          height: '100%',
+          display: 'flex',
+          overflow: 'hidden',
+        }}
+      >
+      {/* Sidebar with chat list */}
+      <Box
+        sx={{
+          width: 320,
+          borderRight: 1,
+          borderColor: 'divider',
+          background: theme.palette.background.paper,
+          flexShrink: 0,
+        }}
+      >
+        <ChatList
+          type={type!}
+          selectedChatId={selectedChatId}
+          onSelectChat={handleSelectChat}
+          onNewChat={handleNewChat}
+        />
+      </Box>
+
+      {/* Main chat area */}
+      <Box sx={{ flex: 1, overflow: 'hidden' }}>
+        <ChatWindow
+          type={type!}
+          chatId={selectedChatId}
+          initialChat={chat as any}
+        />
+      </Box>
+      </Box>
+    </PageContainer>
   );
 };
 

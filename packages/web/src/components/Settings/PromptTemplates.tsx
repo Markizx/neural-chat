@@ -76,15 +76,15 @@ const PromptTemplates: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Load templates
-  const { data: templates, isLoading } = useQuery({
+  const { data: templates, isLoading } = useQuery<PromptTemplate[]>({
     queryKey: ['prompt-templates', selectedCategory, searchQuery],
-    queryFn: async () => {
+    queryFn: async (): Promise<PromptTemplate[]> => {
       const params = new URLSearchParams();
       if (selectedCategory !== 'all') params.append('category', selectedCategory);
       if (searchQuery) params.append('search', searchQuery);
       
       const response = await apiService.get(`/settings/prompt-templates?${params}`);
-      return (response.data as { templates: PromptTemplate[] }).templates;
+      return (response.data as { templates: PromptTemplate[] }).templates || [];
     },
   });
 

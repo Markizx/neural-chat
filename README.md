@@ -20,7 +20,7 @@
 ## 🌟 Features
 
 ### 💬 AI Chat Capabilities
-- **Claude Integration** - Access to Claude 4 Opus, Sonnet, and 3.5 Sonnet models
+- **Claude Integration** - Access to Claude 4 Opus, Claude 4 Sonnet, and Claude 3.7 Sonnet models
 - **Grok Integration** - Experience Grok's unique perspective with Grok 3 and Grok 2
 - **Brainstorm Mode** 🆕 - Watch Claude and Grok collaborate on your ideas
 - **Real-time Streaming** - Get instant responses with WebSocket support

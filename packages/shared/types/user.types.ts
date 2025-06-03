@@ -58,17 +58,17 @@ export interface UserSettings {
   };
   fontSize: number;
   notifications: NotificationSettings;
-  systemPrompts: {
-    claude: string;
-    grok: string;
+  systemPrompts?: {
+    claude?: string;
+    grok?: string;
   };
-  aiRoles: {
-    claude: string;
-    grok: string;
+  aiRoles?: {
+    claude?: string;
+    grok?: string;
   };
-  brainstormPrompts: {
-    claude: string;
-    grok: string;
+  brainstormPrompts?: {
+    claude?: string;
+    grok?: string;
   };
 }
 

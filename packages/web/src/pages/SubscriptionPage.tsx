@@ -3,14 +3,13 @@ import {
   Container,
   Box,
   Typography,
-  Grid,
   Paper,
-  Button,
   Alert,
 } from '@mui/material';
 import { CheckCircle } from '@mui/icons-material';
 import PricingPlans from '../components/Subscription/PricingPlans';
 import SubscriptionStatus from '../components/Subscription/SubscriptionStatus';
+import PageContainer from '../components/common/PageContainer';
 import { useAuth } from '../hooks/useAuth';
 
 const SubscriptionPage: React.FC = () => {
@@ -23,7 +22,8 @@ const SubscriptionPage: React.FC = () => {
   const isCanceled = urlParams.get('canceled') === 'true';
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <PageContainer fullHeight={false}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 4, textAlign: 'center' }}>
         <Typography
           variant="h3"
@@ -39,7 +39,7 @@ const SubscriptionPage: React.FC = () => {
           Choose Your Plan
         </Typography>
         <Typography variant="h6" color="text.secondary">
-                      Unlock the full potential of AI with NeuralChat
+          Unlock the full potential of AI with NeuralChat
         </Typography>
       </Box>
 
@@ -96,7 +96,7 @@ const SubscriptionPage: React.FC = () => {
           </Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
             We offer a 7-day money-back guarantee for new subscriptions. Contact support if you're
-                            not satisfied with NeuralChat.
+            not satisfied with NeuralChat.
           </Typography>
         </Box>
 
@@ -115,12 +115,13 @@ const SubscriptionPage: React.FC = () => {
       <Box sx={{ mt: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
           Have questions? Contact us at{' '}
-                        <a href="mailto:support@neuralchat.pro" style={{ color: 'inherit' }}>
-                support@neuralchat.pro
+          <a href="mailto:support@neuralchat.pro" style={{ color: 'inherit' }}>
+            support@neuralchat.pro
           </a>
         </Typography>
       </Box>
-    </Container>
+      </Container>
+    </PageContainer>
   );
 };
 

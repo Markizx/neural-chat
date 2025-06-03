@@ -25,9 +25,9 @@ import { loadStripe } from '@stripe/stripe-js';
 
 // Безопасная инициализация Stripe только если ключ существует
 const stripePublishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = stripePublishableKey && stripePublishableKey !== 'pk_test_dummy_key_for_development' 
-  ? loadStripe(stripePublishableKey) 
-  : null;
+// const stripePromise = stripePublishableKey && stripePublishableKey !== 'pk_test_dummy_key_for_development' 
+//   ? loadStripe(stripePublishableKey) 
+//   : null;
 
 interface PricingPlansProps {
   currentPlan: string;
@@ -45,7 +45,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ currentPlan }) => {
       description: 'Perfect for trying out NeuralChat',
       features: [
         { text: '10 messages per day', included: true },
-        { text: 'Claude 3.5 Sonnet', included: true },
+        { text: 'Claude 3.7 Sonnet', included: true },
         { text: 'Grok 2', included: true },
         { text: 'Basic features', included: true },
         { text: 'Projects & file uploads', included: false },

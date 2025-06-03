@@ -5,8 +5,6 @@ import {
   Typography,
   List,
   ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Chip,
   Button,
@@ -29,7 +27,7 @@ import {
   Error,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { brainstormService, BrainstormSession } from '../../services/brainstorm.service';
+import { brainstormService, BrainstormSession, BrainstormSessionsResponse } from '../../services/brainstorm.service';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -46,7 +44,7 @@ const BrainstormHistory: React.FC<BrainstormHistoryProps> = ({ onSelectSession }
   const queryClient = useQueryClient();
 
   // Fetch sessions
-  const { data: sessionsData, isLoading, error } = useQuery({
+  const { data: sessionsData, isLoading, error } = useQuery<BrainstormSessionsResponse>({
     queryKey: ['brainstorm-sessions'],
     queryFn: async () => {
       const response = await brainstormService.getSessions();

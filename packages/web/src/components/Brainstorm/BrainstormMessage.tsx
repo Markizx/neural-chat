@@ -14,6 +14,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BrainstormMessageProps {
   message: {
@@ -57,29 +58,55 @@ const BrainstormMessage: React.FC<BrainstormMessageProps> = ({ message, isStream
   const speakerInfo = getSpeakerInfo();
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        gap: 2,
-        mb: 3,
-        alignItems: 'flex-start',
-        opacity: isStreaming ? 0.9 : 1,
-        animation: isStreaming ? 'pulse 1.5s ease-in-out infinite' : 'none',
-        '@keyframes pulse': {
-          '0%, 100%': { opacity: 0.9 },
-          '50%': { opacity: 1 },
-        },
-      }}
-    >
-      <Avatar
-        sx={{
-          bgcolor: speakerInfo.bgcolor,
-          width: 40,
-          height: 40,
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        transition={{ 
+          duration: 0.4,
+          ease: "easeOut"
         }}
       >
-        {speakerInfo.icon}
-      </Avatar>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            mb: 3,
+            alignItems: 'flex-start',
+            opacity: isStreaming ? 0.9 : 1,
+            animation: isStreaming ? 'pulse 1.5s ease-in-out infinite' : 'none',
+            '@keyframes pulse': {
+              '0%, 100%': { opacity: 0.9 },
+              '50%': { opacity: 1 },
+            },
+          }}
+        >
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 200,
+              damping: 15,
+              delay: 0.1
+            }}
+          >
+            <Avatar
+              sx={{
+                bgcolor: speakerInfo.bgcolor,
+                width: 40,
+                height: 40,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                  boxShadow: `0 8px 25px ${speakerInfo.bgcolor}40`,
+                },
+              }}
+            >
+              {speakerInfo.icon}
+            </Avatar>
+          </motion.div>
 
       <Box sx={{ flex: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -174,7 +201,9 @@ const BrainstormMessage: React.FC<BrainstormMessageProps> = ({ message, isStream
           )}
         </Paper>
       </Box>
-    </Box>
+        </Box>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

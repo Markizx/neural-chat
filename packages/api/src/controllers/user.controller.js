@@ -534,3 +534,109 @@ exports.deleteAccount = async (req, res, next) => {
     next(error);
   }
 };
+
+// Get user subscription
+exports.getSubscription = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select('subscription')
+      .populate('subscription.planId');
+
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    res.json(apiResponse(true, { subscription: user.subscription }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Change subscription plan
+exports.changeSubscription = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json(apiResponse(false, null, {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input',
+        details: errors.array()
+      }));
+    }
+
+    const { planId } = req.body;
+    const Plan = require('../models/plan.model');
+
+    // Verify plan exists
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'PLAN_NOT_FOUND',
+        message: 'Plan not found'
+      }));
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    // Update subscription
+    user.subscription = {
+      plan: plan.name.toLowerCase(),
+      status: 'active',
+      planId: plan._id,
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      cancelAtPeriodEnd: false
+    };
+
+    await user.save();
+
+    res.json(apiResponse(true, { 
+      message: 'Subscription updated successfully',
+      subscription: user.subscription 
+    }));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Cancel subscription
+exports.cancelSubscription = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      }));
+    }
+
+    if (!user.subscription || user.subscription.plan === 'free') {
+      return res.status(400).json(apiResponse(false, null, {
+        code: 'NO_ACTIVE_SUBSCRIPTION',
+        message: 'No active subscription to cancel'
+      }));
+    }
+
+    // Mark for cancellation at period end
+    user.subscription.cancelAtPeriodEnd = true;
+    user.subscription.status = 'canceled';
+
+    await user.save();
+
+    res.json(apiResponse(true, { 
+      message: 'Subscription will be canceled at the end of the current period',
+      subscription: user.subscription 
+    }));
+  } catch (error) {
+    next(error);
+  }
+};

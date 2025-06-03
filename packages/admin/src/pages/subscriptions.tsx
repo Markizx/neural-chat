@@ -49,6 +49,13 @@ import {
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+
+// Helper function for safe date formatting
+const formatDate = (dateValue: string | Date | undefined, formatStr: string = 'MMM d, yyyy', fallback: string = 'N/A'): string => {
+  if (!dateValue) return fallback;
+  const date = new Date(dateValue);
+  return !isNaN(date.getTime()) ? format(date, formatStr) : fallback;
+};
 import { adminApi } from '../lib/api';
 
 interface StatCardProps {
@@ -560,7 +567,7 @@ const SubscriptionsPage: NextPage = () => {
                       <TableCell>
                         <Box>
                           <Typography variant="body2">
-                            {format(new Date(subscription.currentPeriodStart), 'MMM d')} - {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                            {formatDate(subscription.currentPeriodStart, 'MMM d')} - {formatDate(subscription.currentPeriodEnd, 'MMM d, yyyy')}
                           </Typography>
                           {subscription.cancelAtPeriodEnd && (
                             <Typography variant="caption" color="warning.main">
@@ -713,7 +720,7 @@ const SubscriptionsPage: NextPage = () => {
             <Box sx={{ pt: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Current End Date: <strong>
-                  {selectedSubscription && format(new Date(selectedSubscription.currentPeriodEnd), 'MMM d, yyyy')}
+                  {selectedSubscription && formatDate(selectedSubscription.currentPeriodEnd, 'MMM d, yyyy')}
                 </strong>
               </Typography>
               <TextField

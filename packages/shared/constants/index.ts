@@ -32,17 +32,14 @@ export const MESSAGE_ROLES = {
 
 export const AI_MODELS = {
   CLAUDE: {
-    OPUS_4: 'claude-4-opus',
     SONNET_4: 'claude-4-sonnet',
-    SONNET_3_5: 'claude-3.5-sonnet',
+    HAIKU: 'claude-3-haiku-20240307',
+    OPUS: 'claude-3-opus-20240229',
   },
   GROK: {
-    GROK_3: 'grok-3',
-    GROK_3_MINI: 'grok-3-mini',
-    GROK_3_FAST: 'grok-3-fast',
-    GROK_3_MINI_FAST: 'grok-3-mini-fast',
     GROK_2: 'grok-2-1212',
     GROK_2_VISION: 'grok-2-vision-1212',
+    GROK_2_IMAGE: 'grok-2-image',
   },
 } as const;
 

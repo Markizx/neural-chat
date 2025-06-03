@@ -18,7 +18,9 @@
     "yes": "Ja",
     "no": "Nein",
     "or": "oder",
-    "and": "und"
+    "and": "und",
+    "you": "Sie",
+    "status": "Status"
   },
   "auth": {
     "login": "Anmelden",
@@ -61,10 +63,16 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "stopGenerating": "Stoppen",
-    "thinking": "Denke nach...",
+    "thinking": "tippt...",
+    "startNewChat": "Neuen {{type}} Chat starten",
+    "enterMessage": "Nachricht eingeben",
+    "enterMessageFull": "Nachricht eingeben, um neuen Chat zu starten",
+    "startChatWith": "Chat mit {{type}} beginnen...",
+    "messageTo": "Nachricht an {{type}}...",
     "models": {
       "claude": "Claude",
-      "grok": "Grok"
+      "grok": "Grok",
+      "assistant": "Assistent"
     },
     "errors": {
       "failedToSend": "Nachricht konnte nicht gesendet werden",
@@ -74,8 +82,24 @@
   "settings": {
     "title": "Einstellungen",
     "appearance": "Erscheinungsbild",
+    "appearanceDescription": "Passen Sie das Aussehen von NeuralChat an",
     "notifications": "Benachrichtigungen",
+    "notificationsDescription": "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten",
+    "emailNotifications": "E-Mail-Benachrichtigungen",
+    "pushNotifications": "Push-Benachrichtigungen",
+    "chatNotifications": "Chat-Nachrichten-Benachrichtigungen",
+    "brainstormNotifications": "Brainstorming-Updates",
+    "marketingEmails": "Marketing-E-Mails",
     "security": "Sicherheit",
+    "securityDescription": "Sichern Sie Ihr Konto",
+    "password": "Passwort",
+    "passwordDescription": "Ändern Sie regelmäßig Ihr Passwort",
+    "changePassword": "Passwort ändern",
+    "twoFactor": "Zwei-Faktor-Authentifizierung",
+    "twoFactorDescription": "Fügen Sie eine zusätzliche Sicherheitsebene hinzu",
+    "enableTwoFactor": "Zwei-Faktor-Authentifizierung aktivieren",
+    "deleteAccount": "Konto löschen",
+    "deleteAccountWarning": "Konto und alle Daten permanent löschen. Diese Aktion kann nicht rückgängig gemacht werden.",
     "language": "Sprache",
     "theme": "Design",
     "themes": {
@@ -123,6 +147,25 @@
     "uploadFiles": "Dateien hochladen",
     "dragDrop": "Dateien hier ablegen",
     "maxSize": "Maximale Dateigröße: {{size}}"
+  },
+  "brainstorm": {
+    "title": "Brainstorming",
+    "newSession": "Neue Sitzung",
+    "currentSession": "Aktuelle Sitzung",
+    "history": "Verlauf",
+    "topic": "Thema",
+    "enterTopic": "Thema eingeben...",
+    "start": "Starten",
+    "turn": "Runde {{current}} / {{max}}",
+    "status": {
+      "active": "Aktiv",
+      "completed": "Abgeschlossen",
+      "paused": "Pausiert"
+    },
+    "summary": "Sitzungszusammenfassung",
+    "keyInsights": "Wichtige Erkenntnisse",
+    "export": "Exportieren",
+    "share": "Teilen"
   },
   "errors": {
     "generic": "Etwas ist schiefgelaufen",

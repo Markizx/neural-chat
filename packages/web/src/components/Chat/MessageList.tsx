@@ -15,6 +15,7 @@ import {
   alpha,
   useTheme,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material';
 import {
   Person,
@@ -31,6 +32,7 @@ import ReactMarkdown from 'react-markdown';
 import { Message } from '../../types';
 import ArtifactRenderer from './ArtifactRenderer';
 import AnimatedMessage from './AnimatedMessage';
+import ProjectFilesIndicator from './ProjectFilesIndicator';
 
 interface MessageListProps {
   messages: Message[];
@@ -49,6 +51,7 @@ interface MessageListProps {
     model?: string;
     isStreaming: boolean;
   } | null;
+  chatType?: 'claude' | 'grok' | 'general';
 }
 
 interface MessageItemProps {
@@ -348,6 +351,14 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 </Box>
               )}
 
+              {/* Project Files */}
+              {message.projectId && (
+                <ProjectFilesIndicator
+                  projectId={message.projectId}
+                  files={[]}
+                />
+              )}
+
               {/* Artifacts */}
               {message.artifacts && message.artifacts.length > 0 && (
                 <Box sx={{ mt: 2 }}>
@@ -482,7 +493,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
 const MessageList: React.FC<MessageListProps> = ({
   messages,
-  loading,
+  loading = false,
   isMobile,
   onDeleteMessage,
   onEditMessage,
@@ -491,53 +502,52 @@ const MessageList: React.FC<MessageListProps> = ({
   onDelete,
   onRegenerate,
   streamingMessage,
+  chatType = 'general',
 }) => {
-  // Используем async функции если они переданы, иначе обычные
+  const theme = useTheme();
+
   const handleEdit = onEditMessage || onEdit;
   const handleDelete = onDeleteMessage || onDelete;
   const handleRegenerate = onRegenerateMessage || onRegenerate;
 
-  // Определяем тип чата из первого сообщения assistant
-  const chatType = messages.find(m => m.role === 'assistant')?.model?.toLowerCase().includes('claude') 
-    ? 'claude' 
-    : messages.find(m => m.role === 'assistant')?.model?.toLowerCase().includes('grok')
-    ? 'grok'
-    : 'general';
+  const allMessages = streamingMessage 
+    ? [...messages, streamingMessage]
+    : messages;
 
   return (
-    <Box sx={{ pb: 2 }}>
-      {/* Существующие сообщения с улучшенной анимацией */}
-      {messages.map((message, index) => (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        flex: 1,
+        overflow: 'auto',
+        pb: 2,
+        '&::-webkit-scrollbar': {
+          width: '6px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'transparent',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: alpha(theme.palette.text.secondary, 0.3),
+          borderRadius: '3px',
+          '&:hover': {
+            background: alpha(theme.palette.text.secondary, 0.5),
+          },
+        },
+      }}
+    >
+      {allMessages.map((message, index) => (
         <AnimatedMessage
-          key={message._id}
-          message={{
-            id: message._id,
-            role: message.role,
-            content: message.content,
-            model: message.model,
-            createdAt: new Date(message.createdAt),
-          }}
+          key={(message as any)._id || (message as any).id || `message-${index}`}
+          message={message}
           index={index}
-          chatType={chatType as 'claude' | 'grok' | 'general'}
+          chatType={chatType}
+          isNew={(message as any).isNew}
         />
       ))}
 
-      {/* Streaming сообщение */}
-      {streamingMessage && (
-        <AnimatedMessage
-          message={{
-            id: streamingMessage.id,
-            role: 'assistant',
-            content: streamingMessage.content,
-            model: 'assistant',
-            isStreaming: true,
-          }}
-          index={messages.length}
-          chatType={chatType as 'claude' | 'grok' | 'general'}
-        />
-      )}
-
-      {/* Индикатор загрузки */}
       {loading && !streamingMessage && (
         <Box
           sx={{
@@ -547,12 +557,7 @@ const MessageList: React.FC<MessageListProps> = ({
             py: 4,
           }}
         >
-          <Box sx={{ textAlign: 'center' }}>
-            <LinearProgress sx={{ width: 100, mb: 2 }} />
-            <Typography variant="body2" color="text.secondary">
-              Thinking...
-            </Typography>
-          </Box>
+          <CircularProgress size={24} />
         </Box>
       )}
     </Box>

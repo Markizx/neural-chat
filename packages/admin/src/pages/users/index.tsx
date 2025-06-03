@@ -48,6 +48,13 @@ import {
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+
+// Helper function for safe date formatting
+const formatDate = (dateValue: string | Date | undefined, fallback: string = 'N/A'): string => {
+  if (!dateValue) return fallback;
+  const date = new Date(dateValue);
+  return !isNaN(date.getTime()) ? format(date, 'MMM d, yyyy') : fallback;
+};
 import { adminApi } from '../../lib/api';
 
 interface StatCardProps {
@@ -604,15 +611,15 @@ const UsersManagement: React.FC = () => {
                         </Typography>
                       </Box>
                     </TableCell>
+                                    <TableCell>
+                  <Typography variant="body2">
+                    {formatDate(user.createdAt)}
+                  </Typography>
+                </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
-                        {format(new Date(user.createdAt), 'MMM d, yyyy')}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {format(new Date(user.lastActive), 'MMM d, yyyy')}
-                      </Typography>
+                                              <Typography variant="body2">
+                          {formatDate(user.lastActive, 'Never')}
+                        </Typography>
                     </TableCell>
                     <TableCell align="right">
                       <IconButton

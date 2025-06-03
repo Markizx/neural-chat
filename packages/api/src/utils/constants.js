@@ -35,16 +35,17 @@ module.exports = {
     SYSTEM: 'system'
   },
 
-  // AI Models
+  // AI Models - актуальные 2025
   AI_MODELS: {
     CLAUDE: {
-      OPUS_4: 'claude-4-opus',
-      SONNET_4: 'claude-4-sonnet',
-      SONNET_3_5: 'claude-3.5-sonnet'
+      CLAUDE_4_OPUS: 'claude-4-opus',
+      CLAUDE_4_SONNET: 'claude-4-sonnet',
+      CLAUDE_3_7_SONNET: 'claude-3.7-sonnet'
     },
     GROK: {
       GROK_3: 'grok-3',
-      GROK_2: 'grok-2'
+      GROK_2_IMAGE: 'grok-2-image',
+      GROK_2_VISION: 'grok-2-vision'
     }
   },
 

@@ -16,13 +16,13 @@ exports.getPlans = async (req, res, next) => {
         interval: 'month',
         features: [
           '10 messages per day',
-          'Claude 3.5 Sonnet',
+          'Claude 3.7 Sonnet',
           'Grok 2',
           'Basic features'
         ],
         limits: {
           dailyMessages: 10,
-          models: ['claude-3.5-sonnet', 'grok-2']
+          models: ['claude-4-sonnet', 'grok-2-1212']
         }
       },
       {
@@ -41,7 +41,7 @@ exports.getPlans = async (req, res, next) => {
         ],
         limits: {
           dailyMessages: 100,
-          models: ['claude-4-opus', 'claude-4-sonnet', 'claude-3.5-sonnet', 'grok-3', 'grok-2']
+          models: ['claude-4-sonnet', 'claude-4-opus', 'claude-3.7-sonnet', 'claude-3-haiku-20240307', 'claude-3-opus-20240229', 'grok-2-1212', 'grok-2-vision-1212']
         }
       },
       {
@@ -61,7 +61,7 @@ exports.getPlans = async (req, res, next) => {
         ],
         limits: {
           dailyMessages: Infinity,
-          models: ['claude-4-opus', 'claude-4-sonnet', 'claude-3.5-sonnet', 'grok-3', 'grok-2']
+          models: ['claude-4-sonnet', 'claude-4-opus', 'claude-3.7-sonnet', 'claude-3-haiku-20240307', 'claude-3-opus-20240229', 'grok-2-1212', 'grok-2-vision-1212']
         }
       }
     ];

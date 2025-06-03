@@ -1,0 +1,77 @@
+/* Общие стили для страниц */
+.page-container {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+/* Стили для чата */
+.chat-page-mobile,
+.chat-page-desktop {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.chat-window-full {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Стили для мозгового штурма */
+.brainstorm-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Стили для подписки */
+.subscription-page {
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 0;
+  }
+  
+  .chat-page-mobile {
+    height: 100vh;
+    position: relative;
+  }
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Скроллбары */
+.page-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.page-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.page-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+} 

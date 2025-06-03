@@ -42,8 +42,7 @@ interface ChatListProps {
   type: 'claude' | 'grok';
   selectedChatId?: string;
   onSelectChat: (chatId: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onNewChat: () => void;
+  onNewChat?: () => void;
   isMobile?: boolean;
 }
 
@@ -89,7 +88,7 @@ const ChatList: React.FC<ChatListProps> = ({
     mutationFn: async () => {
       const response = await apiService.post(`/chats`, {
         type,
-        model: type === 'claude' ? 'claude-3-5-sonnet-20241022' : 'grok-2-1212',
+        model: type === 'claude' ? 'claude-4-sonnet' : 'grok-2-image',
         title: `New ${type} Chat`,
       });
       
@@ -100,6 +99,7 @@ const ChatList: React.FC<ChatListProps> = ({
       }
     },
     onError: (error) => {
+      // eslint-disable-next-line no-console
       // eslint-disable-next-line no-console
       console.error('Failed to create chat:', error);
     },
@@ -118,7 +118,22 @@ const ChatList: React.FC<ChatListProps> = ({
       }
     },
     onError: (error) => {
+      // eslint-disable-next-line no-console
       console.error('Failed to delete chat:', error);
+    },
+  });
+
+  // Update chat mutation
+  const updateChatMutation = useMutation({
+    mutationFn: async ({ chatId, title }: { chatId: string; title: string }) => {
+      await apiService.put(`/chats/${chatId}`, { title });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chats', type] });
+    },
+    onError: (error) => {
+      // eslint-disable-next-line no-console
+      console.error('Failed to update chat:', error);
     },
   });
 
@@ -128,6 +143,10 @@ const ChatList: React.FC<ChatListProps> = ({
 
   const handleDeleteChat = (chatId: string) => {
     deleteChatMutation.mutate(chatId);
+  };
+
+  const handleRenameChat = (chatId: string, newTitle: string) => {
+    updateChatMutation.mutate({ chatId, title: newTitle });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -256,6 +275,7 @@ const ChatList: React.FC<ChatListProps> = ({
                     isSelected={chat._id === selectedChatId}
                     onClick={() => onSelectChat(chat._id)}
                     onDelete={handleDeleteChat}
+                    onRename={handleRenameChat}
                     isMobile={isMobile}
                   />
                 ))}
@@ -272,6 +292,7 @@ const ChatList: React.FC<ChatListProps> = ({
                   isSelected={chat._id === selectedChatId}
                   onClick={() => onSelectChat(chat._id)}
                   onDelete={handleDeleteChat}
+                  onRename={handleRenameChat}
                   isMobile={isMobile}
                 />
               ))
@@ -313,6 +334,7 @@ interface ChatListItemProps {
   isSelected: boolean;
   onClick: () => void;
   onDelete: (chatId: string) => void;
+  onRename: (chatId: string, newTitle: string) => void;
   isMobile?: boolean;
 }
 
@@ -321,12 +343,15 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
   isSelected, 
   onClick, 
   onDelete, 
+  onRename, 
   isMobile = false 
 }) => {
   const theme = useTheme();
   const isSmallMobile = useMediaQuery('(max-width: 480px)');
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState(chat.title);
   
   const formatChatDate = (date: string) => {
     return format(new Date(date), isMobile ? 'dd.MM' : 'MMM d');
@@ -349,6 +374,19 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
   const handleDeleteConfirm = () => {
     onDelete(chat._id);
     setDeleteDialogOpen(false);
+  };
+
+  const handleRenameClick = () => {
+    setNewTitle(chat.title);
+    setRenameDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleRenameConfirm = () => {
+    if (newTitle.trim() && newTitle.trim() !== chat.title) {
+      onRename(chat._id, newTitle.trim());
+    }
+    setRenameDialogOpen(false);
   };
 
   return (
@@ -466,6 +504,12 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
           horizontal: 'right',
         }}
       >
+        <MenuItem onClick={handleRenameClick}>
+          <ListItemIcon>
+            <Edit fontSize="small" />
+          </ListItemIcon>
+          Переименовать
+        </MenuItem>
         <MenuItem onClick={handleDeleteClick}>
           <ListItemIcon>
             <Delete fontSize="small" />
@@ -492,6 +536,43 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
             color="error"
           >
             Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Rename Dialog */}
+      <Dialog 
+        open={renameDialogOpen} 
+        onClose={() => setRenameDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Переименовать чат</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Название чата"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleRenameConfirm();
+              }
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRenameDialogOpen(false)}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleRenameConfirm}
+            variant="contained"
+            disabled={!newTitle.trim() || newTitle.trim() === chat.title}
+          >
+            Сохранить
           </Button>
         </DialogActions>
       </Dialog>

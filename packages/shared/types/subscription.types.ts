@@ -126,7 +126,7 @@ export interface StripeWebhookEvents {
 export interface SubscriptionFeatures {
   free: {
     dailyMessages: 10;
-    models: ['claude-3.5-sonnet', 'grok-2'];
+    models: ['claude-4-sonnet', 'grok-2-1212'];
     projects: false;
     brainstorm: false;
     apiAccess: false;
@@ -134,7 +134,7 @@ export interface SubscriptionFeatures {
   };
   pro: {
     dailyMessages: 100;
-    models: ['claude-4-opus', 'claude-4-sonnet', 'claude-3.5-sonnet', 'grok-3', 'grok-2'];
+    models: ['claude-4-sonnet', 'claude-4-opus', 'claude-3.7-sonnet', 'claude-3-haiku-20240307', 'claude-3-opus-20240229', 'grok-2-1212', 'grok-2-vision-1212'];
     projects: true;
     brainstorm: true;
     apiAccess: false;
@@ -142,7 +142,7 @@ export interface SubscriptionFeatures {
   };
   business: {
     dailyMessages: number; // Infinity
-    models: ['claude-4-opus', 'claude-4-sonnet', 'claude-3.5-sonnet', 'grok-3', 'grok-2'];
+    models: ['claude-4-sonnet', 'claude-4-opus', 'claude-3.7-sonnet', 'claude-3-haiku-20240307', 'claude-3-opus-20240229', 'grok-2-1212', 'grok-2-vision-1212'];
     projects: true;
     brainstorm: true;
     apiAccess: true;

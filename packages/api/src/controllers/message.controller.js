@@ -8,6 +8,7 @@ const { apiResponse } = require('../utils/apiResponse');
 const { validationResult } = require('express-validator');
 const User = require('../models/user.model');
 const mongoose = require('mongoose');
+const { processProjectFiles, createProjectContext } = require('../utils/fileProcessor');
 
 // Helper functions
 async function checkUsageLimits(userId) {
@@ -77,12 +78,12 @@ exports.getMessages = async (req, res, next) => {
 exports.sendMessage = async (req, res, next) => {
   try {
     const { chatId } = req.params;
-    const { content, attachments } = req.body;
+    const { content, attachments, projectFiles, projectId } = req.body;
 
     // Debug: проверяем req.user
     console.log('req.user:', req.user ? { id: req.user._id, email: req.user.email } : 'undefined');
     
-    // Debug: проверяем attachments
+    // Debug: проверяем attachments и project files
     console.log('📎 Attachments received:', {
       count: attachments ? attachments.length : 0,
       attachments: attachments ? attachments.map(att => ({
@@ -90,6 +91,16 @@ exports.sendMessage = async (req, res, next) => {
         type: att.type || att.mimeType,
         size: att.size,
         hasData: !!att.data
+      })) : []
+    });
+
+    console.log('📁 Project files received:', {
+      projectId,
+      count: projectFiles ? projectFiles.length : 0,
+      files: projectFiles ? projectFiles.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size
       })) : []
     });
 
@@ -120,13 +131,27 @@ exports.sendMessage = async (req, res, next) => {
       });
     }
 
+    // Combine regular attachments with project files
+    const allAttachments = [...(attachments || [])];
+    
+    // Add project files as attachments if provided
+    if (projectFiles && projectFiles.length > 0) {
+      const projectFileAttachments = projectFiles.map(file => ({
+        ...file,
+        isProjectFile: true,
+        projectId: projectId
+      }));
+      allAttachments.push(...projectFileAttachments);
+    }
+
     // Create user message
     const userMessage = new Message({
       chatId,
       content,
       role: 'user',
       userId: req.user._id,
-      attachments: attachments || []
+      attachments: allAttachments,
+      projectId: projectId || null
     });
 
     await userMessage.save();
@@ -171,6 +196,33 @@ async function generateAIResponseWithStreaming(chatId, userId, chat, io) {
       .limit(50);
     
     console.log('📚 Chat history loaded:', { messageCount: history.length });
+
+    // Get project context if the latest message has project files
+    let projectContext = '';
+    const latestMessage = history[history.length - 1];
+    if (latestMessage && latestMessage.projectId) {
+      try {
+        const project = await Project.findById(latestMessage.projectId);
+        if (project && project.files && project.files.length > 0) {
+          console.log('📁 Processing project files for context:', {
+            projectId: project._id,
+            projectName: project.name,
+            filesCount: project.files.length
+          });
+
+          // Обрабатываем файлы проекта
+          const processedFiles = await processProjectFiles(project.files);
+          projectContext = createProjectContext(processedFiles, project.name);
+          
+          console.log('✅ Project context created:', {
+            contextLength: projectContext.length,
+            processedFilesCount: processedFiles.length
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error processing project context:', error);
+      }
+    }
     
     // Debug: проверяем attachments в истории
     const attachmentDebug = history.map(msg => ({
@@ -186,7 +238,7 @@ async function generateAIResponseWithStreaming(chatId, userId, chat, io) {
     }
     
     // Prepare messages for AI
-    const messages = history.map(msg => {
+    const messages = history.map((msg, index) => {
       const processedAttachments = (msg.attachments || []).map(att => {
         const hasData = !!(att.data);
         console.log(`📁 Processing attachment: ${att.name}, hasData: ${hasData}, type: ${att.type}`);
@@ -200,9 +252,15 @@ async function generateAIResponseWithStreaming(chatId, userId, chat, io) {
         };
       });
       
+      // Добавляем проектный контекст к последнему пользовательскому сообщению
+      let content = msg.content;
+      if (index === history.length - 1 && msg.role === 'user' && projectContext) {
+        content = msg.content + projectContext;
+      }
+      
       return {
         role: msg.role,
-        content: msg.content,
+        content: content,
         attachments: processedAttachments
       };
     });
@@ -262,69 +320,79 @@ async function generateAIResponseWithStreaming(chatId, userId, chat, io) {
         )
       });
       
-      switch (chat.type) {
-        case 'claude':
-          // Используем Claude streaming
-          if (claudeService.createStreamingMessage) {
-            console.log('📡 Using Claude streaming API');
-            const stream = await claudeService.createStreamingMessage(messages, {
-              model: chat.model || 'claude-3.5-sonnet',
-              maxTokens: 4000,
-              systemPrompt: userSystemPrompt || undefined,
-              temperature: 0.7
-            });
+      // Мапинг старых моделей на новые
+      let actualModel = chat.model;
+      if (chat.type === 'claude') {
+        const claudeModelMapping = {
+          'claude-3-5-sonnet-20241022': 'claude-4-sonnet',
+          'claude-3-5-sonnet': 'claude-4-sonnet',
+          'claude-3.5-sonnet': 'claude-4-sonnet'
+        };
+        actualModel = claudeModelMapping[chat.model] || chat.model;
+      }
+      
+      // Generate AI response
+      if (chat.type === 'claude') {
+        console.log('🤖 Generating Claude response...');
+        
+        console.log('🤖 Using Claude model:', { originalModel: chat.model, actualModel });
+        
+        // Системный промпт с инструкциями по артефактам
+        const systemPrompt = `Ты полезный ассистент Claude.
 
-            // Обрабатываем поток
-            for await (const chunk of stream) {
-              if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
-                fullContent += chunk.delta.text;
-                
-                // Отправляем частичный контент через WebSocket
-                if (io) {
-                  io.to(`chat:${chatId}`).emit('message:streamChunk', {
-                    chatId,
-                    messageId: tempMessageId,
-                    content: chunk.delta.text
-                  });
-                }
-              }
-            }
+Когда пользователь просит создать что-то практическое (код, логотип, диаграмму), создавай это в формате <artifact>.
 
-            aiResponse = {
-              content: fullContent,
-              usage: { totalTokens: Math.ceil(fullContent.length / 4) } // Примерная оценка
-            };
-          } else {
-            console.log('📞 Using Claude regular API (fallback)');
-            // Fallback к обычному API
-            aiResponse = await claudeService.createMessage(messages, {
-              model: chat.model || 'claude-3.5-sonnet',
-              maxTokens: 4000,
-              systemPrompt: userSystemPrompt || undefined
-            });
-            fullContent = aiResponse.content;
+Формат артефактов:
+<artifact identifier="unique_id" type="тип" title="Описание">
+СОДЕРЖИМОЕ
+</artifact>
 
-            // Эмулируем streaming для единообразия UX
-            await simulateStreaming(fullContent, tempMessageId, chatId, io);
+Типы артефактов:
+- image/svg+xml для SVG логотипов и иконок
+- application/vnd.ant.code для кода (добавь language="язык")
+- application/vnd.ant.react для React компонентов
+- text/html для HTML страниц
+
+Пример SVG логотипа:
+<artifact identifier="logo_example" type="image/svg+xml" title="Пример логотипа">
+<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="80" fill="#4A90E2" rx="10"/>
+  <text x="100" y="45" text-anchor="middle" fill="white" font-size="18" font-weight="bold">LOGO</text>
+</svg>
+</artifact>
+
+Отвечай естественно и создавай артефакты для практических задач.`;
+
+        aiResponse = await claudeService.createMessage(
+          messages,
+          {
+            model: actualModel,
+            maxTokens: 4096,
+            temperature: 0.7,
+            systemPrompt: systemPrompt
           }
-          break;
-          
-        case 'grok':
-          console.log('🚀 Using Grok API');
-          // Grok пока не поддерживает streaming, используем обычный вызов
-          aiResponse = await grokService.createMessage(messages, {
-            model: chat.model || 'grok-3',
-            maxTokens: 4000,
-            systemPrompt: userSystemPrompt || undefined
-          });
-          fullContent = aiResponse.content;
-
-          // Эмулируем streaming для единообразия UX
-          await simulateStreaming(fullContent, tempMessageId, chatId, io);
-          break;
-          
-        default:
-          throw new Error('Invalid chat type');
+        );
+      } else {
+        console.log('🤖 Generating Grok response...');
+        
+        // Мапинг новых Grok моделей 2025 года на реальные API модели
+        const grokModelMapping = {
+          'grok-3': 'grok-2-1212',               // Самая новая модель
+          'grok-2-image': 'aurora',              // Image генерация через Aurora
+          'grok-2-vision': 'grok-2-vision-1212', // Vision модель
+        };
+        
+        const actualGrokModel = grokModelMapping[chat.model] || chat.model;
+        console.log('🔄 Grok model mapping:', { original: chat.model, actual: actualGrokModel });
+        
+        aiResponse = await grokService.createMessage(
+          messages,
+          {
+            model: actualGrokModel,
+            maxTokens: 4096,
+            temperature: 0.7
+          }
+        );
       }
 
       console.log('✅ AI response received:', { 
@@ -345,6 +413,7 @@ async function generateAIResponseWithStreaming(chatId, userId, chat, io) {
         model: aiRole,
         metadata: {
           originalModel: chat.model,
+          actualModel: actualModel,
           customRole: aiRole,
           tokens: aiResponse.usage || {},
           processingTime: aiResponse.processingTime
@@ -564,6 +633,32 @@ exports.regenerateMessage = async (req, res, next) => {
     // Regenerate with same AI service
     let aiResponse;
     if (chat.type === 'claude') {
+      // Системный промпт с инструкциями по артефактам
+      const systemPrompt = `Ты полезный ассистент Claude.
+
+Когда пользователь просит создать что-то практическое (код, логотип, диаграмму), создавай это в формате <artifact>.
+
+Формат артефактов:
+<artifact identifier="unique_id" type="тип" title="Описание">
+СОДЕРЖИМОЕ
+</artifact>
+
+Типы артефактов:
+- image/svg+xml для SVG логотипов и иконок
+- application/vnd.ant.code для кода (добавь language="язык")
+- application/vnd.ant.react для React компонентов
+- text/html для HTML страниц
+
+Пример SVG логотипа:
+<artifact identifier="logo_example" type="image/svg+xml" title="Пример логотипа">
+<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="80" fill="#4A90E2" rx="10"/>
+  <text x="100" y="45" text-anchor="middle" fill="white" font-size="18" font-weight="bold">LOGO</text>
+</svg>
+</artifact>
+
+Отвечай естественно и создавай артефакты для практических задач.`;
+
       aiResponse = await claudeService.createMessage(
         history.map(m => ({
           role: m.role,
@@ -573,7 +668,8 @@ exports.regenerateMessage = async (req, res, next) => {
         {
           model: chat.model,
           maxTokens: 4096,
-          temperature: 0.8 // Slightly higher for variation
+          temperature: 0.8, // Slightly higher for variation
+          systemPrompt: systemPrompt
         }
       );
     } else {

@@ -22,17 +22,13 @@ export const MESSAGE_LIMITS = {
 // AI Models
 export const AI_MODELS = {
   CLAUDE: {
-    'claude-4-opus': 'Claude 4 Opus',
     'claude-4-sonnet': 'Claude 4 Sonnet',
-    'claude-3.5-sonnet': 'Claude 3.5 Sonnet',
+    'claude-3-haiku-20240307': 'Claude 3 Haiku',
+    'claude-3-opus-20240229': 'Claude 3 Opus',
   },
   GROK: {
-    'grok-3': 'Grok 3',
-    'grok-3-mini': 'Grok 3 Mini',
-    'grok-3-fast': 'Grok 3 Fast',
-    'grok-3-mini-fast': 'Grok 3 Mini Fast',
-    'grok-2': 'Grok 2',
-    'grok-2-vision': 'Grok 2 Vision',
+    'grok-2-1212': 'Grok 2',
+    'grok-2-vision-1212': 'Grok 2 Vision',
   },
 } as const;
 

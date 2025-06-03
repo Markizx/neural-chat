@@ -7,6 +7,7 @@ import {
   Badge,
   useTheme,
   alpha,
+  Box,
 } from '@mui/material';
 import {
   Home,
@@ -22,11 +23,37 @@ const MobileBottomNavigation: React.FC = () => {
   const theme = useTheme();
 
   const navigationItems = [
-    { label: 'Главная', icon: <Home />, path: '/' },
-    { label: 'Claude', icon: <SmartToy />, path: '/chat/claude' },
-    { label: 'Grok', icon: <Psychology />, path: '/chat/grok' },
-    { label: 'Штурм', icon: <AutoAwesome />, path: '/brainstorm', badge: true },
-    { label: 'Проекты', icon: <Folder />, path: '/projects' },
+    { 
+      label: 'Главная', 
+      icon: <Home />, 
+      path: '/',
+      color: '#6366f1',
+    },
+    { 
+      label: 'Claude', 
+      icon: <SmartToy />, 
+      path: '/chat/claude',
+      color: '#059669',
+    },
+    { 
+      label: 'Grok', 
+      icon: <Psychology />, 
+      path: '/chat/grok',
+      color: '#dc2626',
+    },
+    { 
+      label: 'Штурм', 
+      icon: <AutoAwesome />, 
+      path: '/brainstorm', 
+      badge: true,
+      color: '#ec4899',
+    },
+    { 
+      label: 'Проекты', 
+      icon: <Folder />, 
+      path: '/projects',
+      color: '#7c3aed',
+    },
   ];
 
   const getCurrentValue = () => {
@@ -48,90 +75,158 @@ const MobileBottomNavigation: React.FC = () => {
   };
 
   return (
-    <Paper
-      sx={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        position: 'fixed', 
+        bottom: 0, 
+        left: 0, 
+        right: 0, 
         zIndex: 1000,
-        borderRadius: '20px 20px 0 0',
         background: theme.palette.mode === 'dark'
-          ? alpha('#1a1a2e', 0.95)
-          : alpha('#ffffff', 0.98),
+          ? 'rgba(15, 15, 20, 0.95)'
+          : 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(20px)',
         borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        '&::before': {
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        overflow: 'hidden',
+        '&:before': {
           content: '""',
           position: 'absolute',
           top: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '40px',
-          height: '4px',
-          borderRadius: '2px',
-          background: alpha(theme.palette.text.secondary, 0.3),
-          marginTop: '8px',
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
+          opacity: 0.6,
         },
       }}
-      elevation={0}
     >
       <BottomNavigation
         value={getCurrentValue()}
         onChange={handleChange}
+        showLabels
         sx={{
           background: 'transparent',
-          height: 70,
+          height: 64,
           pt: 1,
+          pb: 0.5,
           '& .MuiBottomNavigationAction-root': {
-            color: theme.palette.mode === 'dark' ? '#6b7280' : '#9ca3af',
-            fontSize: '0.75rem',
+            color: alpha(theme.palette.text.secondary, 0.6),
+            fontSize: '0.7rem',
             minWidth: 'auto',
-            padding: '6px 12px 8px',
-            transition: 'all 0.2s ease',
+            maxWidth: 80,
+            padding: '4px 8px 6px',
+            borderRadius: '12px',
+            margin: '0 2px',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: 'relative',
             '&.Mui-selected': {
-              color: theme.palette.primary.main,
-              transform: 'translateY(-2px)',
+              color: 'transparent', // Скрываем стандартный цвет
+              transform: 'translateY(-4px) scale(1.1)',
               '& .MuiBottomNavigationAction-label': {
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 fontWeight: 600,
+                color: theme.palette.text.primary,
+              },
+              '&:before': {
+                content: '""',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                background: alpha(theme.palette.primary.main, 0.1),
+                zIndex: -1,
               },
             },
+            '&:hover:not(.Mui-selected)': {
+              color: alpha(theme.palette.text.primary, 0.8),
+              transform: 'translateY(-1px)',
+            },
             '& .MuiBottomNavigationAction-label': {
-              fontSize: '0.7rem',
-              fontWeight: 400,
-              marginTop: '4px',
+              fontSize: '0.65rem',
+              fontWeight: 500,
+              marginTop: '2px',
+              transition: 'all 0.2s ease',
+            },
+            '& .MuiSvgIcon-root': {
+              fontSize: '1.3rem',
+              transition: 'all 0.2s ease',
             },
           },
         }}
       >
-        {navigationItems.map((item, index) => (
-          <BottomNavigationAction
-            key={item.path}
-            label={item.label}
-            icon={
-              item.badge ? (
-                <Badge
-                  variant="dot"
-                  sx={{
-                    '& .MuiBadge-badge': {
-                      backgroundColor: '#ec4899',
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      top: 2,
-                      right: 2,
-                    },
-                  }}
-                >
-                  {item.icon}
-                </Badge>
-              ) : (
-                item.icon
-              )
-            }
-          />
-        ))}
+        {navigationItems.map((item, index) => {
+          const isSelected = getCurrentValue() === index;
+          return (
+            <BottomNavigationAction
+              key={item.path}
+              label={item.label}
+              icon={
+                <Box sx={{ position: 'relative' }}>
+                  {item.badge ? (
+                    <Badge
+                      variant="dot"
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          backgroundColor: '#ec4899',
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          top: 0,
+                          right: 2,
+                          animation: isSelected ? 'none' : 'pulse 2s infinite',
+                        },
+                        '@keyframes pulse': {
+                          '0%': {
+                            opacity: 1,
+                            transform: 'scale(1)',
+                          },
+                          '50%': {
+                            opacity: 0.5,
+                            transform: 'scale(1.2)',
+                          },
+                          '100%': {
+                            opacity: 1,
+                            transform: 'scale(1)',
+                          },
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          color: isSelected ? item.color : 'inherit',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'color 0.2s ease',
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                    </Badge>
+                  ) : (
+                    <Box
+                      sx={{
+                        color: isSelected ? item.color : 'inherit',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'color 0.2s ease',
+                      }}
+                    >
+                      {item.icon}
+                    </Box>
+                  )}
+                </Box>
+              }
+            />
+          );
+        })}
       </BottomNavigation>
     </Paper>
   );

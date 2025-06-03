@@ -5,8 +5,24 @@
   padding: 0;
 }
 
+/* Исправление для проблем с масштабированием и viewport */
+html {
+  scroll-behavior: smooth;
+  /* Фиксируем проблемы с zoom и scale */
+  transform: scale(1);
+  transform-origin: top left;
+}
+
+/* Предотвращение горизонтального скролла */
+body {
+  overflow-x: hidden;
+}
+
 html, body {
   height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height для современных браузеров */
+  overflow: hidden; /* Предотвращаем скролл страницы */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -16,6 +32,9 @@ html, body {
 
 #root {
   height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height для современных браузеров */
+  overflow: hidden; /* Предотвращаем скролл страницы */
 }
 
 /* Скроллбары */
@@ -264,115 +283,39 @@ button:focus-visible {
   background-image: radial-gradient(circle, rgba(129, 140, 248, 0.1) 1px, transparent 1px);
 }
 
-/* Оптимизация макета для предотвращения скроллинга */
-.chat-layout {
-  height: 100vh !important;
-  max-height: 100vh !important;
-  overflow: hidden !important;
+/* Базовые flex стили для правильного размещения */
+.flex-full-height {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.chat-main-content {
-  height: calc(100vh - 64px) !important;
-  max-height: calc(100vh - 64px) !important;
-  overflow: hidden !important;
+.flex-grow-content {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
 }
 
-.chat-list-container {
-  height: 100% !important;
-  max-height: 100% !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
+.flex-shrink-content {
+  flex-shrink: 0;
 }
 
-.chat-window-container {
-  height: 100% !important;
-  max-height: 100% !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
+/* Стабилизация позиционирования чата */
+.main-layout-container {
+  position: relative;
+  transform: translateZ(0); /* Создает новый layer для предотвращения сдвигов */
 }
 
-.messages-container {
-  flex: 1 !important;
-  overflow-y: auto !important;
-  min-height: 0 !important;
+/* Предотвращение сдвигов при scroll */
+.chat-messages-container {
+  scroll-behavior: smooth;
+  will-change: scroll-position;
 }
 
-.input-container {
-  flex-shrink: 0 !important;
-}
-
-/* Мобильная оптимизация */
-@media (max-width: 768px) {
-  .chat-main-content {
-    height: calc(100vh - 64px - 90px) !important; /* Учитываем нижнюю навигацию */
-    max-height: calc(100vh - 64px - 90px) !important;
-  }
-}
-
-/* Дополнительные стили для лучшего UX */
-.compact-spacing {
-  padding: 8px !important;
-}
-
-.compact-spacing-small {
-  padding: 4px !important;
-}
-
-/* Принудительный контроль высот - КРИТИЧНО для предотвращения скроллинга */
-.MuiBox-root {
-  max-height: inherit !important;
-}
-
-.chat-container {
-  height: 100vh !important;
-  max-height: 100vh !important;
-  overflow: hidden !important;
-}
-
-.main-content-area {
-  height: calc(100vh - 64px) !important;
-  max-height: calc(100vh - 64px) !important;
-  overflow: hidden !important;
-}
-
-.chat-messages-area {
-  height: calc(100% - 120px) !important;
-  max-height: calc(100% - 120px) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-
-.chat-input-area {
-  height: 80px !important;
-  max-height: 120px !important;
-  min-height: 60px !important;
-  flex-shrink: 0 !important;
-}
-
-.sidebar-area {
-  height: 100% !important;
-  max-height: 100% !important;
-  overflow: hidden !important;
-}
-
-/* Принудительное скрытие скроллбаров на основных контейнерах */
-.no-scroll {
-  overflow: hidden !important;
-  height: 100% !important;
-  max-height: 100% !important;
-}
-
-/* Мобильная оптимизация - ещё более жёсткий контроль */
-@media (max-width: 768px) {
-  .main-content-area {
-    height: calc(100vh - 64px - 90px) !important;
-    max-height: calc(100vh - 64px - 90px) !important;
-  }
-  
-  .chat-messages-area {
-    height: calc(100% - 100px) !important;
-    max-height: calc(100% - 100px) !important;
+/* Стабилизация viewport */
+@supports (height: 100dvh) {
+  html, body, #root {
+    height: 100dvh;
   }
 }

@@ -4,6 +4,7 @@ import { chatService } from '../services/chat.service';
 import { apiService } from '../services/api.service';
 import { Chat, Message } from '@neuralchat/shared/types';
 import { useWebSocket } from './useWebSocket';
+import { extractArtifacts, removeArtifactsFromText } from '../utils/artifactParser';
 
 // Функция для преобразования File в base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -50,20 +51,20 @@ export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | '
   const { socket, on, off } = useWebSocket();
 
   // Fetch chat
-  const chatQuery = useQuery({
+  const chatQuery = useQuery<Chat | null>({
     queryKey: ['chat', chatId],
-    queryFn: async () => {
+    queryFn: async (): Promise<Chat | null> => {
       if (!chatId) return null;
       const response = await apiService.get<{ chat: Chat }>(`/chats/${chatId}`);
-      return response.data?.chat;
+      return response.data?.chat || null;
     },
     enabled: !!chatId && !initialChat,
   });
 
   // Fetch messages
-  const messagesQuery = useQuery({
+  const messagesQuery = useQuery<Message[]>({
     queryKey: ['messages', chatId],
-    queryFn: async () => {
+    queryFn: async (): Promise<Message[]> => {
       if (!chatId) return [];
       const response = await apiService.get<{ messages: Message[] }>(
         `/messages/chats/${chatId}/messages`
@@ -76,7 +77,7 @@ export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | '
   // Update state when queries change
   useEffect(() => {
     if (chatQuery.data) {
-      setChat(chatQuery.data);
+      setChat(chatQuery.data as Chat);
     }
   }, [chatQuery.data]);
 
@@ -107,8 +108,31 @@ export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | '
     const handleStreamComplete = (data: { chatId: string; messageId: string; message: Message }) => {
       if (data.chatId === chatId) {
         console.log('✅ Stream complete:', data);
+        console.log('📝 Claude response content:', data.message.content);
+        
+        // Парсим артефакты из сообщения Claude
+        const extractedArtifacts = extractArtifacts(data.message.content);
+        console.log('🔍 Artifact parsing result:', extractedArtifacts);
+        
+        if (extractedArtifacts.length > 0) {
+          console.log('🎨 Found artifacts:', extractedArtifacts);
+          
+          // Удаляем теги артефактов из текста
+          const cleanContent = removeArtifactsFromText(data.message.content, extractedArtifacts);
+          
+          // Обновляем сообщение с артефактами и очищенным контентом
+          const updatedMessage = {
+            ...data.message,
+            content: cleanContent,
+            artifacts: extractedArtifacts
+          };
+          
+          setMessages(prev => [...prev, updatedMessage]);
+        } else {
+          setMessages(prev => [...prev, data.message]);
+        }
+        
         setStreamingMessage(null);
-        setMessages(prev => [...prev, data.message]);
         queryClient.invalidateQueries({ queryKey: ['messages', chatId] });
       }
     };
@@ -157,7 +181,7 @@ export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | '
       if (!currentChatId && type) {
         const createResponse = await apiService.post<{ chat: Chat }>('/chats', {
           type,
-          model: type === 'claude' ? 'claude-3-5-sonnet-20241022' : 'grok-2-1212',
+          model: type === 'claude' ? 'claude-4-sonnet' : 'grok-2-1212',
           title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
         });
         

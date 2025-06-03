@@ -322,11 +322,12 @@ exports.createSlug = (text) => {
 // Calculate cost for tokens
 exports.calculateTokenCost = (tokens, model) => {
   const pricing = {
-    'claude-4-opus': { input: 0.015, output: 0.075 },
-    'claude-4-sonnet': { input: 0.003, output: 0.015 },
-    'claude-3.5-sonnet': { input: 0.003, output: 0.015 },
-    'grok-3': { input: 0.01, output: 0.03 },
-    'grok-2': { input: 0.005, output: 0.015 }
+    'claude-4-sonnet': { input: 0.015, output: 0.075 },
+    'claude-3-haiku-20240307': { input: 0.00025, output: 0.00125 },
+    'claude-3-opus-20240229': { input: 0.015, output: 0.075 },
+    'grok-2-1212': { input: 0.002, output: 0.01 },
+    'grok-2-vision': { input: 0.005, output: 0.015 },
+    'grok-2-image': { input: 0.005, output: 0.015 }
   };
   
   const modelPricing = pricing[model] || { input: 0.001, output: 0.002 };

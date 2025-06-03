@@ -14,6 +14,7 @@ import {
 import { Save, Psychology, SmartToy } from '@mui/icons-material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { settingsService } from '../../services/settings.service';
+import { UserSettings } from '@neuralchat/shared/types/user.types';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -48,9 +49,12 @@ const SystemPromptSettings: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Загрузка настроек
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading } = useQuery<UserSettings>({
     queryKey: ['userSettings'],
-    queryFn: settingsService.getUserSettings,
+    queryFn: async () => {
+      const result = await settingsService.getUserSettings();
+      return result as UserSettings;
+    },
   });
 
   // Обновляем локальное состояние при загрузке данных

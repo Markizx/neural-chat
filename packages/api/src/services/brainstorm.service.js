@@ -34,7 +34,7 @@ class BrainstormService {
 
       // Use Claude for initial brainstorming
       const claudeResponse = await claudeService.createMessage(messages, {
-        model: 'claude-3.5-sonnet',
+        model: 'claude-3-opus-20240229',
         systemPrompt,
         maxTokens: this.defaultSettings.maxTokens,
         temperature: this.defaultSettings.temperature
@@ -56,8 +56,8 @@ class BrainstormService {
   async startSession(topic, description, participants = {}) {
     try {
       const {
-        claudeModel = 'claude-3.5-sonnet',
-        grokModel = 'grok-3'
+            claudeModel = 'claude-4-sonnet',
+    grokModel = 'grok-2-1212'
       } = participants;
 
       const session = {

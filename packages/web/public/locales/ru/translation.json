@@ -18,7 +18,9 @@
     "yes": "Да",
     "no": "Нет",
     "or": "или",
-    "and": "и"
+    "and": "и",
+    "you": "Вы",
+    "status": "Статус"
   },
   "auth": {
     "login": "Вход",
@@ -61,10 +63,16 @@
     "delete": "Удалить",
     "edit": "Редактировать",
     "stopGenerating": "Остановить",
-    "thinking": "Думаю...",
+    "thinking": "печатает...",
+    "startNewChat": "Начните новый {{type}} чат",
+    "enterMessage": "Введите сообщение для начала",
+    "enterMessageFull": "Введите сообщение для начала нового чата",
+    "startChatWith": "Начните чат с {{type}}...",
+    "messageTo": "Сообщение {{type}}...",
     "models": {
       "claude": "Claude",
-      "grok": "Grok"
+      "grok": "Grok",
+      "assistant": "Ассистент"
     },
     "errors": {
       "failedToSend": "Не удалось отправить сообщение",
@@ -74,8 +82,24 @@
   "settings": {
     "title": "Настройки",
     "appearance": "Внешний вид",
+    "appearanceDescription": "Настройте внешний вид NeuralChat",
     "notifications": "Уведомления",
+    "notificationsDescription": "Выберите, какие уведомления получать",
+    "emailNotifications": "Email уведомления",
+    "pushNotifications": "Push уведомления",
+    "chatNotifications": "Уведомления о сообщениях",
+    "brainstormNotifications": "Обновления мозгового штурма",
+    "marketingEmails": "Маркетинговые письма",
     "security": "Безопасность",
+    "securityDescription": "Обеспечьте безопасность вашего аккаунта",
+    "password": "Пароль",
+    "passwordDescription": "Регулярно меняйте пароль для безопасности",
+    "changePassword": "Изменить пароль",
+    "twoFactor": "Двухфакторная аутентификация",
+    "twoFactorDescription": "Добавьте дополнительный уровень безопасности",
+    "enableTwoFactor": "Включить двухфакторную аутентификацию",
+    "deleteAccount": "Удалить аккаунт",
+    "deleteAccountWarning": "Навсегда удалить аккаунт и все данные. Это действие нельзя отменить.",
     "language": "Язык",
     "theme": "Тема",
     "themes": {
@@ -123,6 +147,25 @@
     "uploadFiles": "Загрузить файлы",
     "dragDrop": "Перетащите файлы сюда",
     "maxSize": "Максимальный размер файла: {{size}}"
+  },
+  "brainstorm": {
+    "title": "Мозговой штурм",
+    "newSession": "Новая сессия",
+    "currentSession": "Текущая сессия",
+    "history": "История",
+    "topic": "Тема",
+    "enterTopic": "Введите тему для обсуждения...",
+    "start": "Начать",
+    "turn": "Ход {{current}} / {{max}}",
+    "status": {
+      "active": "Активна",
+      "completed": "Завершена",
+      "paused": "Приостановлена"
+    },
+    "summary": "Резюме сессии",
+    "keyInsights": "Ключевые выводы",
+    "export": "Экспорт",
+    "share": "Поделиться"
   },
   "errors": {
     "generic": "Что-то пошло не так",

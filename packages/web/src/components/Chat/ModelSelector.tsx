@@ -17,8 +17,9 @@ import {
   Speed,
   Psychology,
   Visibility,
-  Star,
+  // Star,
 } from '@mui/icons-material';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ModelOption {
   id: string;
@@ -46,6 +47,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   onModelChange,
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -53,62 +55,61 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   const models: Record<'claude' | 'grok', ModelOption[]> = {
     claude: [
       {
-        id: 'claude-3.7-sonnet',
-        name: 'Claude 3.7 Sonnet',
-        description: 'Актуальная и сбалансированная модель',
-        capabilities: ['text', 'vision', 'code'],
-        icon: <Speed sx={{ color: '#3b82f6' }} />,
-        isPremium: false,
-        isNew: false,
+        id: 'claude-4-opus',
+        name: 'Claude 4 Opus',
+        description: 'Самая мощная модель Claude 4 поколения',
+        capabilities: ['text', 'vision', 'code', 'reasoning'],
+        icon: <AutoAwesome sx={{ color: '#9333ea' }} />,
+        isPremium: true,
+        isNew: true,
+        badge: 'НОВЫЙ',
       },
       {
         id: 'claude-4-sonnet',
         name: 'Claude 4 Sonnet',
-        description: 'Новейшая и самая умная модель',
-        capabilities: ['text', 'vision', 'code', 'artifacts'],
-        icon: <AutoAwesome sx={{ color: '#8b5cf6' }} />,
-        badge: 'Новинка',
-        isNew: true,
+        description: 'Сбалансированная Claude 4 модель',
+        capabilities: ['text', 'vision', 'code'],
+        icon: <Speed sx={{ color: '#7c3aed' }} />,
         isPremium: false,
+        isNew: true,
+        badge: 'НОВЫЙ',
       },
       {
-        id: 'claude-4-opus',
-        name: 'Claude 4 Opus',
-        description: 'Максимальные возможности для сложных задач',
-        capabilities: ['text', 'vision', 'code', 'artifacts', 'analysis'],
-        icon: <Star sx={{ color: '#f59e0b' }} />,
-        badge: 'Премиум',
-        isPremium: true,
-        requiresSubscription: 'max',
+        id: 'claude-3.7-sonnet',
+        name: 'Claude 3.7 Sonnet',
+        description: 'Обновленная модель 3.7 поколения',
+        capabilities: ['text', 'vision', 'code'],
+        icon: <Psychology sx={{ color: '#059669' }} />,
+        isPremium: false,
         isNew: false,
       },
     ],
     grok: [
       {
+        id: 'grok-2-image',
+        name: 'Grok 2 Image',
+        description: 'Генерация и обработка изображений',
+        capabilities: ['text', 'image_generation', 'editing'],
+        icon: <Speed sx={{ color: '#ea580c' }} />,
+        isPremium: false,
+        isNew: false,
+      },
+      {
         id: 'grok-3',
         name: 'Grok 3',
-        description: 'Основная текстовая модель',
-        capabilities: ['text', 'code'],
-        icon: <Psychology sx={{ color: '#ec4899' }} />,
-        isPremium: false,
-        isNew: false,
-        hint: 'Автоматически переключится на vision/image модель при необходимости'
+        description: 'Новейшая модель Grok третьего поколения',
+        capabilities: ['text', 'code', 'reasoning'],
+        icon: <AutoAwesome sx={{ color: '#dc2626' }} />,
+        isPremium: true,
+        isNew: true,
+        badge: 'НОВЫЙ',
       },
       {
-        id: 'grok-2-vision-1212',
+        id: 'grok-2-vision',
         name: 'Grok 2 Vision',
-        description: 'Понимание изображений',
-        capabilities: ['text', 'vision'],
-        icon: <Visibility sx={{ color: '#10b981' }} />,
-        isPremium: false,
-        isNew: false,
-      },
-      {
-        id: 'grok-2-image-1212',
-        name: 'Grok 2 Image',
-        description: 'Генерация изображений',
-        capabilities: ['text', 'image-generation'],
-        icon: <AutoAwesome sx={{ color: '#f59e0b' }} />,
+        description: 'Понимание и анализ изображений',
+        capabilities: ['text', 'vision', 'analysis'],
+        icon: <Visibility sx={{ color: '#b91c1c' }} />,
         isPremium: false,
         isNew: false,
       },
@@ -221,7 +222,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               fontSize: '11px',
             }}
           >
-            Выберите модель {type === 'claude' ? 'Claude' : 'Grok'}
+            {t('chat.selectModel')} {type === 'claude' ? 'Claude' : 'Grok'}
           </Typography>
         </Box>
         
@@ -259,6 +260,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               <ListItemIcon sx={{ minWidth: '40px', mt: 0.5 }}>
                 {model.icon}
               </ListItemIcon>
+              
               <ListItemText
                 primary={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
@@ -316,6 +318,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                         💡 {model.hint}
                       </Box>
                     )}
+                    
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                       {model.capabilities.slice(0, 3).map((capability) => (
                         <Chip

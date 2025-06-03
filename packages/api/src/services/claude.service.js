@@ -8,19 +8,18 @@ class ClaudeService {
     });
     
     this.models = {
-      'claude-3.7-sonnet': 'claude-3-7-sonnet-20241022',
-      'claude-4-sonnet': 'claude-sonnet-4-20250514',
-      'claude-4-opus': 'claude-opus-4-20250514',
-      'claude-3.5-sonnet': 'claude-3-5-sonnet-20241022',
-      'claude-4-opus': 'claude-opus-4-20250514',
-      'claude-4-sonnet': 'claude-sonnet-4-20250514'
+      'claude-4-opus': 'claude-3-opus-20240229',            // Самая мощная модель
+      'claude-4-sonnet': 'claude-3-opus-20240229',          // Основная модель (используем Opus)
+      'claude-3.7-sonnet': 'claude-3-haiku-20240307',       // Стандартная модель (используем Haiku)
+      'claude-3-haiku-20240307': 'claude-3-haiku-20240307', // Для совместимости
+      'claude-3-opus-20240229': 'claude-3-opus-20240229'    // Для совместимости
     };
   }
 
   async createMessage(messages, options = {}) {
     try {
       const {
-        model = 'claude-3.7-sonnet',
+        model = 'claude-4-sonnet',
         maxTokens = 4096,
         temperature = 0.7,
         systemPrompt = null,
@@ -47,15 +46,19 @@ class ClaudeService {
 
       const response = await this.client.messages.create(params);
       
+      const fullText = response.content[0].text;
+      const artifacts = this.extractArtifacts(fullText);
+      const cleanContent = this.removeArtifactsFromText(fullText, artifacts);
+      
       return {
-        content: response.content[0].text,
+        content: cleanContent,
         usage: {
           promptTokens: response.usage.input_tokens,
           completionTokens: response.usage.output_tokens,
           totalTokens: response.usage.input_tokens + response.usage.output_tokens
         },
         model: modelId,
-        artifacts: this.extractArtifacts(response.content[0].text)
+        artifacts: artifacts
       };
     } catch (error) {
       logger.error('Claude API error:', error);
@@ -188,65 +191,176 @@ class ClaudeService {
   extractArtifacts(content) {
     const artifacts = [];
     
-    // Extract code blocks
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    // Правильный парсер артефактов Claude - ищем теги <artifact>
+    const artifactRegex = /<artifact([^>]*?)>([\s\S]*?)<\/artifact>/g;
     let match;
     
-    while ((match = codeBlockRegex.exec(content)) !== null) {
-      artifacts.push({
-        id: `artifact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: 'code',
-        language: match[1] || 'plain',
-        content: match[2].trim()
-      });
-    }
-
-    // Extract React components from Claude artifacts
-    const reactRegex = /<function_calls>[\s\S]*?<invoke name="artifacts"[\s\S]*?type="application\/vnd\.ant\.react"[\s\S]*?<parameter name="content">([\s\S]*?)<\/antml:parameter>[\s\S]*?<\/antml:invoke>[\s\S]*?<\/antml:function_calls>/g;
-    
-    while ((match = reactRegex.exec(content)) !== null) {
-      artifacts.push({
-        id: `artifact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: 'react',
-        content: match[1].trim()
-      });
+    while ((match = artifactRegex.exec(content)) !== null) {
+      const attributeString = match[1];
+      const artifactContent = match[2];
+      
+      // Извлекаем атрибуты
+      const attributes = this.extractArtifactAttributes(attributeString);
+      
+      if (attributes.identifier) {
+        artifacts.push({
+          id: attributes.identifier,
+          type: this.mapArtifactType(attributes.type),
+          title: attributes.title || '',
+          language: attributes.language || this.detectLanguage(artifactContent, attributes.type),
+          content: artifactContent.trim()
+        });
+      }
     }
     
-    // Extract SVG artifacts
-    const svgRegex = /<function_calls>[\s\S]*?<invoke name="artifacts"[\s\S]*?type="image\/svg\+xml"[\s\S]*?<parameter name="content">([\s\S]*?)<\/antml:parameter>[\s\S]*?<\/antml:invoke>[\s\S]*?<\/antml:function_calls>/g;
-    
-    while ((match = svgRegex.exec(content)) !== null) {
-      artifacts.push({
-        id: `artifact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: 'svg',
-        content: match[1].trim()
-      });
-    }
-    
-    // Extract HTML artifacts
-    const htmlRegex = /<function_calls>[\s\S]*?<invoke name="artifacts"[\s\S]*?type="text\/html"[\s\S]*?<parameter name="content">([\s\S]*?)<\/antml:parameter>[\s\S]*?<\/antml:invoke>[\s\S]*?<\/antml:function_calls>/g;
-    
-    while ((match = htmlRegex.exec(content)) !== null) {
-      artifacts.push({
-        id: `artifact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: 'html',
-        content: match[1].trim()
-      });
+    // Также извлекаем обычные code blocks как fallback
+    if (artifacts.length === 0) {
+      const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+      
+      while ((match = codeBlockRegex.exec(content)) !== null) {
+        artifacts.push({
+          id: `artifact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: 'code',
+          language: match[1] || 'plain',
+          content: match[2].trim(),
+          title: `Code (${match[1] || 'plain'})`
+        });
+      }
     }
 
     return artifacts;
   }
 
+  removeArtifactsFromText(content, artifacts) {
+    let cleanContent = content;
+    
+    // Удаляем теги <artifact>...</artifact> из текста
+    const artifactRegex = /<artifact([^>]*?)>([\s\S]*?)<\/artifact>/g;
+    cleanContent = cleanContent.replace(artifactRegex, '');
+    
+    // Убираем лишние переносы строк
+    cleanContent = cleanContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+    
+    return cleanContent;
+  }
+
+  extractArtifactAttributes(attributeString) {
+    const attributes = {};
+    
+    const patterns = {
+      identifier: /identifier\s*=\s*["']([^"']+)["']/,
+      type: /type\s*=\s*["']([^"']+)["']/,
+      title: /title\s*=\s*["']([^"']+)["']/,
+      language: /language\s*=\s*["']([^"']+)["']/
+    };
+    
+    for (const [key, pattern] of Object.entries(patterns)) {
+      const match = attributeString.match(pattern);
+      if (match) {
+        attributes[key] = match[1];
+      }
+    }
+    
+    return attributes;
+  }
+
+  mapArtifactType(type) {
+    const typeMapping = {
+      'application/vnd.ant.code': 'code',
+      'text/markdown': 'markdown',
+      'application/vnd.ant.react': 'react',
+      'image/svg+xml': 'svg',
+      'text/html': 'html',
+      'text/mermaid': 'mermaid'
+    };
+    
+    return typeMapping[type] || 'code';
+  }
+
+  detectLanguage(content, type) {
+    if (!content || typeof content !== 'string') return 'text';
+    
+    const contentLower = content.toLowerCase();
+    
+    // Определяем по типу артефакта
+    if (type === 'application/vnd.ant.react') return 'jsx';
+    if (type === 'image/svg+xml') return 'xml';
+    if (type === 'text/html') return 'html';
+    if (type === 'text/markdown') return 'markdown';
+    
+    // JavaScript/TypeScript
+    if (contentLower.includes('import ') || 
+        contentLower.includes('export ') || 
+        contentLower.includes('function ') ||
+        contentLower.includes('const ') ||
+        contentLower.includes('let ') ||
+        contentLower.includes('var ')) {
+      if (contentLower.includes('interface ') || 
+          contentLower.includes(': string') ||
+          contentLower.includes(': number')) {
+        return 'typescript';
+      }
+      return 'javascript';
+    }
+    
+    // Python
+    if (contentLower.includes('def ') || 
+        contentLower.includes('import ') ||
+        contentLower.includes('from ') ||
+        contentLower.includes('class ') ||
+        contentLower.includes('print(')) {
+      return 'python';
+    }
+    
+    // HTML
+    if (contentLower.includes('<!doctype') || 
+        contentLower.includes('<html') ||
+        contentLower.includes('<div') ||
+        contentLower.includes('<body')) {
+      return 'html';
+    }
+    
+    // CSS
+    if (contentLower.includes('{') && contentLower.includes('}') && 
+        (contentLower.includes('color:') || 
+         contentLower.includes('margin:') || 
+         contentLower.includes('padding:'))) {
+      return 'css';
+    }
+    
+    // JSON
+    const trimmed = content.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        JSON.parse(content);
+        return 'json';
+      } catch (e) {
+        // Не JSON
+      }
+    }
+    
+    // SQL
+    if (contentLower.includes('select ') ||
+        contentLower.includes('create ') ||
+        contentLower.includes('insert ') ||
+        contentLower.includes('update ')) {
+      return 'sql';
+    }
+    
+    return 'text';
+  }
+
   calculateCost(usage, model) {
     const pricing = {
-      'claude-3.7-sonnet': { input: 0.003, output: 0.015 },
-      'claude-4-sonnet': { input: 0.003, output: 0.015 },
-      'claude-4-opus': { input: 0.015, output: 0.075 },
-      // Для обратной совместимости
-      'claude-3.5-sonnet': { input: 0.003, output: 0.015 }
+      'claude-4-opus': { input: 0.015, output: 0.075 },         // Премиум модель (Claude 3 Opus)
+      'claude-4-sonnet': { input: 0.015, output: 0.075 },       // Стандартная модель (Claude 3 Opus)
+      'claude-3.7-sonnet': { input: 0.00025, output: 0.00125 }, // Базовая модель (Claude 3 Haiku)
+      'claude-3-haiku-20240307': { input: 0.00025, output: 0.00125 },
+      'claude-3-opus-20240229': { input: 0.015, output: 0.075 }
     };
 
-    const modelPricing = pricing[model] || pricing['claude-3.7-sonnet'];
+    const modelPricing = pricing[model] || pricing['claude-4-sonnet'];
     
     const inputCost = (usage.promptTokens / 1000) * modelPricing.input;
     const outputCost = (usage.completionTokens / 1000) * modelPricing.output;
@@ -260,7 +374,7 @@ class ClaudeService {
       
       // Try a minimal request
       await client.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-opus-20240229',
         messages: [{ role: 'user', content: 'Hi' }],
         max_tokens: 10
       });

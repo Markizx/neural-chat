@@ -71,7 +71,8 @@ const PlansPage: NextPage = () => {
   const fetchPlans = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/v1/admin/plans', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/v1/admin/plans`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

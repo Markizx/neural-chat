@@ -6,6 +6,7 @@ import Subscription from '../models/subscription.model';
 import { startOfDay, subDays, format } from 'date-fns';
 import logger from '../utils/logger';
 import Plan from '../models/plan.model';
+const { fixSubscriptionPlans, checkSubscriptionPlans } = require('../utils/fixSubscriptionPlans');
 
 // Get users with filters and pagination
 export const getUsers = async (req: Request, res: Response) => {
@@ -631,10 +632,11 @@ export const changeUserPlan = async (req: Request, res: Response) => {
       });
     }
 
-    // Update user's subscription
+    // Update user's subscription - нормализуем имя плана
+    const normalizedPlanName = plan.name.toLowerCase();
     user.subscription = {
       ...user.subscription,
-      plan: plan.name as 'free' | 'pro' | 'business',
+      plan: normalizedPlanName as 'free' | 'pro' | 'business',
       status: 'active'
     };
 
@@ -650,6 +652,33 @@ export const changeUserPlan = async (req: Request, res: Response) => {
       success: false,
       message: 'Internal server error'
     });
+  }
+};
+
+// Fix subscription plans - исправляет планы подписки в базе данных
+export const fixPlans = async (req: Request, res: Response) => {
+  try {
+    logger.info('Admin fixing subscription plans');
+    
+    // Сначала проверим текущее состояние
+    const statsBefore = await checkSubscriptionPlans();
+    
+    // Исправим планы
+    const result = await fixSubscriptionPlans();
+    
+    // Проверим состояние после исправления
+    const statsAfter = await checkSubscriptionPlans();
+    
+    res.json({
+      success: result.success,
+      fixed: result.fixed,
+      statsBefore,
+      statsAfter,
+      message: `Исправлено ${result.fixed} планов подписки`
+    });
+  } catch (error) {
+    logger.error('Error fixing subscription plans:', error);
+    res.status(500).json({ message: 'Failed to fix subscription plans' });
   }
 };
 

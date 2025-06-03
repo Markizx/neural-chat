@@ -6,6 +6,30 @@ const { apiResponse } = require('../utils/apiResponse');
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
+// Helper function to generate system prompts (moved to top to avoid circular dependency)
+function generateSystemPrompt(ai, format = 'brainstorm') {
+  const prompts = {
+    brainstorm: {
+      claude: `You are Claude, participating in a brainstorming session. Be creative, thoughtful, and build upon ideas presented. Offer unique perspectives and innovative solutions. Be concise but insightful.`,
+      grok: `You are Grok, participating in a brainstorming session. Be bold, unconventional, and challenge assumptions. Bring fresh perspectives and think outside the box. Be direct and engaging.`
+    },
+    debate: {
+      claude: `You are Claude in a debate. Present well-reasoned arguments, use evidence, and maintain a respectful tone. Challenge opposing views constructively.`,
+      grok: `You are Grok in a debate. Take strong positions, use sharp wit, and don't be afraid to be controversial. Challenge conventional thinking.`
+    },
+    analysis: {
+      claude: `You are Claude conducting analysis. Be systematic, thorough, and objective. Break down complex topics and provide clear insights.`,
+      grok: `You are Grok conducting analysis. Be incisive, direct, and willing to point out uncomfortable truths. Cut through complexity with clarity.`
+    },
+    creative: {
+      claude: `You are Claude in a creative session. Be imaginative, explore possibilities, and build elaborate concepts. Think artistically and expansively.`,
+      grok: `You are Grok in a creative session. Be wildly inventive, break rules, and propose radical ideas. Push creative boundaries.`
+    }
+  };
+
+  return prompts[format]?.[ai] || prompts.brainstorm[ai];
+}
+
 // Start brainstorm session
 exports.startBrainstorm = async (req, res, next) => {
   try {
@@ -32,10 +56,10 @@ exports.startBrainstorm = async (req, res, next) => {
     
     // Создаем персонализированные промпты
     const claudePrompt = user?.settings?.brainstormPrompts?.claude || 
-      exports.generateSystemPrompt('claude', settings?.format || 'brainstorm');
+      generateSystemPrompt('claude', settings?.format || 'brainstorm');
     
     const grokPrompt = user?.settings?.brainstormPrompts?.grok || 
-      exports.generateSystemPrompt('grok', settings?.format || 'brainstorm');
+      generateSystemPrompt('grok', settings?.format || 'brainstorm');
 
     // Create chat first
     const chat = new Chat({
@@ -61,7 +85,7 @@ exports.startBrainstorm = async (req, res, next) => {
           systemPrompt: claudePrompt
         },
         grok: {
-          model: participants?.grok?.model || 'grok-3',
+          model: participants?.grok?.model || 'grok-2-1212',
           systemPrompt: grokPrompt
         }
       },
@@ -343,23 +367,60 @@ exports.sendBrainstormMessage = async (req, res, next) => {
   }
 };
 
-// Continue brainstorm conversation with streaming
+// Continue brainstorm conversation with PARALLEL streaming
 exports.continueBrainstorm = async function(session, io, userId) {
-  console.log('🔄 Starting continueBrainstorm for session:', session._id);
+  console.log('🔄 Starting PARALLEL continueBrainstorm for session:', session._id);
   
-  const messages = [];
-  
-  // Get next speaker
-  let speaker = session.getNextSpeaker();
-  console.log('🎤 Next speaker:', speaker);
-  
-  // Continue with one speaker at a time for better UX
   if (session.currentTurn >= session.settings.maxTurns) {
     console.log('⏹️ Max turns reached, completing session');
     session.complete();
     await session.save();
-    return messages;
+    return [];
   }
+
+  // АСИНХРОННЫЙ ПАЙПЛАЙН: запускаем обе модели ПАРАЛЛЕЛЬНО!
+  const claudePromise = exports.generateBrainstormResponse(session, 'claude', io, userId);
+  const grokPromise = exports.generateBrainstormResponse(session, 'grok', io, userId);
+  
+  console.log('🚀 Запускаем Claude и Grok ПАРАЛЛЕЛЬНО...');
+  
+  try {
+    // Ждем оба ответа одновременно
+    const [claudeResult, grokResult] = await Promise.all([claudePromise, grokPromise]);
+    
+    const messages = [];
+    if (claudeResult) messages.push(claudeResult);
+    if (grokResult) messages.push(grokResult);
+    
+    console.log('✅ Получены ответы от обеих моделей:', {
+      claude: !!claudeResult,
+      grok: !!grokResult,
+      totalTime: 'параллельно!'
+    });
+    
+    // Сохраняем сессию
+    await session.save();
+    
+    return messages;
+  } catch (error) {
+    console.error('❌ Error in parallel brainstorm:', error);
+    session.status = 'error';
+    await session.save();
+    
+    if (io) {
+      io.to(`brainstorm_${session._id}`).emit('brainstorm:error', {
+        sessionId: session._id,
+        error: error.message
+      });
+    }
+    
+    return [];
+  }
+};
+
+// Новая функция для генерации ответа одной модели
+exports.generateBrainstormResponse = async function(session, speaker, io, userId) {
+  console.log(`🤖 Starting ${speaker} response generation...`);
 
   // Prepare conversation history
   const history = session.messages.map(m => ({
@@ -471,38 +532,23 @@ exports.continueBrainstorm = async function(session, io, userId) {
     }
     
     console.log(`💾 Added ${speaker} message to session`);
-    messages.push(aiMessage);
     
-    // Сохраняем сессию
-    await session.save();
-    
-    // Автоматически продолжаем с другим AI через небольшую задержку
-    setTimeout(async () => {
-      const nextSpeaker = speaker === 'claude' ? 'grok' : 'claude';
-      
-      if (session.currentTurn < session.settings.maxTurns && session.status === 'active') {
-        console.log(`🔄 Auto-continuing with ${nextSpeaker}`);
-        await exports.continueBrainstorm(session, io, userId);
-      }
-    }, 1000); // 1 секунда задержки между ответами
+    // ВОЗВРАЩАЕМ СООБЩЕНИЕ для Promise.all
+    return aiMessage;
     
   } catch (error) {
     console.error(`❌ Error in ${speaker} service:`, error.message);
-    session.status = 'error';
-    await session.save();
     
     if (io) {
       io.to(`brainstorm_${session._id}`).emit('brainstorm:error', {
         sessionId: session._id,
+        speaker: speaker,
         error: error.message
       });
     }
     
     throw error;
   }
-
-  console.log('✅ continueBrainstorm completed, returning', messages.length, 'messages');
-  return messages;
 };
 
 // Pause brainstorm
@@ -689,7 +735,7 @@ exports.exportBrainstorm = async (req, res, next) => {
     const exportData = session.toExportJSON();
 
     if (format === 'markdown') {
-      const markdown = this.convertToMarkdown(exportData);
+      const markdown = exports.convertToMarkdown(exportData);
       res.setHeader('Content-Type', 'text/markdown');
       res.setHeader('Content-Disposition', `attachment; filename="brainstorm-${id}.md"`);
       res.send(markdown);
@@ -736,7 +782,7 @@ exports.generateSummary = async function(session) {
       role: 'user',
       content: `Summarize this brainstorming session between Claude and Grok on the topic "${session.topic}":\n\n${conversation}\n\nProvide a concise summary of key points, agreements, disagreements, and conclusions.`
     }], {
-      model: 'claude-3.5-sonnet',
+      model: 'claude-4-sonnet',
       maxTokens: 500,
       temperature: 0.3
     });
@@ -759,7 +805,7 @@ exports.extractInsights = async function(session) {
       role: 'user',
       content: `Extract 3-5 key insights from this brainstorming discussion:\n\n${conversation}\n\nList each insight as a brief, actionable statement.`
     }], {
-      model: 'claude-3.5-sonnet',
+      model: 'claude-4-sonnet',
       maxTokens: 300,
       temperature: 0.3
     });

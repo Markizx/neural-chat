@@ -5,8 +5,6 @@ import {
   Chip,
   Typography,
   Paper,
-  LinearProgress,
-  Alert,
   Tooltip,
 } from '@mui/material';
 import {
@@ -24,7 +22,9 @@ interface FileUploadProps {
   maxFiles?: number;
   maxFileSize?: number; // в MB
   acceptedTypes?: string[];
+  acceptedFileTypes?: string[]; // Алиас для acceptedTypes
   disabled?: boolean;
+  helperText?: string;
 }
 
 interface UploadedFile {
@@ -59,8 +59,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
     '.html',
     '.css',
   ],
+  acceptedFileTypes,
   disabled = false,
+  helperText,
 }) => {
+  // Используем acceptedFileTypes если предоставлено, иначе acceptedTypes
+  const finalAcceptedTypes = acceptedFileTypes || acceptedTypes;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
@@ -91,7 +95,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       return `Файл слишком большой. Максимальный размер: ${maxFileSize}MB`;
     }
 
-    const isAccepted = acceptedTypes.some(type => {
+    const isAccepted = finalAcceptedTypes.some(type => {
       if (type.startsWith('.')) {
         return file.name.toLowerCase().endsWith(type);
       }
@@ -185,7 +189,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         ref={fileInputRef}
         type="file"
         multiple
-        accept={acceptedTypes.join(',')}
+        accept={finalAcceptedTypes.join(',')}
         onChange={(e) => handleFileSelect(e.target.files)}
         style={{ display: 'none' }}
       />
@@ -260,6 +264,23 @@ const FileUpload: React.FC<FileUploadProps> = ({
       {uploadedFiles.length > 0 && (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
           {uploadedFiles.length} из {maxFiles} файлов
+        </Typography>
+      )}
+
+      {/* Helper text */}
+      {helperText && (
+        <Typography 
+          variant="caption" 
+          color="text.secondary" 
+          sx={{ 
+            display: 'block', 
+            mt: 1, 
+            fontSize: '0.7rem',
+            lineHeight: 1.2,
+            maxWidth: '400px'
+          }}
+        >
+          {helperText}
         </Typography>
       )}
     </Box>

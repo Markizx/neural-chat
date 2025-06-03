@@ -62,7 +62,15 @@ i18n
 // Custom hook to sync i18n with user settings
 export const syncLanguageWithUserSettings = (settings: any) => {
   const language = settings?.language;
-  if (language && language !== i18n.language) {
+  if (language && language !== i18n.language && Object.keys(supportedLanguages).includes(language)) {
+    i18n.changeLanguage(language);
+    storageService.setLanguage(language);
+  }
+};
+
+// Force set language immediately
+export const forceSetLanguage = (language: string) => {
+  if (Object.keys(supportedLanguages).includes(language)) {
     i18n.changeLanguage(language);
     storageService.setLanguage(language);
   }

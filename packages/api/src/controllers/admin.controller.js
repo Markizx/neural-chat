@@ -124,7 +124,7 @@ exports.getUserStats = async (req, res) => {
 // Update user
 exports.updateUser = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id: userId } = req.params;
     const updates = req.body;
 
     // Remove sensitive fields
@@ -165,7 +165,7 @@ exports.updateUser = async (req, res) => {
 // Delete user
 exports.deleteUser = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id: userId } = req.params;
 
     const user = await User.findById(userId);
     if (!user) {

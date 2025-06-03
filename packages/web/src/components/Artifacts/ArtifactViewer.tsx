@@ -30,11 +30,11 @@ const ArtifactViewer: React.FC<ArtifactViewerProps> = ({ artifact }) => {
   const [activeTab, setActiveTab] = useState(0);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(artifact.content);
+    navigator.clipboard.writeText(artifact.content || '');
   };
 
   const handleDownload = () => {
-    const blob = new Blob([artifact.content], { type: 'text/plain' });
+    const blob = new Blob([artifact.content || ''], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -65,7 +65,7 @@ const ArtifactViewer: React.FC<ArtifactViewerProps> = ({ artifact }) => {
   const renderContent = () => {
     switch (artifact.type) {
       case 'code':
-        return <CodeArtifact artifact={artifact} />;
+        return <CodeArtifact artifact={{ ...artifact, content: artifact.content || '' }} />;
       case 'react':
         return (
           <Box>
@@ -74,14 +74,14 @@ const ArtifactViewer: React.FC<ArtifactViewerProps> = ({ artifact }) => {
               <Tab label="Code" />
             </Tabs>
             {activeTab === 0 ? (
-              <ReactArtifact artifact={artifact} />
+              <ReactArtifact artifact={{ ...artifact, content: artifact.content || '' }} />
             ) : (
-              <CodeArtifact artifact={{ ...artifact, language: 'jsx' }} />
+              <CodeArtifact artifact={{ ...artifact, content: artifact.content || '', language: 'jsx' }} />
             )}
           </Box>
         );
       case 'markdown':
-        return <CodeArtifact artifact={{ ...artifact, language: 'markdown' }} />;
+        return <CodeArtifact artifact={{ ...artifact, content: artifact.content || '', language: 'markdown' }} />;
       case 'html':
         return (
           <Box>
@@ -100,11 +100,11 @@ const ArtifactViewer: React.FC<ArtifactViewerProps> = ({ artifact }) => {
                   },
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: `<iframe srcdoc="${artifact.content.replace(/"/g, '&quot;')}"></iframe>`,
+                  __html: `<iframe srcdoc="${(artifact.content || '').replace(/"/g, '&quot;')}"></iframe>`,
                 }}
               />
             ) : (
-              <CodeArtifact artifact={{ ...artifact, language: 'html' }} />
+              <CodeArtifact artifact={{ ...artifact, content: artifact.content || '', language: 'html' }} />
             )}
           </Box>
         );
@@ -120,13 +120,13 @@ const ArtifactViewer: React.FC<ArtifactViewerProps> = ({ artifact }) => {
                 height: 'auto',
               },
             }}
-            dangerouslySetInnerHTML={{ __html: artifact.content }}
+            dangerouslySetInnerHTML={{ __html: artifact.content || '' }}
           />
         );
       default:
         return (
           <Typography variant="body2" sx={{ p: 2, whiteSpace: 'pre-wrap' }}>
-            {artifact.content}
+            {artifact.content || ''}
           </Typography>
         );
     }

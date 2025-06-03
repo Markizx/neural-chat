@@ -46,7 +46,7 @@ async function testBrainstormSessions() {
         topic: 'Test Brainstorm Session',
         description: 'This is a test session',
         participants: {
-          claude: { model: 'claude-3.5-sonnet' },
+          claude: { model: 'claude-3.7-sonnet' },
           grok: { model: 'grok-2' }
         },
         messages: [],

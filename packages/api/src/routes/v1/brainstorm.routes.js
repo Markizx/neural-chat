@@ -7,8 +7,8 @@ const { authenticate, requireSubscription } = require('../../middleware/auth.mid
 const startBrainstormValidation = [
   body('topic').notEmpty().trim(),
   body('description').optional().trim(),
-  body('claudeModel').optional().isIn(['claude-4-opus', 'claude-4-sonnet', 'claude-3.5-sonnet']),
-  body('grokModel').optional().isIn(['grok-3', 'grok-2']),
+  body('claudeModel').optional().isIn(['claude-4-sonnet', 'claude-4-opus', 'claude-3.7-sonnet', 'claude-3-haiku-20240307', 'claude-3-opus-20240229']),
+  body('grokModel').optional().isIn(['grok-2-1212', 'grok-2-vision-1212', 'grok-2-1212']),
   body('settings.format').optional().isIn(['brainstorm', 'debate', 'analysis', 'creative']),
   body('settings.maxTurns').optional().isInt({ min: 5, max: 50 }),
   body('settings.turnDuration').optional().isInt({ min: 30, max: 120 })

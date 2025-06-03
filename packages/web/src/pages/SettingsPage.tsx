@@ -13,11 +13,13 @@ import {
   Security,
   Api,
   Psychology,
+  CreditCard,
 } from '@mui/icons-material';
 import ProfileSettings from '../components/Settings/ProfileSettings';
 import ApiSettings from '../components/Settings/ApiSettings';
 import SettingsPanel from '../components/Settings/SettingsPanel';
 import SystemPromptSettings from '../components/Settings/SystemPromptSettings';
+import SubscriptionSettings from '../components/Settings/SubscriptionSettings';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -41,7 +43,11 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, height: 'calc(100vh - 100px)' }}>
+    <Container 
+      className="settings-page-container page-content"
+      maxWidth="lg" 
+      sx={{ py: 2, height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       <Paper sx={{ 
         borderRadius: 2, 
         overflow: 'hidden',
@@ -63,6 +69,7 @@ const SettingsPage: React.FC = () => {
           }}
         >
           <Tab icon={<Person />} label="Profile" />
+          <Tab icon={<CreditCard />} label="Subscription" />
           <Tab icon={<Palette />} label="Appearance" />
           <Tab icon={<Psychology />} label="AI Prompts" />
           <Tab icon={<Notifications />} label="Notifications" />
@@ -80,18 +87,21 @@ const SettingsPage: React.FC = () => {
             <ProfileSettings />
           </TabPanel>
           <TabPanel value={activeTab} index={1}>
-            <SettingsPanel type="appearance" />
+            <SubscriptionSettings />
           </TabPanel>
           <TabPanel value={activeTab} index={2}>
-            <SystemPromptSettings />
+            <SettingsPanel type="appearance" />
           </TabPanel>
           <TabPanel value={activeTab} index={3}>
-            <SettingsPanel type="notifications" />
+            <SystemPromptSettings />
           </TabPanel>
           <TabPanel value={activeTab} index={4}>
-            <SettingsPanel type="security" />
+            <SettingsPanel type="notifications" />
           </TabPanel>
           <TabPanel value={activeTab} index={5}>
+            <SettingsPanel type="security" />
+          </TabPanel>
+          <TabPanel value={activeTab} index={6}>
             <ApiSettings />
           </TabPanel>
         </Box>

@@ -76,7 +76,7 @@ const userSchema = new mongoose.Schema({
       push: { type: Boolean, default: false }
     },
     defaultModel: {
-      claude: { type: String, default: 'claude-3.7-sonnet' },
+      claude: { type: String, default: 'claude-4-sonnet' },
       grok: { type: String, default: 'grok-3' }
     },
     // Персональные системные промпты

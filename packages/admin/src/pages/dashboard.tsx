@@ -29,6 +29,13 @@ import {
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { format, subDays, startOfDay } from 'date-fns';
+
+// Helper function for safe date formatting
+const formatDate = (dateValue: string | Date | undefined, formatStr: string = 'HH:mm:ss', fallback: string = 'N/A'): string => {
+  if (!dateValue) return fallback;
+  const date = new Date(dateValue);
+  return !isNaN(date.getTime()) ? format(date, formatStr) : fallback;
+};
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { adminApi } from '../lib/api';
 
@@ -394,7 +401,7 @@ const Dashboard: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary={log.message}
-                      secondary={format(new Date(log.timestamp), 'HH:mm:ss')}
+                      secondary={formatDate(log.timestamp, 'HH:mm:ss')}
                     />
                   </ListItem>
                 )) || (

@@ -6,10 +6,14 @@ export * from './api.types';
 // Artifact type
 export interface Artifact {
   id: string;
-  type: 'code' | 'markdown' | 'react' | 'svg' | 'html' | 'mermaid';
+  type: 'code' | 'markdown' | 'react' | 'svg' | 'html' | 'mermaid' | 'image' | 'generated-image';
   title?: string;
-  content: string;
+  content?: string;
   language?: string;
+  url?: string;
+  alt?: string;
+  description?: string;
+  revisedPrompt?: string;
   metadata?: Record<string, any>;
 }
 

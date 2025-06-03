@@ -52,6 +52,19 @@ router.delete('/avatar', authenticate, userController.deleteAvatar);
 // Get usage statistics
 router.get('/usage', authenticate, userController.getUsage);
 
+// Subscription management
+router.post('/subscription/change',
+  authenticate,
+  [
+    body('planId').notEmpty().isString()
+  ],
+  userController.changeSubscription
+);
+
+router.post('/subscription/cancel', authenticate, userController.cancelSubscription);
+
+router.get('/subscription', authenticate, userController.getSubscription);
+
 // Reset password
 router.post('/reset-password',
   authenticate,

@@ -18,7 +18,9 @@
     "yes": "是",
     "no": "否",
     "or": "或",
-    "and": "和"
+    "and": "和",
+    "you": "您",
+    "status": "状态"
   },
   "auth": {
     "login": "登录",
@@ -61,10 +63,16 @@
     "delete": "删除",
     "edit": "编辑",
     "stopGenerating": "停止",
-    "thinking": "思考中...",
+    "thinking": "正在输入...",
+    "startNewChat": "开始新的{{type}}聊天",
+    "enterMessage": "输入消息",
+    "enterMessageFull": "输入消息开始新聊天",
+    "startChatWith": "与{{type}}开始聊天...",
+    "messageTo": "发送给{{type}}...",
     "models": {
       "claude": "Claude",
-      "grok": "Grok"
+      "grok": "Grok",
+      "assistant": "助手"
     },
     "errors": {
       "failedToSend": "发送消息失败",
@@ -74,8 +82,24 @@
   "settings": {
     "title": "设置",
     "appearance": "外观",
+    "appearanceDescription": "自定义 NeuralChat 的外观",
     "notifications": "通知",
+    "notificationsDescription": "选择要接收的通知",
+    "emailNotifications": "邮件通知",
+    "pushNotifications": "推送通知",
+    "chatNotifications": "聊天消息通知",
+    "brainstormNotifications": "头脑风暴更新",
+    "marketingEmails": "营销邮件",
     "security": "安全",
+    "securityDescription": "保护您的账户安全",
+    "password": "密码",
+    "passwordDescription": "定期更改密码",
+    "changePassword": "修改密码",
+    "twoFactor": "双因素验证",
+    "twoFactorDescription": "增加额外的安全层",
+    "enableTwoFactor": "启用双因素验证",
+    "deleteAccount": "删除账户",
+    "deleteAccountWarning": "永久删除您的账户和所有数据。此操作无法撤销。",
     "language": "语言",
     "theme": "主题",
     "themes": {
@@ -123,6 +147,25 @@
     "uploadFiles": "上传文件",
     "dragDrop": "拖放文件到这里",
     "maxSize": "最大文件大小：{{size}}"
+  },
+  "brainstorm": {
+    "title": "头脑风暴",
+    "newSession": "新建会话",
+    "currentSession": "当前会话",
+    "history": "历史记录",
+    "topic": "主题",
+    "enterTopic": "输入讨论主题...",
+    "start": "开始",
+    "turn": "轮次 {{current}} / {{max}}",
+    "status": {
+      "active": "活跃",
+      "completed": "已完成",
+      "paused": "已暂停"
+    },
+    "summary": "会话摘要",
+    "keyInsights": "关键见解",
+    "export": "导出",
+    "share": "分享"
   },
   "errors": {
     "generic": "出现错误",

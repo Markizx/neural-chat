@@ -134,15 +134,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ type }) => {
           <FormControl fullWidth>
             <InputLabel>{t('settings.defaultModel')}</InputLabel>
             <Select
-              value={user?.settings?.defaultModel || 'claude-3.5-sonnet'}
+              value={user?.settings?.defaultModel || 'claude-4-sonnet'}
               onChange={(e) => handleSettingChange('defaultModel', e.target.value)}
               label={t('settings.defaultModel')}
             >
-              <MenuItem value="claude-4-opus">Claude 4 Opus</MenuItem>
               <MenuItem value="claude-4-sonnet">Claude 4 Sonnet</MenuItem>
-              <MenuItem value="claude-3.5-sonnet">Claude 3.5 Sonnet</MenuItem>
-              <MenuItem value="grok-3">Grok 3</MenuItem>
-              <MenuItem value="grok-2">Grok 2</MenuItem>
+            <MenuItem value="claude-4-opus">Claude 4 Opus</MenuItem>
+            <MenuItem value="claude-3.7-sonnet">Claude 3.7 Sonnet</MenuItem>
+              <MenuItem value="claude-3-haiku-20240307">Claude 3 Haiku</MenuItem>
+              <MenuItem value="grok-2-1212">Grok 2</MenuItem>
+              <MenuItem value="grok-2-vision-1212">Grok 2 Vision</MenuItem>
             </Select>
           </FormControl>
         </Box>

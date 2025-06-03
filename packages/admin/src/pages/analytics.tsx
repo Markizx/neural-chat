@@ -44,6 +44,17 @@ import {
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { format, subDays } from 'date-fns';
+
+// Helper function for safe date formatting in charts
+const safeTickFormatter = (value: any) => {
+  try {
+    if (!value) return '';
+    const date = new Date(value);
+    return !isNaN(date.getTime()) ? format(date, 'MMM d') : '';
+  } catch {
+    return '';
+  }
+};
 import { adminApi } from '../lib/api';
 
 interface StatCardProps {
@@ -232,7 +243,7 @@ const Analytics: React.FC = () => {
                 <XAxis 
                   dataKey="date" 
                   stroke={theme.palette.text.secondary}
-                  tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                  tickFormatter={safeTickFormatter}
                 />
                 <YAxis stroke={theme.palette.text.secondary} />
                 <Tooltip
@@ -313,7 +324,7 @@ const Analytics: React.FC = () => {
                 <XAxis 
                   dataKey="date" 
                   stroke={theme.palette.text.secondary}
-                  tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                  tickFormatter={safeTickFormatter}
                 />
                 <YAxis stroke={theme.palette.text.secondary} />
                 <Tooltip
@@ -350,7 +361,7 @@ const Analytics: React.FC = () => {
                 <XAxis 
                   dataKey="date" 
                   stroke={theme.palette.text.secondary}
-                  tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                  tickFormatter={safeTickFormatter}
                 />
                 <YAxis stroke={theme.palette.text.secondary} />
                 <Tooltip

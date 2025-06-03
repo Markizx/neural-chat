@@ -18,7 +18,9 @@
     "yes": "Oui",
     "no": "Non",
     "or": "ou",
-    "and": "et"
+    "and": "et",
+    "you": "Vous",
+    "status": "Statut"
   },
   "auth": {
     "login": "Connexion",
@@ -61,10 +63,16 @@
     "delete": "Supprimer",
     "edit": "Modifier",
     "stopGenerating": "Arrêter",
-    "thinking": "Réflexion...",
+    "thinking": "tape...",
+    "startNewChat": "Démarrer un nouveau chat {{type}}",
+    "enterMessage": "Entrez un message pour commencer",
+    "enterMessageFull": "Entrez un message pour commencer un nouveau chat",
+    "startChatWith": "Démarrer un chat avec {{type}}...",
+    "messageTo": "Message à {{type}}...",
     "models": {
       "claude": "Claude",
-      "grok": "Grok"
+      "grok": "Grok",
+      "assistant": "Assistant"
     },
     "errors": {
       "failedToSend": "Échec de l'envoi du message",
@@ -74,8 +82,24 @@
   "settings": {
     "title": "Paramètres",
     "appearance": "Apparence",
+    "appearanceDescription": "Personnalisez l'apparence de NeuralChat",
     "notifications": "Notifications",
+    "notificationsDescription": "Choisissez les notifications que vous souhaitez recevoir",
+    "emailNotifications": "Notifications par email",
+    "pushNotifications": "Notifications push",
+    "chatNotifications": "Notifications de messages",
+    "brainstormNotifications": "Mises à jour de brainstorming",
+    "marketingEmails": "Emails marketing",
     "security": "Sécurité",
+    "securityDescription": "Sécurisez votre compte",
+    "password": "Mot de passe",
+    "passwordDescription": "Changez régulièrement votre mot de passe",
+    "changePassword": "Changer le mot de passe",
+    "twoFactor": "Authentification à deux facteurs",
+    "twoFactorDescription": "Ajoutez une couche de sécurité supplémentaire",
+    "enableTwoFactor": "Activer l'authentification à deux facteurs",
+    "deleteAccount": "Supprimer le compte",
+    "deleteAccountWarning": "Supprimer définitivement votre compte et toutes les données. Cette action ne peut pas être annulée.",
     "language": "Langue",
     "theme": "Thème",
     "themes": {
@@ -123,6 +147,25 @@
     "uploadFiles": "Télécharger des fichiers",
     "dragDrop": "Glissez et déposez les fichiers ici",
     "maxSize": "Taille maximale du fichier : {{size}}"
+  },
+  "brainstorm": {
+    "title": "Brainstorming",
+    "newSession": "Nouvelle session",
+    "currentSession": "Session actuelle",
+    "history": "Historique",
+    "topic": "Sujet",
+    "enterTopic": "Entrez un sujet à discuter...",
+    "start": "Commencer",
+    "turn": "Tour {{current}} / {{max}}",
+    "status": {
+      "active": "Actif",
+      "completed": "Terminé",
+      "paused": "En pause"
+    },
+    "summary": "Résumé de session",
+    "keyInsights": "Points clés",
+    "export": "Exporter",
+    "share": "Partager"
   },
   "errors": {
     "generic": "Une erreur s'est produite",

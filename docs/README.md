@@ -24,7 +24,7 @@ Welcome to the NeuralChat documentation. This documentation covers all aspects o
 
 NeuralChat is a comprehensive AI chat platform that integrates multiple AI models including Claude and Grok. The platform features:
 
-- **Multi-Model Support**: Claude 4 Opus, Claude 4 Sonnet, Claude 3.5 Sonnet, Grok 3, and Grok 2
+- **Multi-Model Support**: Claude 4 Opus, Claude 4 Sonnet, Claude 3.7 Sonnet, Grok 3, and Grok 2
 - **Brainstorm Mode**: Unique feature where Claude and Grok collaborate on ideas
 - **Project Management**: Organize chats and context files
 - **Cross-Platform**: Web, iOS, and Android applications

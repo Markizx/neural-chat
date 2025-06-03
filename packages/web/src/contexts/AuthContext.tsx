@@ -12,10 +12,19 @@ interface User {
   subscription: {
     plan: 'free' | 'pro' | 'business';
     status: string;
+    provider?: string;
+    customerId?: string;
+    subscriptionId?: string;
+    currentPeriodStart?: string;
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
+    trialEnd?: string;
   };
   usage: {
     dailyMessages: number;
     totalMessages: number;
+    dailyTokens?: number;
+    monthlyTokens?: number;
   };
   settings: any;
   security?: {
@@ -42,6 +51,36 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const normalizeUserData = (userData: any): User => {
+  return {
+    _id: userData._id || userData.id || '',
+    email: userData.email || '',
+    name: userData.name || '',
+    avatar: userData.avatar,
+    subscription: {
+      plan: userData.subscription?.plan || 'free',
+      status: userData.subscription?.status || 'active',
+      provider: userData.subscription?.provider,
+      customerId: userData.subscription?.customerId,
+      subscriptionId: userData.subscription?.subscriptionId,
+      currentPeriodStart: userData.subscription?.currentPeriodStart,
+      currentPeriodEnd: userData.subscription?.currentPeriodEnd,
+      cancelAtPeriodEnd: userData.subscription?.cancelAtPeriodEnd,
+      trialEnd: userData.subscription?.trialEnd,
+    },
+    usage: {
+      dailyMessages: userData.usage?.dailyMessages || 0,
+      totalMessages: userData.usage?.totalMessages || 0,
+      dailyTokens: userData.usage?.dailyTokens || 0,
+      monthlyTokens: userData.usage?.monthlyTokens || 0,
+    },
+    settings: userData.settings || {},
+    security: userData.security || {},
+    metadata: userData.metadata || {},
+    createdAt: userData.createdAt,
+  };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,26 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const userData = await authService.getProfile();
-      
-      // Обеспечиваем правильную структуру данных пользователя
-      const normalizedUser: User = {
-        _id: userData._id || userData.id || '',
-        email: userData.email || '',
-        name: userData.name || '',
-        avatar: userData.avatar,
-        subscription: {
-          plan: userData.subscription?.plan || 'free',
-          status: userData.subscription?.status || 'active',
-        },
-        usage: {
-          dailyMessages: userData.usage?.dailyMessages || 0,
-          totalMessages: userData.usage?.totalMessages || 0,
-        },
-        settings: userData.settings || {},
-        security: userData.security || {},
-        metadata: userData.metadata || {},
-        createdAt: userData.createdAt,
-      };
+      const normalizedUser = normalizeUserData(userData);
       
       setUser(normalizedUser);
       syncLanguageWithUserSettings(normalizedUser.settings);
@@ -94,26 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       const response = await authService.login(email, password);
-      
-      // Нормализуем данные пользователя
-      const normalizedUser: User = {
-        _id: response.user._id || response.user.id || '',
-        email: response.user.email || '',
-        name: response.user.name || '',
-        avatar: response.user.avatar,
-        subscription: {
-          plan: response.user.subscription?.plan || 'free',
-          status: response.user.subscription?.status || 'active',
-        },
-        usage: {
-          dailyMessages: response.user.usage?.dailyMessages || 0,
-          totalMessages: response.user.usage?.totalMessages || 0,
-        },
-        settings: response.user.settings || {},
-        security: response.user.security || {},
-        metadata: response.user.metadata || {},
-        createdAt: response.user.createdAt,
-      };
+      const normalizedUser = normalizeUserData(response.user);
       
       setUser(normalizedUser);
       storageService.setTokens(response.accessToken, response.refreshToken);
@@ -127,26 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const googleLogin = async (idToken: string) => {
     try {
       const response = await authService.googleLogin(idToken);
-      
-      // Нормализуем данные пользователя
-      const normalizedUser: User = {
-        _id: response.user._id || response.user.id || '',
-        email: response.user.email || '',
-        name: response.user.name || '',
-        avatar: response.user.avatar,
-        subscription: {
-          plan: response.user.subscription?.plan || 'free',
-          status: response.user.subscription?.status || 'active',
-        },
-        usage: {
-          dailyMessages: response.user.usage?.dailyMessages || 0,
-          totalMessages: response.user.usage?.totalMessages || 0,
-        },
-        settings: response.user.settings || {},
-        security: response.user.security || {},
-        metadata: response.user.metadata || {},
-        createdAt: response.user.createdAt,
-      };
+      const normalizedUser = normalizeUserData(response.user);
       
       setUser(normalizedUser);
       storageService.setTokens(response.accessToken, response.refreshToken);
@@ -160,26 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (email: string, password: string, name: string) => {
     try {
       const response = await authService.register(email, password, name);
-      
-      // Нормализуем данные пользователя
-      const normalizedUser: User = {
-        _id: response.user._id || response.user.id || '',
-        email: response.user.email || '',
-        name: response.user.name || '',
-        avatar: response.user.avatar,
-        subscription: {
-          plan: response.user.subscription?.plan || 'free',
-          status: response.user.subscription?.status || 'active',
-        },
-        usage: {
-          dailyMessages: response.user.usage?.dailyMessages || 0,
-          totalMessages: response.user.usage?.totalMessages || 0,
-        },
-        settings: response.user.settings || {},
-        security: response.user.security || {},
-        metadata: response.user.metadata || {},
-        createdAt: response.user.createdAt,
-      };
+      const normalizedUser = normalizeUserData(response.user);
       
       setUser(normalizedUser);
       storageService.setTokens(response.accessToken, response.refreshToken);

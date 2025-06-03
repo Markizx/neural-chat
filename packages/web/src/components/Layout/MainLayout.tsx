@@ -24,9 +24,10 @@ const MainLayout: React.FC = () => {
 
   return (
     <Box 
+      className="main-layout-container"
       sx={{ 
         display: 'flex', 
-        height: '100vh', 
+        height: '100vh',
         overflow: 'hidden',
         background: theme.palette.mode === 'dark'
           ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)'
@@ -131,6 +132,8 @@ const MainLayout: React.FC = () => {
             flexGrow: 1,
             overflow: 'hidden',
             position: 'relative',
+            minHeight: 0, // Важно для правильной работы flex
+            mb: isMobile ? '64px' : 0, // Отступ для мобильной навигации
           }}
         >
           <Outlet />

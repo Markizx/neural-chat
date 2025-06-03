@@ -191,7 +191,7 @@ const client = new NeuralChat({
 
 # Send a message
 const response = await client.chat.send({
-  model: 'claude-4-opus',
+          model: 'claude-4-sonnet',
   message: 'Hello, world!'
 });`}
           </Typography>

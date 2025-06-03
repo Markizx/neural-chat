@@ -25,14 +25,14 @@ const brainstormSchema = new mongoose.Schema({
     claude: {
       model: {
         type: String,
-        default: 'claude-4-opus'
+        default: 'claude-4-sonnet'
       },
       systemPrompt: String
     },
     grok: {
       model: {
         type: String,
-        default: 'grok-3'
+        default: 'grok-2-1212'
       },
       systemPrompt: String
     }

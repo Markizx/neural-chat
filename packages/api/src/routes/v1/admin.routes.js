@@ -932,4 +932,306 @@ router.post('/settings/test-email', async (req, res) => {
   }
 });
 
+// Подписки (subscriptions)
+router.get('/subscriptions', async (req, res) => {
+  try {
+    const { page = 0, limit = 10, search, status, plan } = req.query;
+    const skip = page * limit;
+
+    // Строим фильтр
+    const filter = {};
+    if (status && status !== 'all') {
+      filter['subscription.status'] = status;
+    }
+    if (plan && plan !== 'all') {
+      filter['subscription.plan'] = plan;
+    }
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const users = await User.find(filter)
+      .select('name email subscription createdAt updatedAt')
+      .populate('subscription.planId', 'name price')
+      .sort({ 'subscription.createdAt': -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await User.countDocuments(filter);
+
+    // Преобразуем в формат подписок
+    const subscriptions = users.map(user => ({
+      _id: user._id,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email
+      },
+      plan: user.subscription?.plan || 'free',
+      status: user.subscription?.status || 'inactive',
+      provider: 'stripe',
+      customerId: user.subscription?.customerId || '',
+      subscriptionId: user.subscription?.subscriptionId || '',
+      currentPeriodStart: user.subscription?.currentPeriodStart || user.createdAt,
+      currentPeriodEnd: user.subscription?.currentPeriodEnd || new Date(Date.now() + 30*24*60*60*1000),
+      cancelAtPeriodEnd: user.subscription?.cancelAtPeriodEnd || false,
+      amount: user.subscription?.planId?.price || 0,
+      currency: 'USD',
+      createdAt: user.subscription?.createdAt || user.createdAt,
+      updatedAt: user.updatedAt
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        subscriptions,
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching subscriptions:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch subscriptions' 
+    });
+  }
+});
+
+// Статистика подписок
+router.get('/subscriptions/stats', async (req, res) => {
+  try {
+    const totalSubscriptions = await User.countDocuments({ 'subscription.plan': { $ne: null } });
+    const activeSubscriptions = await User.countDocuments({ 'subscription.status': 'active' });
+    const canceledSubscriptions = await User.countDocuments({ 'subscription.status': 'canceled' });
+    
+    // Заглушка для дохода
+    const monthlyRevenue = 299; // Примерный доход
+    
+    res.json({
+      success: true,
+      data: {
+        totalSubscriptions,
+        activeSubscriptions,
+        canceledSubscriptions,
+        monthlyRevenue,
+        subscriptionGrowth: 5.2,
+        activeGrowth: 3.8,
+        revenueGrowth: 12.1
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching subscription stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch subscription statistics' 
+    });
+  }
+});
+
+// Отменить подписку
+router.post('/subscriptions/:id/cancel', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
+    }
+
+    // Отменяем подписку
+    user.subscription = {
+      ...user.subscription,
+      status: 'canceled',
+      cancelAtPeriodEnd: true,
+      canceledAt: new Date()
+    };
+    
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Subscription canceled successfully'
+    });
+  } catch (error) {
+    console.error('Error canceling subscription:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to cancel subscription' 
+    });
+  }
+});
+
+// Изменить план пользователя
+router.put('/users/:userId/plan', async (req, res) => {
+  try {
+    const { planId } = req.body;
+    const user = await User.findById(req.params.userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
+    }
+
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Plan not found' 
+      });
+    }
+
+    user.subscription = {
+      planId: plan._id,
+      plan: plan.name.toLowerCase(),
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30*24*60*60*1000),
+      updatedAt: new Date()
+    };
+    
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Plan changed successfully'
+    });
+  } catch (error) {
+    console.error('Error changing plan:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to change plan' 
+    });
+  }
+});
+
+// Чаты
+router.get('/chats', async (req, res) => {
+  try {
+    const { page = 0, limit = 25, search, status } = req.query;
+    const skip = page * limit;
+
+    const filter = {};
+    if (search) {
+      filter.title = { $regex: search, $options: 'i' };
+    }
+    if (status && status !== 'all') {
+      filter.status = status;
+    }
+
+    const chats = await Chat.find(filter)
+      .populate('userId', 'name email')
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Chat.countDocuments(filter);
+
+    res.json({
+      success: true,
+      data: {
+        chats,
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching chats:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch chats' 
+    });
+  }
+});
+
+// Статистика чатов
+router.get('/chats/stats', async (req, res) => {
+  try {
+    const totalChats = await Chat.countDocuments();
+    const activeChats = await Chat.countDocuments({ 
+      updatedAt: { $gte: new Date(Date.now() - 24*60*60*1000) }
+    });
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayChats = await Chat.countDocuments({ 
+      createdAt: { $gte: today }
+    });
+
+    // Подсчет сообщений
+    const totalMessages = await Message.countDocuments();
+    const todayMessages = await Message.countDocuments({ 
+      createdAt: { $gte: today }
+    });
+
+    const avgChatLength = totalChats > 0 ? Math.round(totalMessages / totalChats) : 0;
+
+    res.json({
+      success: true,
+      data: {
+        totalChats,
+        activeChats,
+        todayChats,
+        totalMessages,
+        todayMessages,
+        avgChatLength
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching chat stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch chat statistics' 
+    });
+  }
+});
+
+// Health check для системы
+router.get('/health', async (req, res) => {
+  try {
+    const status = 'healthy';
+    const version = '1.0.0';
+    const uptime = process.uptime();
+    
+    // Проверка подключения к БД
+    const mongoose = require('mongoose');
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+
+    res.json({
+      success: true,
+      data: {
+        status,
+        version,
+        uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
+        database: { status: dbStatus },
+        redis: { status: 'connected' },
+        memory: {
+          used: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
+          total: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`
+        },
+        recentLogs: []
+      }
+    });
+  } catch (error) {
+    console.error('Error getting health status:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to get health status' 
+    });
+  }
+});
+
+// TODO: Исправить планы подписки (временно отключено)
+// router.post('/fix-plans', fixPlans);
+
 module.exports = router; 

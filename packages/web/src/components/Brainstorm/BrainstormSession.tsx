@@ -7,29 +7,27 @@ import {
   TextField,
   Chip,
   CircularProgress,
-  LinearProgress,
   Alert,
+  IconButton,
 } from '@mui/material';
 import {
   Send,
-  Psychology,
-  SmartToy,
+  AutoAwesome,
+  MoreVert,
 } from '@mui/icons-material';
 import { useMutation } from '@tanstack/react-query';
 import { apiService } from '../../services/api.service';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import BrainstormMessage from './BrainstormMessage';
-import BrainstormControls from './BrainstormControls';
 import FileUpload from '../Chat/FileUpload';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 
 interface BrainstormSessionProps {
   sessionId: string;
 }
 
 const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
-  // eslint-disable-next-line no-console
-  console.log('🔄 BrainstormSession component mounted with sessionId:', sessionId);
-  
   const [userInput, setUserInput] = useState('');
   const [session, setSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +36,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
   const { socket } = useWebSocket();
   const [attachments, setAttachments] = useState<File[]>([]);
   const [streamingMessages, setStreamingMessages] = useState<Map<string, any>>(new Map());
+  const theme = useTheme();
 
   // Оборачиваем refetch в useCallback
   const refetch = useCallback(async () => {
@@ -56,7 +55,6 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       setSession(responseData.session);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.error('❌ Error refetching session:', errorMessage);
       setError(errorMessage);
     }
   }, [sessionId]);
@@ -72,56 +70,22 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
         setIsLoading(true);
         setError(null);
         
-        // eslint-disable-next-line no-console
-        console.log('🔍 Fetching brainstorm session:', sessionId);
         const response = await apiService.get(`/brainstorm/${sessionId}`);
         
         if (!isMounted) return;
         
-        // eslint-disable-next-line no-console
-        console.log('📥 Full API response:', response);
-        
-        // API возвращает {session: {...}} напрямую
         const responseData = response.data as any;
         
-        // eslint-disable-next-line no-console
-        console.log('📊 Response structure check:', {
-          hasData: !!responseData,
-          hasSession: !!(responseData && responseData.session),
-          responseDataType: typeof responseData,
-          responseDataKeys: responseData ? Object.keys(responseData) : 'no data',
-          actualResponseData: responseData
-        });
-        
-        // eslint-disable-next-line no-console
-        console.log('🔍 Detailed response data:', JSON.stringify(responseData, null, 2));
-        
         if (!responseData || !responseData.session) {
-          // eslint-disable-next-line no-console
-          console.error('❌ Invalid response structure:', responseData);
           throw new Error('Invalid session response structure');
         }
         
         const sessionData = responseData.session;
-        
-        // eslint-disable-next-line no-console
-        console.log('✅ Session loaded successfully:', {
-          id: sessionData._id,
-          topic: sessionData.topic,
-          status: sessionData.status,
-          currentTurn: sessionData.currentTurn,
-          maxTurns: sessionData.settings?.maxTurns,
-          messagesCount: sessionData.messages?.length || 0,
-          messages: sessionData.messages?.map((m: any) => ({ speaker: m.speaker, content: m.content.substring(0, 50) + '...' }))
-        });
-        
         setSession(sessionData);
       } catch (err) {
         if (!isMounted) return;
         
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        // eslint-disable-next-line no-console
-        console.error('❌ Error loading session:', errorMessage);
         setError(errorMessage);
       } finally {
         if (isMounted) {
@@ -142,17 +106,11 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     if (!socket || !sessionId || !session) return;
 
     const timer = setTimeout(() => {
-      // eslint-disable-next-line no-console
-      console.log('🔗 Setting up WebSocket for session:', sessionId);
-      
-      // eslint-disable-next-line no-console
-      console.log('🚀 Emitting brainstorm:join with sessionId:', sessionId);
       socket.emit('brainstorm:join', sessionId);
 
       // Обработка начала streaming
       socket.on('brainstorm:streamStart', (data) => {
         if (data.sessionId === sessionId) {
-          console.log('📝 Stream started:', data);
           setStreamingMessages(prev => {
             const newMap = new Map(prev);
             newMap.set(data.messageId, {
@@ -187,7 +145,6 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       // Обработка завершения streaming
       socket.on('brainstorm:streamComplete', (data) => {
         if (data.sessionId === sessionId) {
-          console.log('✅ Stream completed:', data);
           setStreamingMessages(prev => {
             const newMap = new Map(prev);
             newMap.delete(data.messageId);
@@ -201,27 +158,18 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       // Обработка ошибок
       socket.on('brainstorm:error', (data) => {
         if (data.sessionId === sessionId) {
-          console.error('❌ Brainstorm error:', data);
           setError(data.error);
         }
       });
 
       socket.on('brainstorm:message', (data) => {
-        // eslint-disable-next-line no-console
-        console.log('📨 New brainstorm message received:', data);
         if (data.sessionId === sessionId) {
           refetch();
         }
       });
 
       socket.on('error', (error) => {
-        // eslint-disable-next-line no-console
         console.error('❌ WebSocket error:', error);
-      });
-
-      socket.on('brainstorm:joined', (data) => {
-        // eslint-disable-next-line no-console
-        console.log('✅ Successfully joined brainstorm:', data);
       });
     }, 100);
 
@@ -238,14 +186,20 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     };
   }, [sessionId, socket, session, refetch]); // Добавляем refetch в зависимости
 
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
+    }, 100);
+  }, []);
+
   // Auto-scroll to bottom when messages or streaming messages change
   useEffect(() => {
     scrollToBottom();
-  }, [session?.messages, streamingMessages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, [session?.messages, streamingMessages, scrollToBottom]);
 
   // Mutations
   const sendMessageMutation = useMutation({
@@ -281,17 +235,6 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
           });
         })
       );
-
-      // Отправляем как JSON
-      console.log('📤 Sending brainstorm message:', {
-        content: content || '',
-        attachments: processedAttachments.map((a: any) => ({ 
-          name: a.name, 
-          type: a.type, 
-          size: a.size,
-          mimeType: a.mimeType 
-        }))
-      });
       
       return apiService.post(`/brainstorm/${sessionId}/message`, {
         content: content || '', // Убеждаемся что content не undefined
@@ -304,35 +247,8 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       setTimeout(() => refetch(), 500);
     },
     onError: (error: any) => {
+      // eslint-disable-next-line no-console
       console.error('❌ Error sending brainstorm message:', error);
-      console.log('Error details:', error.response?.data);
-    },
-  });
-
-  const pauseMutation = useMutation({
-    mutationFn: async () => {
-      return apiService.post(`/brainstorm/${sessionId}/pause`);
-    },
-    onSuccess: () => {
-      setTimeout(() => refetch(), 500);
-    },
-  });
-
-  const resumeMutation = useMutation({
-    mutationFn: async () => {
-      return apiService.post(`/brainstorm/${sessionId}/resume`);
-    },
-    onSuccess: () => {
-      setTimeout(() => refetch(), 500);
-    },
-  });
-
-  const stopMutation = useMutation({
-    mutationFn: async () => {
-      return apiService.post(`/brainstorm/${sessionId}/stop`);
-    },
-    onSuccess: () => {
-      setTimeout(() => refetch(), 500);
     },
   });
 
@@ -344,25 +260,6 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
 
   const handleFilesChange = (files: File[]) => {
     setAttachments([...attachments, ...files]);
-  };
-
-  const removeAttachment = (index: number) => {
-    setAttachments(attachments.filter((_, i) => i !== index));
-  };
-
-  const handleExport = async () => {
-    try {
-      const response = await apiService.get(`/brainstorm/${sessionId}/export?format=markdown`);
-      const blob = new Blob([response.data as string], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `brainstorm-${session?.topic}-${Date.now()}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      // Export failed silently
-    }
   };
 
   if (isLoading) {
@@ -391,259 +288,265 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     );
   }
 
-  // Safe access to settings with defaults
-  const maxTurns = session.settings?.maxTurns || 10;
-  const currentTurn = session.currentTurn || 0;
-  const progress = (currentTurn / maxTurns) * 100;
-
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
+    <Box
+      sx={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)'
+          : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
+      }}
+    >
+      {/* Header - фиксированная высота */}
       <Paper
         elevation={0}
         sx={{
-          p: 2,
-          borderRadius: 0,
+          p: { xs: 1.5, md: 2 },
           borderBottom: 1,
           borderColor: 'divider',
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(26, 26, 46, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          minHeight: { xs: '60px', md: '70px' },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              {session.topic}
-            </Typography>
-            {session.description && (
-              <Typography variant="body2" color="text.secondary">
-                {session.description}
-              </Typography>
-            )}
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Button
-              size="small"
-              onClick={() => refetch()}
-              disabled={isLoading}
-              sx={{ minWidth: 'auto', px: 1 }}
-            >
-              🔄
-            </Button>
-            <Chip
-              icon={<SmartToy />}
-              label={session.participants?.claude?.model || 'Claude'}
-              color="primary"
-              variant="outlined"
-            />
-            <Chip
-              icon={<Psychology />}
-              label={session.participants?.grok?.model || 'Grok'}
-              color="secondary"
-              variant="outlined"
-            />
-          </Box>
-        </Box>
-
-        {/* Progress */}
-        <Box sx={{ mt: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2">
-              Turn {currentTurn} / {maxTurns}
-            </Typography>
-            <Typography variant="body2">
-              Status: {session.status}
-            </Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={progress}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
             sx={{
-              height: 6,
-              borderRadius: 3,
-              '& .MuiLinearProgress-bar': {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              p: 1.5,
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              animation: 'pulse 2s infinite',
+              '@keyframes pulse': {
+                '0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(102,126,234,0.7)' },
+                '70%': { transform: 'scale(1.05)', boxShadow: '0 0 0 10px rgba(102,126,234,0)' },
               },
             }}
+          >
+            <AutoAwesome sx={{ color: 'white', fontSize: 24 }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              🧠 Мозговой штурм
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              Claude vs Grok • {session?.settings?.format || 'brainstorm'}
+            </Typography>
+          </Box>
+        </Box>
+        
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Chip
+            label={`${session.messages?.length || 0} сообщений`}
+            size="small"
+            color="primary"
+            variant="outlined"
           />
+          <IconButton size="small">
+            <MoreVert />
+          </IconButton>
         </Box>
       </Paper>
 
-      {/* Messages */}
-      <Box 
-        sx={{ 
-          flex: 1, 
-          overflow: 'auto',
+      {/* Messages Area - растягивается */}
+      <Box
+        sx={{
+          flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          minHeight: 0,
-          maxHeight: 'calc(100vh - 400px)', // Ограничиваем максимальную высоту
-          p: 3,
-          position: 'relative',
-          '&::-webkit-scrollbar': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(0,0,0,0.1)',
-            borderRadius: '3px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(0,0,0,0.3)',
-            borderRadius: '3px',
-            '&:hover': {
-              background: 'rgba(0,0,0,0.5)',
-            },
-          },
+          overflow: 'hidden',
+          px: { xs: 1, md: 2 },
+          py: 1,
         }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 2 
-        }}>
-          {session.messages?.map((message, index) => (
-            <BrainstormMessage key={index} message={message} />
-          )) || []}
-          
-          {/* Отображаем streaming сообщения */}
-          {Array.from(streamingMessages.values()).map((streamingMsg) => (
-            <BrainstormMessage 
-              key={streamingMsg.id} 
-              message={streamingMsg}
-              isStreaming={true}
-            />
-          ))}
-          
-          <div ref={messagesEndRef} />
-        </Box>
+        {session?.messages?.length === 0 ? (
+          <Box
+            sx={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              p: 4,
+            }}
+          >
+            <Box>
+              <Box
+                sx={{
+                  fontSize: '64px',
+                  mb: 2,
+                  animation: 'float 3s ease-in-out infinite',
+                  '@keyframes float': {
+                    '0%, 100%': { transform: 'translateY(0px)' },
+                    '50%': { transform: 'translateY(-10px)' },
+                  },
+                }}
+              >
+                🤖⚡🧠
+              </Box>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+                Готов к мозговому штурму!
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Claude и Grok готовы обсудить вашу тему
+              </Typography>
+            </Box>
+          </Box>
+        ) : (
+          <Box
+            ref={messagesEndRef}
+            sx={{
+              flex: 1,
+              overflow: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'transparent',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: alpha(theme.palette.text.secondary, 0.3),
+                borderRadius: '3px',
+                '&:hover': {
+                  background: alpha(theme.palette.text.secondary, 0.5),
+                },
+              },
+            }}
+          >
+            {session?.messages?.map((message: any) => (
+              <BrainstormMessage
+                key={message._id}
+                message={message}
+                isStreaming={streamingMessages.get(message._id)?.isStreaming}
+              />
+            ))}
+            
+            {streamingMessages.size > 0 && (
+              <BrainstormMessage
+                message={{
+                  id: streamingMessages.values().next().value.id,
+                  speaker: streamingMessages.values().next().value.speaker,
+                  content: streamingMessages.values().next().value.content,
+                  timestamp: new Date().toISOString(),
+                }}
+                isStreaming={true}
+              />
+            )}
+          </Box>
+        )}
       </Box>
 
-      {/* Controls */}
-      <BrainstormControls
-        status={session.status}
-        onPause={() => pauseMutation.mutate()}
-        onResume={() => resumeMutation.mutate()}
-        onStop={() => stopMutation.mutate()}
-        onExport={handleExport}
-        isLoading={
-          pauseMutation.isPending ||
-          resumeMutation.isPending ||
-          stopMutation.isPending
-        }
-      />
-
-      {/* User input */}
-      {session.status !== 'completed' && (
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            borderTop: 1,
-            borderColor: 'divider',
-            borderRadius: 0,
-            position: 'sticky',
-            bottom: 0,
-            backgroundColor: 'background.paper',
-            zIndex: 10
-          }}
-        >
-          {/* Attachments */}
-          {attachments.length > 0 && (
-            <Box sx={{ 
-              mb: 1.5, 
-              display: 'flex', 
-              gap: 0.5, 
-              flexWrap: 'wrap',
-              maxHeight: '100px',
-              overflowY: 'auto'
-            }}>
-              {attachments.map((file, index) => (
-                <Chip
-                  key={index}
-                  label={file.name}
-                  onDelete={() => removeAttachment(index)}
-                  size="small"
-                  variant="outlined"
-                />
-              ))}
-            </Box>
-          )}
+      {/* Input Area - фиксированная высота */}
+      <Box
+        sx={{
+          p: { xs: 1, md: 2 },
+          borderTop: 1,
+          borderColor: 'divider',
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(26, 26, 46, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          minHeight: { xs: '80px', md: '100px' },
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+          <FileUpload
+            onFilesChange={handleFilesChange}
+            maxFiles={3}
+            maxFileSize={5}
+            disabled={sendMessageMutation.isPending}
+            acceptedFileTypes={[
+              'image/*',
+              'text/*',
+              'application/json',
+              'application/javascript',
+              'application/typescript',
+              '.js',
+              '.ts',
+              '.jsx',
+              '.tsx',
+              '.py',
+              '.java',
+              '.c',
+              '.cpp',
+              '.md',
+              '.txt',
+              '.csv',
+              '.xml',
+              '.yaml',
+              '.yml'
+            ]}
+            helperText="📎 Поддерживаются: изображения, код, документы • Claude видит все • Grok автоматически переключается на vision для изображений"
+          />
           
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-            <FileUpload
-              onFilesChange={handleFilesChange}
-              maxFiles={3}
-              maxFileSize={5}
-              disabled={sendMessageMutation.isPending}
-            />
-            
-            <TextField
-              fullWidth
-              placeholder="Add your input to guide the discussion..."
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              disabled={sendMessageMutation.isPending}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  minHeight: '48px'
-                }
-              }}
-            />
-            <Button
-              variant="contained"
-              onClick={handleSendMessage}
-              disabled={(!userInput.trim() && attachments.length === 0) || sendMessageMutation.isPending}
-              endIcon={sendMessageMutation.isPending ? <CircularProgress size={20} /> : <Send />}
-              sx={{
-                minHeight: '48px',
-                minWidth: '80px'
-              }}
-            >
-              Send
-            </Button>
-          </Box>
-        </Paper>
-      )}
-
-      {/* Summary (if completed) */}
-      {session.status === 'completed' && session.summary && (
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            m: 2,
-            bgcolor: 'background.default',
-            border: 1,
-            borderColor: 'divider',
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Summary
-          </Typography>
-          <Typography variant="body2" paragraph>
-            {session.summary}
-          </Typography>
-          
-          {session.insights && session.insights.length > 0 && (
-            <>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Key Insights
-              </Typography>
-              <Box component="ul" sx={{ pl: 2 }}>
-                {session.insights.map((insight, index) => (
-                  <li key={index}>
-                    <Typography variant="body2">{insight}</Typography>
-                  </li>
-                ))}
-              </Box>
-            </>
-          )}
-        </Paper>
-      )}
+          <TextField
+            fullWidth
+            multiline
+            maxRows={3}
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            placeholder="Продолжите дискуссию или задайте новый вопрос..."
+            disabled={isLoading || streamingMessages.size > 0}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '20px',
+                background: theme.palette.mode === 'dark'
+                  ? 'rgba(255,255,255,0.05)'
+                  : 'rgba(255,255,255,0.8)',
+                '&:hover': {
+                  boxShadow: '0 4px 20px rgba(102,126,234,0.15)',
+                },
+                '&.Mui-focused': {
+                  boxShadow: '0 4px 20px rgba(102,126,234,0.25)',
+                },
+              },
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleSendMessage}
+            disabled={!userInput.trim() || isLoading || streamingMessages.size > 0}
+            sx={{
+              minWidth: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              boxShadow: '0 8px 32px rgba(102,126,234,0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
+                boxShadow: '0 12px 40px rgba(102,126,234,0.4)',
+                transform: 'translateY(-2px)',
+              },
+              '&:disabled': {
+                background: 'linear-gradient(135deg, rgba(102,126,234,0.5) 0%, rgba(118,75,162,0.5) 100%)',
+                boxShadow: 'none',
+              },
+            }}
+          >
+            {isLoading || streamingMessages.size > 0 ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              <Send />
+            )}
+          </Button>
+        </Box>
+      </Box>
     </Box>
   );
 };

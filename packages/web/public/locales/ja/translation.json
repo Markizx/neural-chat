@@ -18,7 +18,9 @@
     "yes": "はい",
     "no": "いいえ",
     "or": "または",
-    "and": "と"
+    "and": "と",
+    "you": "あなた",
+    "status": "状態"
   },
   "auth": {
     "login": "ログイン",
@@ -61,10 +63,16 @@
     "delete": "削除",
     "edit": "編集",
     "stopGenerating": "停止",
-    "thinking": "考え中...",
+    "thinking": "入力中...",
+    "startNewChat": "新しい{{type}}チャットを開始",
+    "enterMessage": "メッセージを入力してください",
+    "enterMessageFull": "新しいチャットを開始するにはメッセージを入力してください",
+    "startChatWith": "{{type}}とのチャットを開始...",
+    "messageTo": "{{type}}へのメッセージ...",
     "models": {
       "claude": "Claude",
-      "grok": "Grok"
+      "grok": "Grok",
+      "assistant": "アシスタント"
     },
     "errors": {
       "failedToSend": "メッセージの送信に失敗しました",
@@ -74,8 +82,24 @@
   "settings": {
     "title": "設定",
     "appearance": "外観",
+    "appearanceDescription": "NeuralChatの外観をカスタマイズ",
     "notifications": "通知",
+    "notificationsDescription": "受信する通知を選択",
+    "emailNotifications": "メール通知",
+    "pushNotifications": "プッシュ通知",
+    "chatNotifications": "チャットメッセージ通知",
+    "brainstormNotifications": "ブレインストーミング更新",
+    "marketingEmails": "マーケティングメール",
     "security": "セキュリティ",
+    "securityDescription": "アカウントを安全に保つ",
+    "password": "パスワード",
+    "passwordDescription": "定期的にパスワードを変更",
+    "changePassword": "パスワードを変更",
+    "twoFactor": "二要素認証",
+    "twoFactorDescription": "追加のセキュリティレイヤーを追加",
+    "enableTwoFactor": "二要素認証を有効にする",
+    "deleteAccount": "アカウントを削除",
+    "deleteAccountWarning": "アカウントとすべてのデータを完全に削除します。この操作は元に戻せません。",
     "language": "言語",
     "theme": "テーマ",
     "themes": {
@@ -123,6 +147,25 @@
     "uploadFiles": "ファイルをアップロード",
     "dragDrop": "ここにファイルをドラッグ＆ドロップ",
     "maxSize": "最大ファイルサイズ：{{size}}"
+  },
+  "brainstorm": {
+    "title": "ブレインストーミング",
+    "newSession": "新しいセッション",
+    "currentSession": "現在のセッション",
+    "history": "履歴",
+    "topic": "トピック",
+    "enterTopic": "議論するトピックを入力...",
+    "start": "開始",
+    "turn": "ターン {{current}} / {{max}}",
+    "status": {
+      "active": "アクティブ",
+      "completed": "完了",
+      "paused": "一時停止"
+    },
+    "summary": "セッション概要",
+    "keyInsights": "重要な洞察",
+    "export": "エクスポート",
+    "share": "共有"
   },
   "errors": {
     "generic": "エラーが発生しました",

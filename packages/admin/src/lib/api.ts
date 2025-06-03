@@ -118,6 +118,11 @@ class AdminApi {
     return response.data;
   }
 
+  async getChatStats() {
+    const response = await api.get('/admin/chats/stats');
+    return response.data;
+  }
+
   // Analytics
   async getAnalytics(timeframe: string = '7d') {
     const response = await api.get('/admin/analytics', {
@@ -243,7 +248,7 @@ class AdminApi {
 
   // Subscription Actions
   async changeUserPlan(userId: string, planId: string) {
-    const response = await api.post(`/admin/users/${userId}/change-plan`, { planId });
+    const response = await api.put(`/admin/users/${userId}/plan`, { planId });
     return response.data;
   }
 

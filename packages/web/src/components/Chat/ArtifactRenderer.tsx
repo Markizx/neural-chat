@@ -22,12 +22,14 @@ import {
 
 interface Artifact {
   id: string;
-  type: 'code' | 'react' | 'svg' | 'html' | 'image' | 'generated-image';
+  type: 'code' | 'react' | 'svg' | 'html' | 'image' | 'generated-image' | 'text' | 'markdown';
   content?: string;
   language?: string;
+  title?: string;
   url?: string;
   alt?: string;
   description?: string;
+  revisedPrompt?: string;
 }
 
 interface ArtifactRendererProps {
@@ -187,14 +189,38 @@ const ArtifactRenderer: React.FC<ArtifactRendererProps> = ({ artifacts }) => {
 
       case 'generated-image':
         return (
-          <Box sx={{ textAlign: 'center', p: 3 }}>
-            <ImageIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-            <Typography variant="body1" color="text.secondary">
-              Сгенерированное изображение: {artifact.description}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Изображение будет доступно после генерации
-            </Typography>
+          <Box sx={{ textAlign: 'center' }}>
+            {artifact.url ? (
+              <>
+                <img
+                  src={artifact.url}
+                  alt={artifact.description || 'Generated image'}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: 400,
+                    borderRadius: 8,
+                  }}
+                />
+                <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                  {artifact.description}
+                </Typography>
+                {artifact.revisedPrompt && (
+                  <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: 'text.secondary', fontStyle: 'italic' }}>
+                    Улучшенный промпт: {artifact.revisedPrompt}
+                  </Typography>
+                )}
+              </>
+            ) : (
+              <Box sx={{ p: 3 }}>
+                <ImageIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="body1" color="text.secondary">
+                  Сгенерированное изображение: {artifact.description}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Изображение будет доступно после генерации
+                </Typography>
+              </Box>
+            )}
           </Box>
         );
 

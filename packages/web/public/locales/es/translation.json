@@ -18,7 +18,9 @@
     "yes": "Sí",
     "no": "No",
     "or": "o",
-    "and": "y"
+    "and": "y",
+    "you": "Tú",
+    "status": "Estado"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -61,10 +63,16 @@
     "delete": "Eliminar",
     "edit": "Editar",
     "stopGenerating": "Detener",
-    "thinking": "Pensando...",
+    "thinking": "escribiendo...",
+    "startNewChat": "Iniciar nuevo chat {{type}}",
+    "enterMessage": "Ingresa un mensaje",
+    "enterMessageFull": "Ingresa un mensaje para iniciar un nuevo chat",
+    "startChatWith": "Iniciar chat con {{type}}...",
+    "messageTo": "Mensaje a {{type}}...",
     "models": {
       "claude": "Claude",
-      "grok": "Grok"
+      "grok": "Grok",
+      "assistant": "Asistente"
     },
     "errors": {
       "failedToSend": "Error al enviar el mensaje",
@@ -74,8 +82,24 @@
   "settings": {
     "title": "Configuración",
     "appearance": "Apariencia",
+    "appearanceDescription": "Personaliza la apariencia de NeuralChat",
     "notifications": "Notificaciones",
+    "notificationsDescription": "Elige qué notificaciones recibir",
+    "emailNotifications": "Notificaciones por email",
+    "pushNotifications": "Notificaciones push",
+    "chatNotifications": "Notificaciones de mensajes",
+    "brainstormNotifications": "Actualizaciones de lluvia de ideas",
+    "marketingEmails": "Emails de marketing",
     "security": "Seguridad",
+    "securityDescription": "Mantén tu cuenta segura",
+    "password": "Contraseña",
+    "passwordDescription": "Cambia tu contraseña regularmente",
+    "changePassword": "Cambiar contraseña",
+    "twoFactor": "Autenticación de dos factores",
+    "twoFactorDescription": "Añade una capa extra de seguridad",
+    "enableTwoFactor": "Activar autenticación de dos factores",
+    "deleteAccount": "Eliminar cuenta",
+    "deleteAccountWarning": "Eliminar permanentemente tu cuenta y todos los datos. Esta acción no se puede deshacer.",
     "language": "Idioma",
     "theme": "Tema",
     "themes": {
@@ -123,6 +147,25 @@
     "uploadFiles": "Subir archivos",
     "dragDrop": "Arrastra y suelta archivos aquí",
     "maxSize": "Tamaño máximo de archivo: {{size}}"
+  },
+  "brainstorm": {
+    "title": "Lluvia de ideas",
+    "newSession": "Nueva sesión",
+    "currentSession": "Sesión actual",
+    "history": "Historial",
+    "topic": "Tema",
+    "enterTopic": "Ingresa un tema para discutir...",
+    "start": "Iniciar",
+    "turn": "Turno {{current}} / {{max}}",
+    "status": {
+      "active": "Activo",
+      "completed": "Completado",
+      "paused": "Pausado"
+    },
+    "summary": "Resumen de sesión",
+    "keyInsights": "Ideas clave",
+    "export": "Exportar",
+    "share": "Compartir"
   },
   "errors": {
     "generic": "Algo salió mal",

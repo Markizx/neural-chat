@@ -21,6 +21,11 @@ const messageSchema = new mongoose.Schema({
     required: true
   },
   model: String,
+  projectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Project',
+    required: false
+  },
   attachments: [{
     id: String,
     name: String,
@@ -30,7 +35,16 @@ const messageSchema = new mongoose.Schema({
       enum: ['image', 'document', 'code', 'other']
     },
     size: Number,
-    mimeType: String
+    mimeType: String,
+    data: String, // Base64 encoded file data
+    isProjectFile: {
+      type: Boolean,
+      default: false
+    },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Project'
+    }
   }],
   artifacts: [{
     id: String,
@@ -91,11 +105,12 @@ messageSchema.methods.calculateCost = function() {
   if (!this.usage || !this.usage.totalTokens) return 0;
   
   const pricing = {
-    'claude-4-opus': { input: 0.015, output: 0.075 },
-    'claude-4-sonnet': { input: 0.003, output: 0.015 },
-    'claude-3.5-sonnet': { input: 0.003, output: 0.015 },
-    'grok-3': { input: 0.01, output: 0.03 },
-    'grok-2': { input: 0.005, output: 0.015 }
+    'claude-4-sonnet': { input: 0.015, output: 0.075 },
+    'claude-3-haiku-20240307': { input: 0.00025, output: 0.00125 },
+    'claude-3-opus-20240229': { input: 0.015, output: 0.075 },
+    'grok-2-1212': { input: 0.002, output: 0.01 },
+    'grok-2-vision': { input: 0.005, output: 0.015 },
+    'grok-2-image': { input: 0.005, output: 0.015 }
   };
   
   const modelPricing = pricing[this.model] || { input: 0.001, output: 0.002 };

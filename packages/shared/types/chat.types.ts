@@ -66,12 +66,16 @@ export interface Artifact {
   id: string;
   type: ArtifactType;
   title?: string;
-  content: string;
+  content?: string;
   language?: string;
+  url?: string;
+  alt?: string;
+  description?: string;
+  revisedPrompt?: string;
   metadata?: Record<string, any>;
 }
 
-export type ArtifactType = 'code' | 'markdown' | 'react' | 'svg' | 'html' | 'mermaid';
+export type ArtifactType = 'code' | 'markdown' | 'react' | 'svg' | 'html' | 'mermaid' | 'image' | 'generated-image';
 
 export interface MessageUsage {
   promptTokens: number;

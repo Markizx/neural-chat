@@ -11,6 +11,7 @@ import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeContextProvider, useTheme } from './contexts/ThemeContext';
 import './styles/globals.css';
+import './styles/pages.css';
 
 // Create a client
 const queryClient = new QueryClient({

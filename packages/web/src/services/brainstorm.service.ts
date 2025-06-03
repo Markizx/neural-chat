@@ -14,11 +14,11 @@ interface StartBrainstormResponse {
   session: BrainstormSession;
 }
 
-interface BrainstormMessageResponse {
-  userMessage: BrainstormMessage;
-  nextMessages: BrainstormMessage[];
-  session: BrainstormSession;
-}
+// interface BrainstormMessageResponse {
+//   userMessage: BrainstormMessage;
+//   nextMessages: BrainstormMessage[];
+//   session: BrainstormSession;
+// }
 
 export interface BrainstormSessionsResponse {
   sessions: BrainstormSession[];
@@ -105,7 +105,7 @@ class BrainstormService {
     if (!response.success) {
       throw new Error(response.error?.message || 'Failed to get sessions');
     }
-    return response.data;
+    return response.data!;
   }
 
   // Delete session
