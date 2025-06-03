@@ -46,7 +46,7 @@
     "clean": "lerna clean --yes && rm -rf node_modules",
     "clean:all": "npm run clean && rm -rf packages/*/dist packages/*/build",
     "reset": "npm run clean:all && npm install && npm run install:packages",
-    "prepare": "husky install",
+    "prepare": "node -e \"try { require('husky').install() } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e }\"",
     "pre-commit": "lint-staged",
     "deploy:aws": "./scripts/deploy.sh production",
     "deploy:staging": "./scripts/deploy.sh staging",

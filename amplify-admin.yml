@@ -4,8 +4,8 @@ applications:
       phases:
         preBuild:
           commands:
-            # Install dependencies
-            - npm ci --legacy-peer-deps
+            # Install dependencies with dev dependencies for build tools
+            - npm ci --legacy-peer-deps --production=false
             - npm run bootstrap
             
             # Build shared packages first
