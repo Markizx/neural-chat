@@ -1,35 +1,30 @@
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        # Install dependencies
-        - npm ci --legacy-peer-deps
-        - npm run bootstrap
-        
-        # Build shared packages first
-        - npm run build --workspace=@neuralchat/shared
-        
-    build:
-      commands:
-        # Build admin application
-        - cd packages/admin
-        - npm run build
-        - cd ../..
-        
-  artifacts:
-    baseDirectory: packages/admin
-    files:
-      - '.next/**/*'
-      - 'public/**/*'
-      - 'package.json'
-      - 'next.config.js'
-      - 'node_modules/**/*'
-      
-  cache:
-    paths:
-      - node_modules/**/*
-      - packages/*/node_modules/**/*
-      - .npm/**/*
-      
-appRoot: . 
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            # Install dependencies
+            - npm ci --legacy-peer-deps
+            - npm run bootstrap
+            
+            # Build shared packages first
+            - npm run build --workspace=@neuralchat/shared
+            
+        build:
+          commands:
+            # Build admin application
+            - npm run build --workspace=@neuralchat/admin
+            
+      artifacts:
+        baseDirectory: packages/admin/.next
+        files:
+          - '**/*'
+          
+      cache:
+        paths:
+          - node_modules/**/*
+          - packages/*/node_modules/**/*
+          - .npm/**/*
+          
+    appRoot: packages/admin 
