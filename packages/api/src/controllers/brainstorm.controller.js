@@ -104,23 +104,7 @@ exports.startBrainstorm = async (req, res, next) => {
       topic: session.topic
     });
 
-    // Send initial user message
-    const initialMessage = `Topic: ${topic}\n${description ? `Description: ${description}` : ''}`;
-    session.addMessage('user', initialMessage);
-    await session.save();
-
-    console.log('📝 Initial message added and session re-saved');
-
-    console.log('Initial message added, starting AI conversation...');
-
-    // Start the AI conversation
-    try {
-      const nextMessages = await exports.continueBrainstorm(session);
-      console.log('AI conversation started, messages:', nextMessages.length);
-    } catch (aiError) {
-      console.error('AI conversation error:', aiError);
-      // Don't fail the whole request if AI fails
-    }
+    console.log('✅ Brainstorm session created - waiting for user to start conversation...');
 
     res.status(201).json(apiResponse(true, {
       sessionId: session._id,
@@ -260,6 +244,48 @@ exports.getBrainstormSessions = async (req, res, next) => {
     }));
   } catch (error) {
     console.error('❌ Error in getBrainstormSessions:', error);
+    next(error);
+  }
+};
+
+// Continue AI discussion without user input
+exports.continueAIDiscussion = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const session = await BrainstormSession.findOne({
+      _id: id,
+      userId: req.user._id
+    });
+
+    if (!session) {
+      return res.status(404).json(apiResponse(false, null, {
+        code: 'SESSION_NOT_FOUND',
+        message: 'Brainstorm session not found'
+      }));
+    }
+
+    if (session.status === 'completed') {
+      return res.status(400).json(apiResponse(false, null, {
+        code: 'SESSION_COMPLETED',
+        message: 'Session is already completed'
+      }));
+    }
+
+    console.log('🤖💬 Starting AI-only discussion round for session:', session._id);
+
+    // Start AI conversation without user message
+    const nextMessages = await exports.continueBrainstorm(session, req.io, req.user._id);
+    
+    console.log('✅ AI discussion round completed, messages:', nextMessages.length);
+
+    res.json(apiResponse(true, {
+      session,
+      messagesAdded: nextMessages.length,
+      message: 'AI discussion continued'
+    }));
+  } catch (error) {
+    console.error('❌ Error in continueAIDiscussion:', error);
     next(error);
   }
 };

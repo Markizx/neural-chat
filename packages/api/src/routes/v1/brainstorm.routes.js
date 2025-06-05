@@ -37,6 +37,7 @@ router.get('/sessions', brainstormController.getBrainstormSessions);
 router.get('/:id', param('id').isMongoId(), brainstormController.getBrainstormSession);
 router.delete('/:id', param('id').isMongoId(), brainstormController.deleteBrainstormSession);
 router.post('/:id/message', sendMessageValidation, brainstormController.sendBrainstormMessage);
+router.post('/:id/continue', param('id').isMongoId(), brainstormController.continueAIDiscussion);
 router.post('/:id/pause', param('id').isMongoId(), brainstormController.pauseBrainstorm);
 router.post('/:id/resume', param('id').isMongoId(), brainstormController.resumeBrainstorm);
 router.post('/:id/stop', param('id').isMongoId(), brainstormController.stopBrainstorm);

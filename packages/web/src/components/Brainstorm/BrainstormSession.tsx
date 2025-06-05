@@ -14,6 +14,7 @@ import {
   Send,
   AutoAwesome,
   MoreVert,
+  Psychology,
 } from '@mui/icons-material';
 import { useMutation } from '@tanstack/react-query';
 import { apiService } from '../../services/api.service';
@@ -347,10 +348,29 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     },
   });
 
+  const continueDiscussionMutation = useMutation({
+    mutationFn: async () => {
+      return apiService.post(`/brainstorm/${sessionId}/continue`);
+    },
+    onSuccess: () => {
+      // eslint-disable-next-line no-console
+      console.log('✅ AI discussion continued successfully');
+      // Рефетч произойдет автоматически через WebSocket events
+    },
+    onError: (error: any) => {
+      // eslint-disable-next-line no-console
+      console.error('❌ Error continuing AI discussion:', error);
+    }
+  });
+
   const handleSendMessage = () => {
     if (userInput.trim() || attachments.length > 0) {
       sendMessageMutation.mutate(userInput.trim());
     }
+  };
+
+  const handleContinueDiscussion = () => {
+    continueDiscussionMutation.mutate();
   };
 
   const handleFilesChange = (files: File[]) => {
@@ -461,6 +481,37 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
           py: 1,
         }}
       >
+        {/* Topic and Description Header */}
+        {session?.topic && (
+          <Box
+            sx={{
+              mb: 3,
+              p: 3,
+              borderRadius: '16px',
+              background: theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%)'
+                : 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)',
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontWeight: 700, 
+                mb: session?.description ? 1 : 0,
+                color: 'primary.main'
+              }}
+            >
+              📝 {session.topic}
+            </Typography>
+            {session?.description && (
+              <Typography variant="body2" color="text.secondary">
+                {session.description}
+              </Typography>
+            )}
+          </Box>
+        )}
+
         {session?.messages?.length === 0 ? (
           <Box
             sx={{
@@ -487,10 +538,10 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
                 🤖⚡🧠
               </Box>
               <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                Готов к мозговому штурму!
+                Начните дискуссию!
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Claude и Grok готовы обсудить вашу тему
+                Напишите сообщение, и Claude с Grok начнут обсуждение
               </Typography>
             </Box>
           </Box>
@@ -574,7 +625,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
             maxRows={3}
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
-            placeholder="Продолжите дискуссию или задайте новый вопрос..."
+            placeholder={session?.messages?.length === 0 ? "Начните дискуссию по теме..." : "Продолжите дискуссию или задайте новый вопрос..."}
             disabled={isLoading || streamingMessages.size > 0}
             sx={{
               '& .MuiOutlinedInput-root': {
@@ -597,6 +648,46 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
               }
             }}
           />
+          
+          {/* Кнопка продолжить дискуссию (показывается только если есть сообщения) */}
+          {session?.messages?.length > 0 && (
+            <Button
+              variant="outlined"
+              onClick={handleContinueDiscussion}
+              disabled={isLoading || streamingMessages.size > 0 || continueDiscussionMutation.isPending}
+              sx={{
+                minWidth: '140px',
+                height: '56px',
+                borderRadius: '28px',
+                border: `2px solid ${theme.palette.primary.main}`,
+                color: 'primary.main',
+                background: theme.palette.mode === 'dark'
+                  ? 'rgba(102,126,234,0.1)'
+                  : 'rgba(102,126,234,0.05)',
+                '&:hover': {
+                  background: theme.palette.mode === 'dark'
+                    ? 'rgba(102,126,234,0.2)'
+                    : 'rgba(102,126,234,0.1)',
+                  border: `2px solid ${theme.palette.primary.main}`,
+                  transform: 'translateY(-1px)',
+                },
+                '&:disabled': {
+                  border: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                  color: alpha(theme.palette.primary.main, 0.5),
+                },
+              }}
+            >
+              {continueDiscussionMutation.isPending ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <>
+                  <Psychology sx={{ mr: 1, fontSize: 20 }} />
+                  Продолжить
+                </>
+              )}
+            </Button>
+          )}
+          
           <Button
             variant="contained"
             onClick={handleSendMessage}
