@@ -20,9 +20,37 @@ const sendMessageValidation = [
   body('attachments').optional().isArray(),
   // Custom validation: content OR attachments must be present
   body().custom((value) => {
-    if (!value.content && (!value.attachments || value.attachments.length === 0)) {
+    const hasContent = value.content && value.content.trim().length > 0;
+    const hasAttachments = value.attachments && Array.isArray(value.attachments) && value.attachments.length > 0;
+    
+    if (!hasContent && !hasAttachments) {
       throw new Error('Content or attachments must be provided');
     }
+    
+    // Validate attachments structure if present
+    if (hasAttachments) {
+      for (let i = 0; i < value.attachments.length; i++) {
+        const attachment = value.attachments[i];
+        // Логирование только при проблемах
+        if (!attachment?.name || !attachment?.data || !attachment?.mimeType) {
+          console.log(`🔍 Проблема с attachment ${i}:`, {
+            hasName: !!attachment?.name,
+            hasData: !!attachment?.data,
+            hasMimeType: !!attachment?.mimeType,
+            mimeTypeValue: attachment?.mimeType,
+            name: attachment?.name
+          });
+        }
+        
+        if (!attachment || typeof attachment !== 'object') {
+          throw new Error(`Attachment ${i} must be an object`);
+        }
+        if (!attachment.name || !attachment.data || !attachment.mimeType) {
+          throw new Error(`Attachment ${i} missing required fields: name, data, mimeType`);
+        }
+      }
+    }
+    
     return true;
   })
 ];

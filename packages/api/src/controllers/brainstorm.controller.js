@@ -336,6 +336,19 @@ exports.sendBrainstormMessage = async (req, res, next) => {
       attachments: req.body.attachments?.length || 0,
       timestamp: new Date().toISOString()
     });
+    
+    // Детальное логирование каждого attachment
+    if (req.body.attachments && Array.isArray(req.body.attachments)) {
+      req.body.attachments.forEach((attachment, index) => {
+        console.log(`🔍 Attachment ${index}:`, {
+          hasName: !!attachment?.name,
+          hasData: !!attachment?.data,
+          hasMimeType: !!attachment?.mimeType,
+          keys: Object.keys(attachment || {}),
+          fullObject: attachment
+        });
+      });
+    }
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -351,12 +364,28 @@ exports.sendBrainstormMessage = async (req, res, next) => {
     const { content, attachments = [] } = req.body;
 
     // Проверяем что есть контент или файлы
-    if (!content && (!attachments || attachments.length === 0)) {
+    const hasContent = content && content.trim().length > 0;
+    const hasAttachments = attachments && Array.isArray(attachments) && attachments.length > 0;
+    
+    if (!hasContent && !hasAttachments) {
       console.log('❌ No content or attachments provided');
       return res.status(400).json(apiResponse(false, null, {
         code: 'EMPTY_MESSAGE',
         message: 'Content or attachments must be provided'
       }));
+    }
+
+    // Дополнительная валидация структуры attachments
+    if (hasAttachments) {
+      for (const attachment of attachments) {
+        if (!attachment.name || !attachment.data || !attachment.mimeType) {
+          console.log('❌ Invalid attachment structure:', attachment);
+          return res.status(400).json(apiResponse(false, null, {
+            code: 'INVALID_ATTACHMENT',
+            message: 'Each attachment must have name, data, and mimeType'
+          }));
+        }
+      }
     }
 
     const session = await BrainstormSession.findOne({
@@ -379,7 +408,27 @@ exports.sendBrainstormMessage = async (req, res, next) => {
     }
 
     // Add user message with attachments
-    const userMessage = session.addMessage('user', content, attachments);
+    console.log('🔍 Before addMessage:', {
+      content: content,
+      contentType: typeof content,
+      attachments: attachments,
+      attachmentsLength: attachments.length,
+      attachmentsStructure: attachments.map(a => ({
+        name: a?.name,
+        type: a?.type,
+        mimeType: a?.mimeType,
+        hasData: !!a?.data
+      }))
+    });
+    
+    const userMessage = session.addMessage('user', content || '', attachments);
+    
+    console.log('🔍 After addMessage, before save:', {
+      messageId: userMessage.id,
+      messageContent: userMessage.content,
+      messageAttachments: userMessage.attachments?.length || 0
+    });
+    
     await session.save();
     console.log('💾 User message saved to session with', attachments.length, 'attachments');
 
@@ -464,7 +513,9 @@ exports.continueBrainstorm = async function(session, io, userId) {
     
     console.log('✅ Получены ответы от обеих моделей последовательно:', {
       first: speakers[0],
-      second: speakers[1],
+      firstResult: !!firstResult,
+      second: speakers[1], 
+      secondResult: !!secondResult,
       totalMessages: messages.length
     });
     
@@ -498,10 +549,10 @@ exports.generateBrainstormResponse = async function(session, speaker, io, userId
         attachments: m.attachments || []
       };
     } else {
-      // Для ИИ сообщений указываем автора для понимания контекста
+      // ДЛЯ ИИ СООБЩЕНИЙ НЕ ДОБАВЛЯЕМ ПРЕФИКСЫ - контент уже содержит нужную информацию
       return {
         role: 'assistant',
-        content: `[${m.speaker.toUpperCase()}]: ${m.content}`,
+        content: m.content, // Убираем дублирование префиксов
         attachments: m.attachments || []
       };
     }
@@ -590,6 +641,12 @@ exports.generateBrainstormResponse = async function(session, speaker, io, userId
     console.log(`✅ ${speaker} response completed:`, {
       contentLength: fullContent.length
     });
+
+    // Проверяем что ответ не пустой перед добавлением
+    if (!fullContent || fullContent.trim().length === 0) {
+      console.log(`⚠️  ${speaker} returned empty content, skipping message save`);
+      return null; // Возвращаем null вместо сообщения
+    }
 
     // Добавляем сообщение в сессию
     const aiMessage = session.addMessage(

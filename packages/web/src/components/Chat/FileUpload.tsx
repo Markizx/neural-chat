@@ -19,6 +19,7 @@ import {
 
 interface FileUploadProps {
   onFilesChange: (files: File[]) => void;
+  files?: File[]; // Для синхронизации состояния
   maxFiles?: number;
   maxFileSize?: number; // в MB
   acceptedTypes?: string[];
@@ -34,8 +35,9 @@ interface UploadedFile {
   error?: string;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({
+const FileUpload = React.forwardRef<any, FileUploadProps>(({
   onFilesChange,
+  files = [],
   maxFiles = 5,
   maxFileSize = 10,
   acceptedTypes = [
@@ -62,12 +64,28 @@ const FileUpload: React.FC<FileUploadProps> = ({
   acceptedFileTypes,
   disabled = false,
   helperText,
-}) => {
+}, ref) => {
   // Используем acceptedFileTypes если предоставлено, иначе acceptedTypes
   const finalAcceptedTypes = acceptedFileTypes || acceptedTypes;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
+
+  // Синхронизация с внешним состоянием files
+  React.useEffect(() => {
+    if (files.length === 0 && uploadedFiles.length > 0) {
+      // Очищаем внутреннее состояние когда внешние файлы очищены
+      setUploadedFiles([]);
+    }
+  }, [files.length, uploadedFiles.length]);
+
+  // Предоставляем метод для очистки файлов
+  React.useImperativeHandle(ref, () => ({
+    clearFiles: () => {
+      setUploadedFiles([]);
+      onFilesChange([]);
+    }
+  }));
 
   const getFileIcon = (file: File) => {
     const type = file.type;
@@ -138,8 +156,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
     });
 
-    setUploadedFiles(prev => [...prev, ...newFiles]);
-    onFilesChange([...uploadedFiles.map(f => f.file).filter(f => !uploadedFiles.find(uf => uf.file === f && uf.error)), ...validFiles]);
+    setUploadedFiles(prev => {
+      const updated = [...prev, ...newFiles];
+      // Передаем только валидные файлы
+      const allValidFiles = updated.filter(f => !f.error).map(f => f.file);
+      onFilesChange(allValidFiles);
+      return updated;
+    });
   };
 
   const handleRemoveFile = (id: string) => {
@@ -285,6 +308,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
       )}
     </Box>
   );
-};
+});
 
 export default FileUpload; 

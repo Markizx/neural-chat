@@ -46,11 +46,24 @@ const brainstormSchema = new mongoose.Schema({
     },
     content: String,
     attachments: [{
+      id: String,
       name: String,
-      type: String,
+      url: String,
+      type: {
+        type: String,
+        enum: ['image', 'document', 'code', 'other']
+      },
       size: Number,
-      data: String,
-      mimeType: String
+      mimeType: String,
+      data: String, // Base64 encoded file data
+      isProjectFile: {
+        type: Boolean,
+        default: false
+      },
+      projectId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project'
+      }
     }],
     timestamp: {
       type: Date,
@@ -122,10 +135,18 @@ brainstormSchema.virtual('isFinished').get(function() {
 
 // Add message
 brainstormSchema.methods.addMessage = function(speaker, content, attachments = [], tokens = 0) {
+  // Валидируем что есть либо контент, либо файлы
+  const hasContent = content && content.trim().length > 0;
+  const hasAttachments = attachments && Array.isArray(attachments) && attachments.length > 0;
+  
+  if (!hasContent && !hasAttachments) {
+    throw new Error('Message must have either content or attachments');
+  }
+  
   const message = {
     id: new mongoose.Types.ObjectId().toString(),
     speaker,
-    content,
+    content: content || '', // Обеспечиваем что content никогда не undefined
     attachments: attachments || [],
     timestamp: new Date(),
     tokens
