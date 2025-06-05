@@ -409,6 +409,9 @@ class GrokService {
           }))
         });
         
+        // Handle both images and text files for vision models
+        const textAttachments = [];
+        
         msg.attachments.forEach(attachment => {
           const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
           
@@ -425,8 +428,48 @@ class GrokService {
                 detail: 'auto'
               }
             });
+          } else {
+            // Handle text files and other non-image attachments
+            const fileExtension = attachment.name ? attachment.name.split('.').pop()?.toLowerCase() : '';
+            const isTextFile = attachment.mimeType?.startsWith('text/') || 
+                             (!attachment.mimeType || attachment.mimeType === '') && 
+                             ['md', 'txt', 'json', 'xml', 'yaml', 'yml', 'csv', 'log', 'py', 'js', 'ts', 'html', 'css', 'sql'].includes(fileExtension);
+            
+            const isStructuredFile = attachment.mimeType && (attachment.mimeType.includes('json') || attachment.mimeType.includes('xml') || 
+                       attachment.mimeType.includes('yaml') || attachment.mimeType.includes('markdown')) ||
+                       (!attachment.mimeType || attachment.mimeType === '') && 
+                       ['json', 'xml', 'yaml', 'yml', 'md', 'markdown'].includes(fileExtension);
+
+            if (isTextFile || isStructuredFile) {
+              let content = attachment.content || '';
+              
+              // Если есть data (base64), пытаемся декодировать
+              if (!content && attachment.data) {
+                try {
+                  if (attachment.data.includes(',')) {
+                    const base64Data = attachment.data.split(',')[1];
+                    content = Buffer.from(base64Data, 'base64').toString('utf-8');
+                  } else {
+                    content = Buffer.from(attachment.data, 'base64').toString('utf-8');
+                  }
+                } catch (e) {
+                  console.error('Failed to decode text file:', e);
+                  content = '[Не удалось декодировать содержимое файла]';
+                }
+              }
+              
+              const fileType = isStructuredFile ? (attachment.mimeType || `text/${fileExtension}`) : (attachment.mimeType || 'text/plain');
+              textAttachments.push(`📄 Файл: ${attachment.name} (${fileType})\n\`\`\`${fileExtension || ''}\n${content || '[Файл пуст]'}\n\`\`\``);
+            } else {
+              textAttachments.push(`📎 Файл: ${attachment.name} (${attachment.mimeType || 'неизвестный тип'}, ${attachment.size ? Math.round(attachment.size / 1024) + ' KB' : 'размер неизвестен'})`);
+            }
           }
         });
+        
+        // Add text attachments content to the main text
+        if (textAttachments.length > 0) {
+          formatted.content[0].text += '\n\n' + textAttachments.join('\n');
+        }
       } else if (msg.attachments && msg.attachments.length > 0) {
         // For non-vision models, add attachment info as text
         console.log('🔍 Grok processing attachments (non-vision):', {
@@ -443,7 +486,20 @@ class GrokService {
         const attachmentTexts = msg.attachments.map(att => {
           if (att.mimeType && att.mimeType.startsWith('image/')) {
             return `[Изображение: ${att.name} (${att.mimeType}, ${att.size ? Math.round(att.size / 1024) + ' KB' : 'размер неизвестен'})]`;
-          } else if (att.mimeType && att.mimeType.startsWith('text/')) {
+          } 
+          
+          // Определяем тип файла по расширению, если MIME тип пустой или неопределён
+          const fileExtension = att.name ? att.name.split('.').pop()?.toLowerCase() : '';
+          const isTextFile = att.mimeType?.startsWith('text/') || 
+                           (!att.mimeType || att.mimeType === '') && 
+                           ['md', 'txt', 'json', 'xml', 'yaml', 'yml', 'csv', 'log', 'py', 'js', 'ts', 'html', 'css', 'sql'].includes(fileExtension);
+          
+          const isStructuredFile = att.mimeType && (att.mimeType.includes('json') || att.mimeType.includes('xml') || 
+                     att.mimeType.includes('yaml') || att.mimeType.includes('markdown')) ||
+                     (!att.mimeType || att.mimeType === '') && 
+                     ['json', 'xml', 'yaml', 'yml', 'md', 'markdown'].includes(fileExtension);
+          
+          if (isTextFile || isStructuredFile) {
             let content = att.content || '';
             
             // Если есть data (base64), пытаемся декодировать
@@ -461,23 +517,8 @@ class GrokService {
               }
             }
             
-            return `📄 Файл: ${att.name}\n\`\`\`\n${content || '[Файл пуст]'}\n\`\`\``;
-          } else if (att.mimeType && (att.mimeType.includes('json') || att.mimeType.includes('xml') || 
-                     att.mimeType.includes('yaml') || att.mimeType.includes('markdown'))) {
-            let content = '';
-            
-            if (att.data) {
-              try {
-                const base64Data = att.data.includes(',') 
-                  ? att.data.split(',')[1] 
-                  : att.data;
-                content = Buffer.from(base64Data, 'base64').toString('utf-8');
-              } catch (e) {
-                console.error('Failed to decode file:', e);
-              }
-            }
-            
-            return `📄 Файл: ${att.name} (${att.mimeType})\n\`\`\`\n${content || '[Не удалось прочитать файл]'}\n\`\`\``;
+            const fileType = isStructuredFile ? (att.mimeType || `text/${fileExtension}`) : (att.mimeType || 'text/plain');
+            return `📄 Файл: ${att.name} (${fileType})\n\`\`\`${fileExtension || ''}\n${content || '[Файл пуст]'}\n\`\`\``;
           } else {
             return `📎 Файл: ${att.name} (${att.mimeType || 'неизвестный тип'}, ${att.size ? Math.round(att.size / 1024) + ' KB' : 'размер неизвестен'})`;
           }

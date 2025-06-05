@@ -191,7 +191,7 @@ exports.uploadFiles = async (req, res, next) => {
       }));
     }
 
-    const project = await Project.findById(id);
+    let project = await Project.findById(id);
 
     if (!project) {
       return res.status(404).json(apiResponse(false, null, {
@@ -206,6 +206,73 @@ exports.uploadFiles = async (req, res, next) => {
         code: 'FORBIDDEN',
         message: 'You need editor permissions to upload files'
       }));
+    }
+
+    // Check if project needs migration (has old schema)
+    let needsMigration = false;
+    try {
+      // Try to access files field
+      if (project.files && project.files.length > 0) {
+        // Check if first file is a string (old schema)
+        if (typeof project.files[0] === 'string') {
+          needsMigration = true;
+        }
+      }
+    } catch (e) {
+      needsMigration = true;
+    }
+
+    if (needsMigration) {
+      console.log('🔧 Project needs schema migration');
+      
+      try {
+        // Save project data including existing files
+        const projectData = {
+          userId: project.userId,
+          name: project.name,
+          description: project.description,
+          color: project.color,
+          icon: project.icon,
+          collaborators: project.collaborators,
+          settings: project.settings,
+          stats: project.stats,
+          isArchived: project.isArchived,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt
+        };
+        
+        // Save existing files if any (convert from old format if needed)
+        const existingFiles = [];
+        if (project.files && Array.isArray(project.files)) {
+          project.files.forEach((file, index) => {
+            if (typeof file === 'object' && file.id) {
+              // Already in correct format
+              existingFiles.push(file);
+            }
+          });
+        }
+        
+        // Delete the old project document
+        await Project.deleteOne({ _id: id });
+        console.log('🗑️ Deleted old project document');
+        
+        // Create new project with correct schema
+        project = new Project({
+          _id: id,
+          ...projectData,
+          files: existingFiles // Preserve existing files
+        });
+        
+        await project.save();
+        console.log('✅ Recreated project with correct schema, preserved', existingFiles.length, 'files');
+        
+      } catch (migrationError) {
+        console.log('⚠️ Migration failed:', migrationError.message);
+        return res.status(500).json(apiResponse(false, null, {
+          code: 'MIGRATION_ERROR',
+          message: 'Failed to migrate project schema. Please create a new project.'
+        }));
+      }
     }
 
     // Add files to project

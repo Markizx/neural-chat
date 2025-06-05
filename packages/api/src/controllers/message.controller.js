@@ -55,6 +55,19 @@ exports.getMessages = async (req, res, next) => {
       .limit(options.limit)
       .skip((options.page - 1) * options.limit);
 
+    // Debug: логируем attachments в сообщениях
+    const attachmentDebug = messages.map(msg => ({
+      messageId: msg._id,
+      role: msg.role,
+      hasAttachments: !!(msg.attachments && msg.attachments.length > 0),
+      attachmentCount: msg.attachments?.length || 0,
+      attachmentNames: msg.attachments?.map(att => att.name) || []
+    })).filter(debug => debug.hasAttachments);
+    
+    if (attachmentDebug.length > 0) {
+      console.log('📎 Messages with attachments being returned:', attachmentDebug);
+    }
+
     const total = await Message.countDocuments({
       chatId,
       isDeleted: false

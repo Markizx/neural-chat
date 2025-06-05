@@ -1,0 +1,12 @@
+{
+  "watch": ["packages/api/src"],
+  "ext": "js,json",
+  "ignore": [
+    "packages/api/uploads/*",
+    "packages/api/src/**/*.test.js",
+    "packages/api/src/**/*.spec.js",
+    "node_modules/*",
+    "*.log"
+  ],
+  "exec": "ts-node packages/api/src/index.js"
+} 

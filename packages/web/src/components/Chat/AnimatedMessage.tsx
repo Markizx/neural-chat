@@ -8,11 +8,20 @@ import {
   useTheme,
   LinearProgress,
   Chip,
+  Modal,
+  Backdrop,
+  IconButton,
 } from '@mui/material';
+import { Fade } from '@mui/material';
 import {
   Person,
   SmartToy,
   Psychology,
+  Close,
+  Image as ImageIcon,
+  Code,
+  Article,
+  DescriptionOutlined,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -28,6 +37,7 @@ interface AnimatedMessageProps {
     model?: string;
     isStreaming?: boolean;
     createdAt?: string | Date;
+    attachments?: any[];
   };
   index: number;
   chatType?: 'claude' | 'grok' | 'general';
@@ -37,14 +47,14 @@ interface AnimatedMessageProps {
 const AnimatedMessage: React.FC<AnimatedMessageProps> = ({ 
   message, 
   index, 
-  chatType,
-  isNew = false 
+  chatType
 }) => {
   const theme = useTheme();
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   const [typedContent, setTypedContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [modalImage, setModalImage] = useState<string | null>(null);
 
   // Эффект печати для streaming сообщений
   useEffect(() => {
@@ -123,6 +133,32 @@ const AnimatedMessage: React.FC<AnimatedMessageProps> = ({
       return 'Grok';
     }
     return model;
+  };
+
+  const getFileIcon = (mimeType: string, type: string) => {
+    if (mimeType && mimeType.startsWith('image/')) {
+      return <ImageIcon sx={{ fontSize: 16 }} />;
+    } else if (type === 'code' || (mimeType && (mimeType.includes('javascript') || mimeType.includes('python')))) {
+      return <Code sx={{ fontSize: 16 }} />;
+    } else if (mimeType && (mimeType.includes('text/') || mimeType.includes('markdown'))) {
+      return <Article sx={{ fontSize: 16 }} />;
+    } else {
+      return <DescriptionOutlined sx={{ fontSize: 16 }} />;
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${Math.round(bytes / (1024 * 1024))} MB`;
+  };
+
+  const handleImageClick = (url: string) => {
+    setModalImage(url);
+  };
+
+  const closeModal = () => {
+    setModalImage(null);
   };
 
   return (
@@ -353,6 +389,97 @@ const AnimatedMessage: React.FC<AnimatedMessageProps> = ({
                     },
                   },
                 }}>
+                  {/* Attachments for user messages */}
+                  {isUser && message.attachments && message.attachments.length > 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      {message.attachments.map((attachment, index) => {
+                        const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                        
+                        return (
+                          <Box
+                            key={attachment.id || index}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.5,
+                              p: 1.5,
+                              mb: 1,
+                              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                              borderRadius: 2,
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              transition: 'all 0.2s ease',
+                              cursor: isImage ? 'pointer' : 'default',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                transform: isImage ? 'scale(1.02)' : 'none',
+                              },
+                            }}
+                            onClick={isImage && attachment.url ? () => handleImageClick(attachment.url) : undefined}
+                          >
+                            {isImage ? (
+                              <>
+                                <Box
+                                  component="img"
+                                  src={attachment.url}
+                                  alt={attachment.name}
+                                  sx={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 1,
+                                    objectFit: 'cover',
+                                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                                  }}
+                                />
+                                <Typography sx={{ fontSize: '0.8rem' }}>📷</Typography>
+                              </>
+                            ) : (
+                              <Box
+                                sx={{
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: 1,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                                }}
+                              >
+                                {getFileIcon(attachment.mimeType || '', attachment.type || '')}
+                              </Box>
+                            )}
+                            
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography
+                                sx={{
+                                  fontSize: '0.875rem',
+                                  fontWeight: 500,
+                                  color: 'white',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {attachment.name}
+                              </Typography>
+                              <Typography
+                                sx={{
+                                  fontSize: '0.75rem',
+                                  color: 'rgba(255, 255, 255, 0.8)',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {attachment.mimeType || 'unknown'} • {attachment.size ? formatFileSize(attachment.size) : 'Unknown size'}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  )}
+
                   <ReactMarkdown className="markdown-body">
                     {typedContent || ''}
                   </ReactMarkdown>
@@ -411,6 +538,64 @@ const AnimatedMessage: React.FC<AnimatedMessageProps> = ({
           </motion.div>
         </Box>
       </motion.div>
+
+      {/* Modal for image preview */}
+      <Modal
+        open={!!modalImage}
+        onClose={closeModal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+          sx: { backgroundColor: 'rgba(0, 0, 0, 0.8)' },
+        }}
+      >
+        <Fade in={!!modalImage}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              outline: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <IconButton
+              onClick={closeModal}
+              sx={{
+                position: 'absolute',
+                top: -40,
+                right: -40,
+                color: 'white',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                },
+              }}
+            >
+              <Close />
+            </IconButton>
+            {modalImage && (
+              <Box
+                component="img"
+                src={modalImage}
+                alt="Attachment preview"
+                sx={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  borderRadius: 2,
+                  boxShadow: 3,
+                }}
+              />
+            )}
+          </Box>
+        </Fade>
+      </Modal>
     </AnimatePresence>
   );
 };

@@ -1,0 +1,130 @@
+{
+  "name": "neuralchat-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NeuralChat - Advanced AI Chat Platform with Claude and Grok Integration",
+  "author": "NeuralChat Team",
+  "license": "MIT",
+  "homepage": "https://neuralchat.pro",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neuralchat/neuralchat-platform.git"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "lerna run build --stream",
+    "build:shared": "lerna run build --scope=@neuralchat/shared",
+    "build:api": "npm run build:shared && lerna run build --scope=@neuralchat/api",
+    "build:web": "lerna run build --scope=@neuralchat/web --scope=@neuralchat/shared --scope=@neuralchat/ui-kit --stream",
+    "build:all": "npm run build:shared && lerna run build --ignore=@neuralchat/shared --stream",
+    "build:docker": "docker-compose build",
+    "build:docker:api": "docker build -t neuralchat-api -f docker/api.Dockerfile .",
+    "build:docker:web": "docker build -t neuralchat-web -f docker/web.Dockerfile .",
+    "start": "lerna run start --parallel",
+    "start:api": "lerna run start --scope=@neuralchat/api",
+    "start:web": "lerna run start --scope=@neuralchat/web",
+    "start:docker": "docker-compose up",
+    "start:docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up",
+    "dev": "lerna run dev --parallel",
+    "dev:core": "lerna run dev --parallel --scope=@neuralchat/api --scope=@neuralchat/web",
+    "dev:api": "lerna run dev --scope=@neuralchat/api --parallel",
+    "dev:web": "lerna run dev --scope=@neuralchat/web --parallel",
+    "dev:admin": "lerna run dev --scope=@neuralchat/admin --parallel",
+    "test": "lerna run test --stream",
+    "test:api": "jest --projects packages/api",
+    "test:web": "jest --projects packages/web",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "lint": "lerna run lint --stream",
+    "lint:fix": "lerna run lint -- --fix",
+    "type-check": "lerna run type-check --parallel",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "clean": "lerna clean --yes && rm -rf node_modules",
+    "clean:all": "npm run clean && rm -rf packages/*/dist packages/*/build",
+    "reset": "npm run clean:all && npm install && npm run install:packages",
+    "prepare": "node -e \"try { require('husky').install() } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e }\"",
+    "pre-commit": "lint-staged",
+    "deploy:aws": "./scripts/deploy.sh production",
+    "deploy:staging": "./scripts/deploy.sh staging",
+    "deploy:docker": "npm run docker:build && npm run docker:push",
+    "docker:build": "npm run build:docker:api && npm run build:docker:web",
+    "docker:push": "npm run docker:push:api && npm run docker:push:web",
+    "docker:push:api": "docker tag neuralchat-api:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/neuralchat-api:latest && docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/neuralchat-api:latest",
+    "docker:push:web": "docker tag neuralchat-web:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/neuralchat-web:latest && docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/neuralchat-web:latest",
+    "docker:login": "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com",
+    "db:migrate": "lerna run migrate --scope=@neuralchat/api",
+    "db:seed": "lerna run seed --scope=@neuralchat/api",
+    "analyze": "lerna run analyze --parallel",
+    "check:deps": "npm-check-updates",
+    "update:deps": "npm-check-updates -u && npm install",
+    "security:check": "npm audit && lerna exec -- npm audit",
+    "docs:build": "typedoc",
+    "release": "lerna version --conventional-commits --yes",
+    "release:publish": "lerna publish from-package --yes",
+    "install:packages": "npm install",
+    "check:env": "node scripts/check-env.js",
+    "setup:env": "node scripts/setup-env.js",
+    "bootstrap": "npx lerna exec --parallel -- npm install",
+    "version": "lerna version",
+    "publish": "lerna publish"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.8",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^8.0.3",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "lerna": "^8.0.2",
+    "lint-staged": "^15.2.0",
+    "npm-check-updates": "^16.14.12",
+    "prettier": "^3.1.1",
+    "sharp": "^0.34.2",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.25.6",
+    "typescript": "^4.9.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "volta": {
+    "node": "18.19.0",
+    "npm": "10.2.5"
+  }
+}

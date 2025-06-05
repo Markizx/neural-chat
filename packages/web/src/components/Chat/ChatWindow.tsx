@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -8,21 +8,29 @@ import {
   useTheme,
   Button,
   Paper,
+  IconButton,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Folder,
   FolderOff,
+  MoreVert,
+  Edit,
+  Archive,
+  Delete,
 } from '@mui/icons-material';
 import AnimatedMessage from './AnimatedMessage';
 import MessageInput from './MessageInput';
 import ModelSelector from './ModelSelector';
 import EmptyState from './EmptyState';
+import ProjectFilesIndicator from './ProjectFilesIndicator';
 import { useChat } from '../../hooks/useChat';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useProjects } from '../../hooks/useProjects';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Chat } from '../../types/api.types';
 import { alpha } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatWindowProps {
   type: 'claude' | 'grok';
@@ -42,12 +50,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [selectedModel, setSelectedModel] = useState<string>(
     type === 'claude' ? 'claude-4-sonnet' : 'grok-3'
   );
-  const [activeProject, setActiveProject] = useState<string | null>(null);
+  const [activeProject, setActiveProject] = useState<string | null>(
+    initialChat?.projectId || null
+  );
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const messagesContainerRef = useRef<null | HTMLDivElement>(null);
   const { socket } = useWebSocket();
   const theme = useTheme();
+  const navigate = useNavigate();
   // const isSmallMobile = useMediaQuery('(max-width: 480px)');
   const { projects, loading: projectsLoading } = useProjects();
   
@@ -55,9 +66,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     chat,
     messages,
     loading,
+    error,
     sendMessage,
     streamingMessage,
-  } = useChat(chatId, initialChat, type);
+    updateChat,
+  } = useChat(chatId, initialChat, type, navigate, activeProject || undefined);
 
   useEffect(() => {
     if (chatId && socket) {
@@ -120,9 +133,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setProjectMenuAnchorEl(null);
   };
 
-  const handleProjectSelect = (projectId: string | null) => {
+  const handleProjectSelect = async (projectId: string | null) => {
     setActiveProject(projectId);
     handleProjectMenuClose();
+    
+    // Обновляем чат с новым projectId
+    if (chatId && chat) {
+      try {
+        await updateChat(chatId, { projectId });
+      } catch (error) {
+        console.error('Failed to update chat project:', error);
+      }
+    }
   };
 
   const handleSendMessage = async (content: string, attachments?: any[]) => {
@@ -429,6 +451,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           minHeight: 0, // Важно для правильной работы flex
         }}
       >
+        {/* Индикатор файлов проекта */}
+        {activeProject && projects && Array.isArray(projects) && (
+          (() => {
+            const project = projects.find(p => p._id === activeProject);
+            return project?.files && project.files.length > 0 ? (
+              <ProjectFilesIndicator
+                projectId={activeProject}
+                projectName={project.name}
+                files={project.files}
+                expanded={true}
+              />
+            ) : null;
+          })()
+        )}
         {messages.length === 0 && !streamingMessage ? (
           <Box
             sx={{

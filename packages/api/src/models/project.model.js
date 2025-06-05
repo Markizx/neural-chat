@@ -1,5 +1,32 @@
 const mongoose = require('mongoose');
 
+const fileSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  url: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    required: true
+  },
+  size: {
+    type: Number,
+    required: true
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { _id: false });
+
 const projectSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,17 +50,10 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: 'folder'
   },
-  files: [{
-    id: String,
-    name: String,
-    url: String,
-    type: String,
-    size: Number,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  files: {
+    type: [fileSchema],
+    default: []
+  },
   collaborators: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -114,14 +134,34 @@ projectSchema.methods.checkPermission = function(userId, requiredRole = 'viewer'
 
 // Add file
 projectSchema.methods.addFile = function(fileData) {
+  console.log('🔍 Adding file to project:', {
+    projectId: this._id,
+    currentFilesType: Array.isArray(this.files) ? 'array' : typeof this.files,
+    currentFilesLength: this.files ? this.files.length : 0,
+    fileData: fileData
+  });
+
   const file = {
     id: new mongoose.Types.ObjectId().toString(),
-    ...fileData,
+    name: fileData.name,
+    url: fileData.url,
+    type: fileData.type,
+    size: fileData.size,
     uploadedAt: new Date()
   };
 
+  console.log('📄 File object to add:', file);
+
+  // Ensure files array exists
+  if (!this.files) {
+    this.files = [];
+  }
+  
+  // Add file using mongoose array methods
   this.files.push(file);
   this.updateFileCount();
+  
+  console.log('✅ File added, new files count:', this.files.length);
   
   return file;
 };
@@ -156,6 +196,11 @@ projectSchema.methods.removeCollaborator = function(userId) {
     c => c.userId.toString() !== userId.toString()
   );
 };
+
+// Force schema override in case of existing cached model
+if (mongoose.models.Project) {
+  delete mongoose.models.Project;
+}
 
 const Project = mongoose.model('Project', projectSchema);
 

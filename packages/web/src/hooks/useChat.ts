@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
+import { NavigateFunction } from 'react-router-dom';
 import { chatService } from '../services/chat.service';
 import { apiService } from '../services/api.service';
-import { Chat, Message } from '@neuralchat/shared/types';
+import { Chat, Message } from '../types/api.types';
 import { useWebSocket } from './useWebSocket';
 import { extractArtifacts, removeArtifactsFromText } from '../utils/artifactParser';
 
@@ -28,6 +29,7 @@ interface UseChatOptions {
   chatId?: string;
   initialChat?: Chat;
   type?: 'claude' | 'grok';
+  navigate?: NavigateFunction;
 }
 
 interface SendMessageOptions {
@@ -35,7 +37,7 @@ interface SendMessageOptions {
   attachments?: any[];
 }
 
-export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | 'grok') => {
+export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | 'grok', navigate?: NavigateFunction, projectId?: string) => {
   const queryClient = useQueryClient();
   const [chat, setChat] = useState<Chat | null>(initialChat || null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -183,6 +185,7 @@ export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | '
           type,
           model: type === 'claude' ? 'claude-4-sonnet' : 'grok-2-1212',
           title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
+          projectId: projectId || chat?.projectId, // Передаем projectId из параметров или из чата
         });
         
         if (!createResponse.data?.chat) {
@@ -199,7 +202,9 @@ export const useChat = (chatId?: string, initialChat?: Chat, type?: 'claude' | '
         }
         
         // Update URL to include the new chat ID
-        window.history.replaceState(null, '', `/chat/${type}/${currentChatId}`);
+        if (navigate) {
+          navigate(`/chat/${type}/${currentChatId}`);
+        }
       }
       
       if (!currentChatId) {
