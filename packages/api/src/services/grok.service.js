@@ -18,6 +18,7 @@ class GrokService {
     
     // Актуальные модели Grok (стандартизированные)
     this.models = {
+      'grok-3': 'grok-2-1212', // Мапим grok-3 на актуальную API модель
       'grok-2-1212': 'grok-2-1212',
       'grok-2-vision-1212': 'grok-2-vision-1212',
       'aurora': 'aurora' // Добавляем модель Aurora для генерации изображений
@@ -25,6 +26,7 @@ class GrokService {
 
     // Ценообразование для расчета стоимости (стандартизированные модели)
     this.pricing = {
+      'grok-3': { input: 0.002, output: 0.01 }, // $2/$10 per 1M tokens
       'grok-2-1212': { input: 0.002, output: 0.01 }, // $2/$10 per 1M tokens
       'grok-2-vision-1212': { input: 0.005, output: 0.015 }, // $5/$15 per 1M tokens
       'aurora': { input: 0.002, output: 0.01 } // Ценообразование для Aurora
@@ -32,6 +34,7 @@ class GrokService {
 
     // Лимиты для каждой модели (стандартизированные)
     this.rateLimits = {
+      'grok-3': 15,
       'grok-2-1212': 15,
       'grok-2-vision-1212': 10,
       'aurora': 10

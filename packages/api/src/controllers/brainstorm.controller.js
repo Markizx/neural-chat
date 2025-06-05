@@ -10,12 +10,12 @@ const mongoose = require('mongoose');
 function generateSystemPrompt(ai, format = 'brainstorm') {
   const prompts = {
     brainstorm: {
-      claude: `You are Claude, participating in a brainstorming session. Be creative, thoughtful, and build upon ideas presented. Offer unique perspectives and innovative solutions. Be concise but insightful.`,
-      grok: `You are Grok, participating in a brainstorming session. Be bold, unconventional, and challenge assumptions. Bring fresh perspectives and think outside the box. Be direct and engaging.`
+      claude: `You are Claude, participating in a LIVE brainstorming session with Grok. Read and respond to previous messages in the conversation. Build upon ideas, challenge perspectives, and engage directly with what Grok has said. Reference specific points from the discussion. Be creative and collaborative.`,
+      grok: `You are Grok, participating in a LIVE brainstorming session with Claude. Read and respond to previous messages in the conversation. Be bold, challenge Claude's ideas directly, and offer contrasting viewpoints. Reference what Claude has said and push back when you disagree. Be provocative and engaging.`
     },
     debate: {
-      claude: `You are Claude in a debate. Present well-reasoned arguments, use evidence, and maintain a respectful tone. Challenge opposing views constructively.`,
-      grok: `You are Grok in a debate. Take strong positions, use sharp wit, and don't be afraid to be controversial. Challenge conventional thinking.`
+      claude: `You are Claude in a LIVE DEBATE with Grok. Read the conversation history carefully and respond to Grok's specific arguments. Address their points directly, present counter-evidence, and challenge their reasoning respectfully but firmly. This is an interactive debate - engage with what has been said.`,
+      grok: `You are Grok in a LIVE DEBATE with Claude. Read what Claude has said and respond aggressively to their arguments. Point out flaws in their reasoning, challenge their assumptions, and present stronger counter-arguments. Be sharp, witty, and don't hold back. This is a real debate - fight for your position.`
     },
     analysis: {
       claude: `You are Claude conducting analysis. Be systematic, thorough, and objective. Break down complex topics and provide clear insights.`,
@@ -85,7 +85,7 @@ exports.startBrainstorm = async (req, res, next) => {
           systemPrompt: claudePrompt
         },
         grok: {
-          model: participants?.grok?.model || 'grok-2-1212',
+          model: participants?.grok?.model || 'grok-3',
           systemPrompt: grokPrompt
         }
       },
@@ -171,7 +171,14 @@ exports.getBrainstormSession = async (req, res, next) => {
           status: session.status,
           currentTurn: session.currentTurn,
           settings: session.settings,
-          messagesCount: session.messages?.length || 0
+          messagesCount: session.messages?.length || 0,
+          messages: session.messages?.map((m, i) => ({
+            index: i,
+            id: m._id || m.id,
+            speaker: m.speaker,
+            content: m.content?.substring(0, 30) + '...',
+            timestamp: m.timestamp
+          }))
         }
       }
     });
@@ -356,9 +363,15 @@ exports.sendBrainstormMessage = async (req, res, next) => {
       session
     }));
 
+    // Перезагружаем сессию из БД чтобы получить актуальное состояние
+    const freshSession = await BrainstormSession.findById(session._id);
+    
     // Continue the brainstorm with streaming (не ждем завершения)
     console.log('🚀 Starting AI conversation with streaming...');
-    exports.continueBrainstorm(session, req.io, req.user._id).catch(error => {
+    console.log('📡 IO object available:', !!req.io);
+    console.log('👤 User ID:', req.user._id);
+    
+    exports.continueBrainstorm(freshSession, req.io, req.user._id).catch(error => {
       console.error('❌ Error in background brainstorm:', error);
     });
 
@@ -372,35 +385,62 @@ exports.sendBrainstormMessage = async (req, res, next) => {
 exports.continueBrainstorm = async function(session, io, userId) {
   console.log('🔄 Starting PARALLEL continueBrainstorm for session:', session._id);
   
-  if (session.currentTurn >= session.settings.maxTurns) {
+  // Подсчитываем количество пар сообщений (Claude + Grok = 1 ход)
+  const aiMessages = session.messages.filter(m => m.speaker !== 'user').length;
+  const actualTurns = Math.floor(aiMessages / 2);
+  
+  console.log('📊 Current turn status:', {
+    aiMessages,
+    actualTurns,
+    maxTurns: session.settings.maxTurns,
+    messagesTotal: session.messages.length
+  });
+  
+  if (actualTurns >= session.settings.maxTurns) {
     console.log('⏹️ Max turns reached, completing session');
     session.complete();
     await session.save();
     return [];
   }
 
-  // АСИНХРОННЫЙ ПАЙПЛАЙН: запускаем обе модели ПАРАЛЛЕЛЬНО!
-  const claudePromise = exports.generateBrainstormResponse(session, 'claude', io, userId);
-  const grokPromise = exports.generateBrainstormResponse(session, 'grok', io, userId);
-  
-  console.log('🚀 Запускаем Claude и Grok ПАРАЛЛЕЛЬНО...');
-  
+  // ПОСЛЕДОВАТЕЛЬНЫЙ ПАЙПЛАЙН: ИИ отвечают поочередно для живой дискуссии
   try {
-    // Ждем оба ответа одновременно
-    const [claudeResult, grokResult] = await Promise.all([claudePromise, grokPromise]);
-    
     const messages = [];
-    if (claudeResult) messages.push(claudeResult);
-    if (grokResult) messages.push(grokResult);
     
-    console.log('✅ Получены ответы от обеих моделей:', {
-      claude: !!claudeResult,
-      grok: !!grokResult,
-      totalTime: 'параллельно!'
+    // Определяем порядок ответов (можно рандомизировать или по очереди)
+    const speakers = session.messages.filter(m => m.speaker !== 'user').length % 2 === 0 
+      ? ['claude', 'grok'] 
+      : ['grok', 'claude'];
+    
+    console.log(`🚀 Запускаем ${speakers[0]} и ${speakers[1]} ПОСЛЕДОВАТЕЛЬНО для живой дискуссии...`);
+    
+    // Первый ИИ отвечает
+    console.log(`🤖 ${speakers[0]} отвечает первым...`);
+    const firstResult = await exports.generateBrainstormResponse(session, speakers[0], io, userId);
+    if (firstResult) {
+      messages.push(firstResult);
+      // Обновляем сессию чтобы второй ИИ видел первый ответ
+      await session.save();
+      
+      // Небольшая пауза для реалистичности
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    // Перезагружаем сессию с обновленными сообщениями
+    const freshSession = await BrainstormSession.findById(session._id);
+    
+    // Второй ИИ отвечает, видя ответ первого
+    console.log(`🤖 ${speakers[1]} отвечает, видя ответ ${speakers[0]}...`);
+    const secondResult = await exports.generateBrainstormResponse(freshSession, speakers[1], io, userId);
+    if (secondResult) {
+      messages.push(secondResult);
+    }
+    
+    console.log('✅ Получены ответы от обеих моделей последовательно:', {
+      first: speakers[0],
+      second: speakers[1],
+      totalMessages: messages.length
     });
-    
-    // Сохраняем сессию
-    await session.save();
     
     return messages;
   } catch (error) {
@@ -409,7 +449,7 @@ exports.continueBrainstorm = async function(session, io, userId) {
     await session.save();
     
     if (io) {
-      io.to(`brainstorm_${session._id}`).emit('brainstorm:error', {
+      io.to(`brainstorm:${session._id}`).emit('brainstorm:error', {
         sessionId: session._id,
         error: error.message
       });
@@ -423,12 +463,23 @@ exports.continueBrainstorm = async function(session, io, userId) {
 exports.generateBrainstormResponse = async function(session, speaker, io, userId) {
   console.log(`🤖 Starting ${speaker} response generation...`);
 
-  // Prepare conversation history
-  const history = session.messages.map(m => ({
-    role: m.speaker === 'user' ? 'user' : 'assistant',
-    content: `[${m.speaker.toUpperCase()}]: ${m.content}`,
-    attachments: m.attachments || []
-  }));
+  // Prepare conversation history with better context formatting
+  const history = session.messages.map(m => {
+    if (m.speaker === 'user') {
+      return {
+        role: 'user',
+        content: m.content,
+        attachments: m.attachments || []
+      };
+    } else {
+      // Для ИИ сообщений указываем автора для понимания контекста
+      return {
+        role: 'assistant',
+        content: `[${m.speaker.toUpperCase()}]: ${m.content}`,
+        attachments: m.attachments || []
+      };
+    }
+  });
   
   console.log(`📝 Prepared history for ${speaker}:`, history.length, 'messages');
 
@@ -445,7 +496,7 @@ exports.generateBrainstormResponse = async function(session, speaker, io, userId
     
     // Отправляем начало генерации
     if (io) {
-      io.to(`brainstorm_${session._id}`).emit('brainstorm:streamStart', {
+      io.to(`brainstorm:${session._id}`).emit('brainstorm:streamStart', {
         sessionId: session._id,
         speaker: speaker,
         messageId: tempMessageId
@@ -469,7 +520,7 @@ exports.generateBrainstormResponse = async function(session, speaker, io, userId
           
           // Отправляем частичный контент через WebSocket
           if (io) {
-            io.to(`brainstorm_${session._id}`).emit('brainstorm:streamChunk', {
+            io.to(`brainstorm:${session._id}`).emit('brainstorm:streamChunk', {
               sessionId: session._id,
               speaker: speaker,
               messageId: tempMessageId,
@@ -497,7 +548,7 @@ exports.generateBrainstormResponse = async function(session, speaker, io, userId
         const chunk = words.slice(i, i + chunkSize).join(' ') + ' ';
         
         if (io) {
-          io.to(`brainstorm_${session._id}`).emit('brainstorm:streamChunk', {
+          io.to(`brainstorm:${session._id}`).emit('brainstorm:streamChunk', {
             sessionId: session._id,
             speaker: speaker,
             messageId: tempMessageId,
@@ -522,17 +573,30 @@ exports.generateBrainstormResponse = async function(session, speaker, io, userId
       0 // tokens будут подсчитаны позже
     );
     
+    // Сохраняем сессию сразу после добавления сообщения
+    await session.save();
+    console.log(`💾 Added ${speaker} message to session and saved to DB`);
+    
     // Отправляем завершение генерации
     if (io) {
-      io.to(`brainstorm_${session._id}`).emit('brainstorm:streamComplete', {
+      const room = `brainstorm:${session._id}`;
+      console.log(`📡 Emitting streamComplete to room: ${room}`);
+      
+      // Проверяем, есть ли клиенты в комнате
+      const sockets = await io.in(room).fetchSockets();
+      console.log(`👥 Clients in room ${room}: ${sockets.length}`);
+      
+      io.to(room).emit('brainstorm:streamComplete', {
         sessionId: session._id,
         speaker: speaker,
         messageId: tempMessageId,
         message: aiMessage
       });
+      
+      console.log(`✅ Emitted streamComplete for ${speaker} to ${sockets.length} clients`);
+    } else {
+      console.log('⚠️  No io instance available for WebSocket emit');
     }
-    
-    console.log(`💾 Added ${speaker} message to session`);
     
     // ВОЗВРАЩАЕМ СООБЩЕНИЕ для Promise.all
     return aiMessage;
@@ -541,7 +605,7 @@ exports.generateBrainstormResponse = async function(session, speaker, io, userId
     console.error(`❌ Error in ${speaker} service:`, error.message);
     
     if (io) {
-      io.to(`brainstorm_${session._id}`).emit('brainstorm:error', {
+      io.to(`brainstorm:${session._id}`).emit('brainstorm:error', {
         sessionId: session._id,
         speaker: speaker,
         error: error.message
@@ -748,29 +812,7 @@ exports.exportBrainstorm = async (req, res, next) => {
   }
 };
 
-// Helper: Generate system prompt
-exports.generateSystemPrompt = function(ai, format = 'brainstorm') {
-  const prompts = {
-    brainstorm: {
-      claude: `You are Claude, participating in a brainstorming session. Be creative, thoughtful, and build upon ideas presented. Offer unique perspectives and innovative solutions. Be concise but insightful.`,
-      grok: `You are Grok, participating in a brainstorming session. Be bold, unconventional, and challenge assumptions. Bring fresh perspectives and think outside the box. Be direct and engaging.`
-    },
-    debate: {
-      claude: `You are Claude in a debate. Present well-reasoned arguments, use evidence, and maintain a respectful tone. Challenge opposing views constructively.`,
-      grok: `You are Grok in a debate. Take strong positions, use sharp wit, and don't be afraid to be controversial. Challenge conventional thinking.`
-    },
-    analysis: {
-      claude: `You are Claude conducting analysis. Be systematic, thorough, and objective. Break down complex topics and provide clear insights.`,
-      grok: `You are Grok conducting analysis. Be incisive, direct, and willing to point out uncomfortable truths. Cut through complexity with clarity.`
-    },
-    creative: {
-      claude: `You are Claude in a creative session. Be imaginative, explore possibilities, and build elaborate concepts. Think artistically and expansively.`,
-      grok: `You are Grok in a creative session. Be wildly inventive, break rules, and propose radical ideas. Push creative boundaries.`
-    }
-  };
 
-  return prompts[format]?.[ai] || prompts.brainstorm[ai];
-};
 
 // Helper: Generate summary
 exports.generateSummary = async function(session) {

@@ -16,6 +16,7 @@ import {
   Alert,
   Menu,
   MenuItem,
+  useTheme,
 } from '@mui/material';
 import {
   Delete,
@@ -36,6 +37,7 @@ interface BrainstormHistoryProps {
 }
 
 const BrainstormHistory: React.FC<BrainstormHistoryProps> = ({ onSelectSession }) => {
+  const theme = useTheme();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -138,30 +140,131 @@ const BrainstormHistory: React.FC<BrainstormHistoryProps> = ({ onSelectSession }
 
   if (sessions.length === 0) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h6" color="text.secondary">
-          Нет сохраненных сессий
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Создайте первую brainstorm сессию
-        </Typography>
+      <Box
+        sx={{
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, rgba(15,15,35,0.5) 0%, rgba(26,26,46,0.3) 50%, rgba(22,33,62,0.5) 100%)'
+            : 'linear-gradient(135deg, rgba(248,250,252,0.5) 0%, rgba(226,232,240,0.3) 50%, rgba(203,213,225,0.5) 100%)',
+          minHeight: '100vh',
+        }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            background: theme.palette.mode === 'dark'
+              ? 'rgba(18, 18, 24, 0.95)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            borderBottom: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 700,
+              background: theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, #818cf8 0%, #c084fc 100%)'
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
+            🧠 История Brainstorm сессий
+          </Typography>
+        </Paper>
+        
+        <Box sx={{ p: 6, textAlign: 'center' }}>
+          <Box
+            sx={{
+              mb: 4,
+              opacity: 0.7,
+              fontSize: '4rem',
+            }}
+          >
+            🤖
+          </Box>
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+            Нет сохраненных сессий
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Создайте первую brainstorm сессию для начала работы с ИИ
+          </Typography>
+        </Box>
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h6" sx={{ p: 2, pb: 1 }}>
-        История Brainstorm сессий
-      </Typography>
+    <Box
+      sx={{
+        background: theme.palette.mode === 'dark'
+          ? 'linear-gradient(135deg, rgba(15,15,35,0.5) 0%, rgba(26,26,46,0.3) 50%, rgba(22,33,62,0.5) 100%)'
+          : 'linear-gradient(135deg, rgba(248,250,252,0.5) 0%, rgba(226,232,240,0.3) 50%, rgba(203,213,225,0.5) 100%)',
+        minHeight: '100vh',
+      }}
+    >
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(18, 18, 24, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 700,
+            background: theme.palette.mode === 'dark'
+              ? 'linear-gradient(135deg, #818cf8 0%, #c084fc 100%)'
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            color: 'transparent',
+          }}
+        >
+          🧠 История Brainstorm сессий
+        </Typography>
+      </Paper>
       
-      <List>
+              <List sx={{ p: 2 }}>
         {sessions.map((session: BrainstormSession) => (
           <ListItem
             key={session._id}
             component={Paper}
-            elevation={1}
-            sx={{ mb: 1, mx: 2, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            elevation={theme.palette.mode === 'dark' ? 2 : 1}
+            sx={{ 
+              mb: 2, 
+              mx: 2, 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center',
+              borderRadius: '16px',
+              background: theme.palette.mode === 'dark'
+                ? 'rgba(30, 41, 59, 0.8)'
+                : 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(20px)',
+              border: theme.palette.mode === 'dark'
+                ? '1px solid rgba(255,255,255,0.1)'
+                : '1px solid rgba(0,0,0,0.05)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: theme.palette.mode === 'dark'
+                  ? '0 8px 32px rgba(129,140,248,0.2)'
+                  : '0 8px 32px rgba(102,126,234,0.15)',
+                background: theme.palette.mode === 'dark'
+                  ? 'rgba(30, 41, 59, 0.95)'
+                  : 'rgba(255, 255, 255, 1)',
+              },
+            }}
             onClick={() => onSelectSession(session._id)}
           >
             <Box sx={{ mr: 2 }}>

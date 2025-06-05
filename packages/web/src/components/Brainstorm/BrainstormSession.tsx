@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Box,
   Paper,
@@ -43,6 +43,8 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
     if (!sessionId) return;
     
     try {
+      // eslint-disable-next-line no-console
+      console.log('🔄 Refetching session:', sessionId);
       setError(null);
       
       const response = await apiService.get(`/brainstorm/${sessionId}`);
@@ -52,8 +54,27 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
         throw new Error('Invalid session response structure');
       }
       
-      setSession(responseData.session);
+      const sessionData = responseData.session;
+      
+      // eslint-disable-next-line no-console
+      console.log('📋 Refetch - Session data received:', {
+        id: sessionData._id,
+        topic: sessionData.topic,
+        messagesCount: sessionData.messages?.length || 0,
+        lastMessage: sessionData.messages?.[sessionData.messages.length - 1]?.speaker || 'none',
+        messages: sessionData.messages?.map((m: any, i: number) => ({
+          index: i,
+          id: m._id || m.id,
+          speaker: m.speaker,
+          content: m.content?.substring(0, 30) + '...',
+          timestamp: m.timestamp
+        }))
+      });
+      
+      setSession(sessionData);
     } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Error in refetch:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
     }
@@ -81,6 +102,21 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
         }
         
         const sessionData = responseData.session;
+        
+        // eslint-disable-next-line no-console
+        console.log('📋 Session data received:', {
+          id: sessionData._id,
+          topic: sessionData.topic,
+          messagesCount: sessionData.messages?.length || 0,
+          messages: sessionData.messages?.map((m: any, i: number) => ({
+            index: i,
+            id: m._id || m.id,
+            speaker: m.speaker,
+            content: m.content?.substring(0, 30) + '...',
+            timestamp: m.timestamp
+          }))
+        });
+        
         setSession(sessionData);
       } catch (err) {
         if (!isMounted) return;
@@ -103,14 +139,16 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
 
   // WebSocket setup для streaming - отдельный useEffect
   useEffect(() => {
-    if (!socket || !sessionId || !session) return;
+    if (!socket || !sessionId) return;
 
     const timer = setTimeout(() => {
+      console.log('🔌 Joining brainstorm room:', sessionId);
       socket.emit('brainstorm:join', sessionId);
 
       // Обработка начала streaming
       socket.on('brainstorm:streamStart', (data) => {
         if (data.sessionId === sessionId) {
+          console.log('🎬 Stream start:', data.speaker);
           setStreamingMessages(prev => {
             const newMap = new Map(prev);
             newMap.set(data.messageId, {
@@ -145,13 +183,18 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       // Обработка завершения streaming
       socket.on('brainstorm:streamComplete', (data) => {
         if (data.sessionId === sessionId) {
+          // eslint-disable-next-line no-console
+          console.log('✅ Stream completed for:', data.speaker, data.messageId, 'Message:', data.message);
           setStreamingMessages(prev => {
             const newMap = new Map(prev);
             newMap.delete(data.messageId);
             return newMap;
           });
           // Обновляем сессию с новым сообщением
-          refetch();
+          setTimeout(() => {
+            console.log('🔄 Refetching after streamComplete for:', data.speaker);
+            refetch();
+          }, 1000); // Увеличиваем задержку для БД
         }
       });
 
@@ -164,12 +207,18 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
 
       socket.on('brainstorm:message', (data) => {
         if (data.sessionId === sessionId) {
+          // eslint-disable-next-line no-console
+          console.log('🔄 WebSocket message received, refetching session...', data);
           refetch();
         }
       });
 
       socket.on('error', (error) => {
         console.error('❌ WebSocket error:', error);
+      });
+      
+      socket.on('brainstorm:joined', (data) => {
+        console.log('✅ Successfully joined brainstorm room:', data);
       });
     }, 100);
 
@@ -184,7 +233,50 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
       socket.off('error');
       socket.off('brainstorm:joined');
     };
-  }, [sessionId, socket, session, refetch]); // Добавляем refetch в зависимости
+  }, [sessionId, socket, refetch]); // Убираем session из зависимостей
+
+  // Мемоизируем список сообщений для предотвращения лишних перерендеров
+  const renderedMessages = useMemo(() => {
+    if (!session?.messages) return [];
+    
+    return session.messages.map((message: any, index: number) => {
+      const messageId = message._id || message.id || `msg-${index}`;
+      const isStreaming = streamingMessages.get(messageId)?.isStreaming;
+      
+      return (
+        <BrainstormMessage
+          key={messageId}
+          message={{
+            id: messageId,
+            speaker: message.speaker,
+            content: message.content,
+            timestamp: message.timestamp,
+            tokens: message.tokens,
+            isStreaming: isStreaming
+          }}
+          isStreaming={isStreaming}
+        />
+      );
+    });
+  }, [session?.messages, streamingMessages]);
+
+  // Мемоизируем streaming сообщение
+  const streamingMessage = useMemo(() => {
+    if (streamingMessages.size === 0) return null;
+    
+    const firstStreamingMessage = streamingMessages.values().next().value;
+    return (
+      <BrainstormMessage
+        message={{
+          id: firstStreamingMessage.id,
+          speaker: firstStreamingMessage.speaker,
+          content: firstStreamingMessage.content,
+          timestamp: new Date().toISOString(),
+        }}
+        isStreaming={true}
+      />
+    );
+  }, [streamingMessages]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -241,10 +333,13 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
         attachments: processedAttachments
       });
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      // eslint-disable-next-line no-console
+      console.log('✅ Message sent successfully:', response);
       setUserInput('');
       setAttachments([]);
-      setTimeout(() => refetch(), 500);
+      // Немедленно обновляем локальное состояние и потом refetch
+      refetch();
     },
     onError: (error: any) => {
       // eslint-disable-next-line no-console
@@ -291,7 +386,7 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
   return (
     <Box
       sx={{
-        height: '100vh',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -401,7 +496,6 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
           </Box>
         ) : (
           <Box
-            ref={messagesEndRef}
             sx={{
               flex: 1,
               overflow: 'auto',
@@ -423,25 +517,10 @@ const BrainstormSession: React.FC<BrainstormSessionProps> = ({ sessionId }) => {
               },
             }}
           >
-            {session?.messages?.map((message: any) => (
-              <BrainstormMessage
-                key={message._id}
-                message={message}
-                isStreaming={streamingMessages.get(message._id)?.isStreaming}
-              />
-            ))}
+            {renderedMessages}
             
-            {streamingMessages.size > 0 && (
-              <BrainstormMessage
-                message={{
-                  id: streamingMessages.values().next().value.id,
-                  speaker: streamingMessages.values().next().value.speaker,
-                  content: streamingMessages.values().next().value.content,
-                  timestamp: new Date().toISOString(),
-                }}
-                isStreaming={true}
-              />
-            )}
+            {streamingMessage}
+            <div ref={messagesEndRef} />
           </Box>
         )}
       </Box>

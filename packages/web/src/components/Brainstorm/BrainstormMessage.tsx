@@ -207,4 +207,4 @@ const BrainstormMessage: React.FC<BrainstormMessageProps> = ({ message, isStream
   );
 };
 
-export default BrainstormMessage;
+export default React.memo(BrainstormMessage);

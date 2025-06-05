@@ -32,7 +32,7 @@ const brainstormSchema = new mongoose.Schema({
     grok: {
       model: {
         type: String,
-        default: 'grok-2-1212'
+        default: 'grok-3'
       },
       systemPrompt: String
     }
@@ -109,7 +109,9 @@ brainstormSchema.virtual('currentTurn').get(function() {
   if (!this.messages || !Array.isArray(this.messages)) {
     return 0;
   }
-  return this.messages.filter(m => m.speaker !== 'user').length;
+  // Считаем пары сообщений (Claude + Grok = 1 ход)
+  const aiMessages = this.messages.filter(m => m.speaker !== 'user').length;
+  return Math.floor(aiMessages / 2);
 });
 
 // Virtual for is finished

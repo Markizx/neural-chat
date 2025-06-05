@@ -15,6 +15,7 @@ import {
   CircularProgress,
   Tabs,
   Tab,
+  useTheme,
 } from '@mui/material';
 import {
   AutoAwesome,
@@ -32,13 +33,14 @@ const BrainstormPage: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
   // const [activeTab, setActiveTab] = useState(id ? 1 : 0); // 0 = История, 1 = Сессия
   const [showNewSession, setShowNewSession] = useState(false);
   const [topic, setTopic] = useState('');
   const [description, setDescription] = useState('');
   const [format, setFormat] = useState<'brainstorm' | 'debate' | 'analysis' | 'creative'>('brainstorm');
   const [claudeModel, setClaudeModel] = useState('claude-4-sonnet');
-  const [grokModel, setGrokModel] = useState('grok-2-1212');
+  const [grokModel, setGrokModel] = useState('grok-3');
 
   // Fetch existing session
   const { isLoading } = useQuery({
@@ -54,10 +56,10 @@ const BrainstormPage: React.FC = () => {
   // Start new session mutation
   const startMutation = useMutation({
     mutationFn: async () => {
-      console.log('📤 Sending brainstorm request...');
-      const response = await apiService.post('/brainstorm', {
-        topic,
-        description,
+      // eslint-disable-next-line no-console
+      console.log('📤 Sending brainstorm request...', {
+        topic: topic,
+        description: description,
         participants: {
           claude: { model: claudeModel },
           grok: { model: grokModel }
@@ -67,23 +69,79 @@ const BrainstormPage: React.FC = () => {
           maxTurns: 20,
         },
       });
-      console.log('📥 Brainstorm response:', response);
-      const sessionId = (response.data as any).data.sessionId;
-      console.log('🆔 Session ID:', sessionId);
-      return sessionId;
+      
+      try {
+        const response = await apiService.post('/brainstorm', {
+          topic,
+          description,
+          participants: {
+            claude: { model: claudeModel },
+            grok: { model: grokModel }
+          },
+          settings: {
+            format,
+            maxTurns: 20,
+          },
+        });
+        
+        // eslint-disable-next-line no-console
+        console.log('📥 Brainstorm response:', response);
+        
+        // Проверяем структуру ответа
+        if (!response || !response.data) {
+          throw new Error('Invalid response structure');
+        }
+        
+        const responseData = response.data as any;
+        if (!responseData || !responseData.sessionId) {
+          // eslint-disable-next-line no-console
+          console.error('❌ Invalid response data:', responseData);
+          throw new Error('Session ID not found in response');
+        }
+        
+        const sessionId = responseData.sessionId;
+        // eslint-disable-next-line no-console
+        console.log('🆔 Session ID extracted:', sessionId);
+        return sessionId;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('❌ Error in mutationFn:', error);
+        throw error;
+      }
     },
     onSuccess: (sessionId) => {
-      console.log('✅ Brainstorm session created, navigating to:', `/brainstorm/${sessionId}`);
-      setShowNewSession(false); // Скрываем форму
-      navigate(`/brainstorm/${sessionId}`);
+      // eslint-disable-next-line no-console
+      console.log('✅ Brainstorm session created successfully!');
+      // eslint-disable-next-line no-console
+      console.log('🔄 Preparing navigation to:', `/brainstorm/${sessionId}`);
+      
+      // Очищаем форму
+      setTopic('');
+      setDescription('');
+      setShowNewSession(false);
+      
+      // Даем время для обновления состояния перед навигацией
+      setTimeout(() => {
+        // eslint-disable-next-line no-console
+        console.log('🚀 Navigating to session:', sessionId);
+        navigate(`/brainstorm/${sessionId}`, { replace: true });
+      }, 100);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      // eslint-disable-next-line no-console
       console.error('❌ Brainstorm creation failed:', error);
+      // eslint-disable-next-line no-console
+      console.error('❌ Error details:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status
+      });
     },
   });
 
   const handleStart = () => {
     if (topic.trim()) {
+      // eslint-disable-next-line no-console
       console.log('🚀 Starting brainstorm session with:', { topic, description, format });
       startMutation.mutate();
     }
@@ -127,14 +185,24 @@ const BrainstormPage: React.FC = () => {
       <PageContainer>
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Tabs */}
-        <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            background: theme.palette.mode === 'dark'
+              ? 'rgba(18, 18, 24, 0.95)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+          }}
+        >
           <Tabs value={1} onChange={handleTabChange}>
             <Tab label={t('brainstorm.history')} />
             <Tab label={t('brainstorm.currentSession')} />
           </Tabs>
         </Paper>
         
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: 1, overflow: 'hidden' }}>
           <BrainstormSession sessionId={id} />
         </Box>
         </Box>
@@ -152,7 +220,9 @@ const BrainstormPage: React.FC = () => {
           borderBottom: 1, 
           borderColor: 'divider', 
           p: 3,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.95) 100%)',
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, rgba(18,18,24,0.95) 0%, rgba(30,30,36,0.95) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.95) 100%)',
           backdropFilter: 'blur(20px)',
         }}
       >
@@ -162,7 +232,9 @@ const BrainstormPage: React.FC = () => {
               variant="h4"
               sx={{
                 fontWeight: 700,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: theme.palette.mode === 'dark'
+                  ? 'linear-gradient(135deg, #818cf8 0%, #c084fc 100%)'
+                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 color: 'transparent',
@@ -186,12 +258,20 @@ const BrainstormPage: React.FC = () => {
               borderRadius: '16px',
               fontSize: '1rem',
               fontWeight: 600,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              boxShadow: '0 8px 32px rgba(102,126,234,0.3)',
+              background: theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, #818cf8 0%, #c084fc 100%)'
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              boxShadow: theme.palette.mode === 'dark'
+                ? '0 8px 32px rgba(129,140,248,0.3)'
+                : '0 8px 32px rgba(102,126,234,0.3)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                background: 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
-                boxShadow: '0 12px 40px rgba(102,126,234,0.4)',
+                background: theme.palette.mode === 'dark'
+                  ? 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+                  : 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
+                boxShadow: theme.palette.mode === 'dark'
+                  ? '0 12px 40px rgba(129,140,248,0.4)'
+                  : '0 12px 40px rgba(102,126,234,0.4)',
                 transform: 'translateY(-2px)',
               },
             }}
@@ -206,19 +286,25 @@ const BrainstormPage: React.FC = () => {
         sx={{ 
           flex: 1, 
           overflow: 'auto',
-          background: 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)',
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, rgba(129,140,248,0.03) 0%, rgba(192,132,252,0.03) 100%)'
+            : 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)',
         }}
       >
         {showNewSession ? (
-          <Container maxWidth="md" sx={{ py: 6 }}>
+          <Container maxWidth="md" sx={{ py: 3 }}>
             <Paper 
               elevation={8}
               sx={{ 
-                p: 6,
-                borderRadius: '24px',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.95) 100%)',
+                p: 4,
+                borderRadius: '20px',
+                background: theme.palette.mode === 'dark'
+                  ? 'linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(51,65,85,0.95) 100%)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.95) 100%)',
                 backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                border: theme.palette.mode === 'dark'
+                  ? '1px solid rgba(255,255,255,0.1)'
+                  : '1px solid rgba(255,255,255,0.2)',
                 position: 'relative',
                 overflow: 'hidden',
                 '&::before': {
@@ -228,89 +314,41 @@ const BrainstormPage: React.FC = () => {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  background: 'radial-gradient(circle at 20% 80%, rgba(102,126,234,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(239,68,68,0.1) 0%, transparent 50%)',
+                  background: theme.palette.mode === 'dark'
+                    ? 'radial-gradient(circle at 20% 80%, rgba(129,140,248,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(192,132,252,0.15) 0%, transparent 50%)'
+                    : 'radial-gradient(circle at 20% 80%, rgba(102,126,234,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(239,68,68,0.1) 0%, transparent 50%)',
                   zIndex: 0,
                 },
               }}
             >
               <Box sx={{ position: 'relative', zIndex: 1 }}>
-                <Box sx={{ mb: 6, textAlign: 'center' }}>
-                  {/* Animated icon container */}
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      display: 'inline-block',
-                      mb: 3,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        p: 3,
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        animation: 'pulse 2s infinite',
-                        '@keyframes pulse': {
-                          '0%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(102,126,234,0.7)' },
-                          '70%': { transform: 'scale(1.05)', boxShadow: '0 0 0 10px rgba(102,126,234,0)' },
-                          '100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(102,126,234,0)' },
-                        },
-                      }}
-                    >
-                      <AutoAwesome
-                        sx={{
-                          fontSize: 48,
-                          color: 'white',
-                        }}
-                      />
-                    </Box>
-                    
-                    {/* Floating AI icons */}
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: -10,
-                        right: -10,
-                        animation: 'float 3s ease-in-out infinite',
-                        '@keyframes float': {
-                          '0%, 100%': { transform: 'translateY(0px)' },
-                          '50%': { transform: 'translateY(-10px)' },
-                        },
-                      }}
-                    >
-                      🤖
-                    </Box>
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        bottom: -10,
-                        left: -10,
-                        animation: 'float 3s ease-in-out infinite 1.5s',
-                      }}
-                    >
-                      🚀
-                    </Box>
-                  </Box>
-
+                <Box sx={{ mb: 3, textAlign: 'center' }}>
                   <Typography 
-                    variant="h3" 
+                    variant="h4" 
                     gutterBottom
                     sx={{
-                      fontWeight: 800,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      fontWeight: 700,
+                      background: theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, #818cf8 0%, #c084fc 100%)'
+                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
                       color: 'transparent',
-                      mb: 2,
+                      mb: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 1,
                     }}
                   >
-                    Мозговой штурм с ИИ
+                    🧠 Мозговой штурм с ИИ
                   </Typography>
                   <Typography 
-                    variant="h6" 
+                    variant="body1" 
                     color="text.secondary"
                     sx={{
-                      lineHeight: 1.6,
-                      maxWidth: '500px',
+                      lineHeight: 1.5,
+                      maxWidth: '400px',
                       mx: 'auto',
                     }}
                   >
@@ -330,11 +368,18 @@ const BrainstormPage: React.FC = () => {
                     '& .MuiOutlinedInput-root': {
                       borderRadius: '16px',
                       fontSize: '1.1rem',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent',
                       '&:hover': {
-                        boxShadow: '0 4px 20px rgba(102,126,234,0.15)',
+                        boxShadow: theme.palette.mode === 'dark'
+                          ? '0 4px 20px rgba(129,140,248,0.15)'
+                          : '0 4px 20px rgba(102,126,234,0.15)',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'transparent',
                       },
                       '&.Mui-focused': {
-                        boxShadow: '0 4px 20px rgba(102,126,234,0.25)',
+                        boxShadow: theme.palette.mode === 'dark'
+                          ? '0 4px 20px rgba(129,140,248,0.25)'
+                          : '0 4px 20px rgba(102,126,234,0.25)',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'transparent',
                       },
                     },
                   }}
@@ -348,28 +393,39 @@ const BrainstormPage: React.FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   margin="normal"
                   multiline
-                  rows={4}
+                  rows={2}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: '16px',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent',
                       '&:hover': {
-                        boxShadow: '0 4px 20px rgba(102,126,234,0.15)',
+                        boxShadow: theme.palette.mode === 'dark'
+                          ? '0 4px 20px rgba(129,140,248,0.15)'
+                          : '0 4px 20px rgba(102,126,234,0.15)',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'transparent',
                       },
                       '&.Mui-focused': {
-                        boxShadow: '0 4px 20px rgba(102,126,234,0.25)',
+                        boxShadow: theme.palette.mode === 'dark'
+                          ? '0 4px 20px rgba(129,140,248,0.25)'
+                          : '0 4px 20px rgba(102,126,234,0.25)',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'transparent',
                       },
                     },
                   }}
                 />
 
-                <Box sx={{ display: 'flex', gap: 3, mt: 4 }}>
+                <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
                   <FormControl 
                     fullWidth
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '16px',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent',
                         '&:hover': {
-                          boxShadow: '0 4px 20px rgba(102,126,234,0.15)',
+                          boxShadow: theme.palette.mode === 'dark'
+                            ? '0 4px 20px rgba(129,140,248,0.15)'
+                            : '0 4px 20px rgba(102,126,234,0.15)',
+                          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'transparent',
                         },
                       },
                     }}
@@ -392,8 +448,12 @@ const BrainstormPage: React.FC = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '16px',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent',
                         '&:hover': {
-                          boxShadow: '0 4px 20px rgba(99,102,241,0.15)',
+                          boxShadow: theme.palette.mode === 'dark'
+                            ? '0 4px 20px rgba(99,102,241,0.15)'
+                            : '0 4px 20px rgba(99,102,241,0.15)',
+                          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'transparent',
                         },
                       },
                     }}
@@ -415,8 +475,12 @@ const BrainstormPage: React.FC = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '16px',
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent',
                         '&:hover': {
-                          boxShadow: '0 4px 20px rgba(239,68,68,0.15)',
+                          boxShadow: theme.palette.mode === 'dark'
+                            ? '0 4px 20px rgba(239,68,68,0.15)'
+                            : '0 4px 20px rgba(239,68,68,0.15)',
+                          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'transparent',
                         },
                       },
                     }}
@@ -427,8 +491,7 @@ const BrainstormPage: React.FC = () => {
                       onChange={(e) => setGrokModel(e.target.value)}
                       label="🚀 Grok модель"
                     >
-                      <MenuItem value="grok-2-1212">🚀 Grok 2 Latest</MenuItem>
-                      <MenuItem value="grok-2-vision-1212">👁️ Grok 2 Vision</MenuItem>
+                      <MenuItem value="grok-3">🚀 Grok 3</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -436,37 +499,38 @@ const BrainstormPage: React.FC = () => {
                 <Alert 
                   severity="info" 
                   sx={{ 
-                    mt: 4,
-                    borderRadius: '16px',
-                    border: '1px solid rgba(102,126,234,0.2)',
-                    background: 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)',
+                    mt: 2,
+                    borderRadius: '12px',
+                    border: theme.palette.mode === 'dark'
+                      ? '1px solid rgba(129,140,248,0.2)'
+                      : '1px solid rgba(102,126,234,0.2)',
+                    background: theme.palette.mode === 'dark'
+                      ? 'linear-gradient(135deg, rgba(129,140,248,0.1) 0%, rgba(192,132,252,0.1) 100%)'
+                      : 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)',
                   }}
                 >
-                  <Typography variant="body2" sx={{ lineHeight: 1.8 }}>
-                    💡 <strong>Мозговой штурм:</strong> Совместная генерация креативных идей
-                    <br />
-                    ⚔️ <strong>Дебаты:</strong> Противоположные точки зрения и аргументы
-                    <br />
-                    🔍 <strong>Анализ:</strong> Систематический и глубокий разбор
-                    <br />
-                    🎭 <strong>Творческий:</strong> Воображение и нестандартные подходы
+                  <Typography variant="caption" sx={{ lineHeight: 1.4, fontSize: '0.75rem' }}>
+                    💡 <strong>Мозговой штурм:</strong> Совместная генерация идей • 
+                    ⚔️ <strong>Дебаты:</strong> Противоположные точки зрения • 
+                    🔍 <strong>Анализ:</strong> Глубокий разбор • 
+                    🎭 <strong>Творческий:</strong> Нестандартные подходы
                   </Typography>
                 </Alert>
 
-                <Box sx={{ mt: 6, display: 'flex', justifyContent: 'space-between', gap: 3 }}>
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
                   <Button
                     variant="outlined"
-                    size="large"
+                    size="medium"
                     onClick={() => setShowNewSession(false)}
                     sx={{
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: '16px',
-                      borderColor: 'grey.300',
+                      px: 3,
+                      py: 1,
+                      borderRadius: '12px',
+                      borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.23)' : 'grey.300',
                       color: 'text.secondary',
                       '&:hover': {
-                        borderColor: 'grey.400',
-                        background: 'rgba(0,0,0,0.04)',
+                        borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.4)' : 'grey.400',
+                        background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
                       },
                     }}
                   >
@@ -474,26 +538,36 @@ const BrainstormPage: React.FC = () => {
                   </Button>
                   <Button
                     variant="contained"
-                    size="large"
-                    startIcon={startMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
+                    size="medium"
+                    startIcon={startMutation.isPending ? <CircularProgress size={18} color="inherit" /> : <PlayArrow />}
                     onClick={handleStart}
                     disabled={!topic.trim() || startMutation.isPending}
                     sx={{
-                      px: 6,
-                      py: 1.5,
-                      borderRadius: '16px',
-                      fontSize: '1.1rem',
+                      px: 4,
+                      py: 1,
+                      borderRadius: '12px',
+                      fontSize: '1rem',
                       fontWeight: 600,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      boxShadow: '0 8px 32px rgba(102,126,234,0.3)',
+                      background: theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, #818cf8 0%, #c084fc 100%)'
+                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      boxShadow: theme.palette.mode === 'dark'
+                        ? '0 8px 32px rgba(129,140,248,0.3)'
+                        : '0 8px 32px rgba(102,126,234,0.3)',
                       transition: 'all 0.3s ease',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
-                        boxShadow: '0 12px 40px rgba(102,126,234,0.4)',
+                        background: theme.palette.mode === 'dark'
+                          ? 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+                          : 'linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%)',
+                        boxShadow: theme.palette.mode === 'dark'
+                          ? '0 12px 40px rgba(129,140,248,0.4)'
+                          : '0 12px 40px rgba(102,126,234,0.4)',
                         transform: 'translateY(-2px)',
                       },
                       '&:disabled': {
-                        background: 'linear-gradient(135deg, rgba(102,126,234,0.5) 0%, rgba(118,75,162,0.5) 100%)',
+                        background: theme.palette.mode === 'dark'
+                          ? 'linear-gradient(135deg, rgba(129,140,248,0.5) 0%, rgba(192,132,252,0.5) 100%)'
+                          : 'linear-gradient(135deg, rgba(102,126,234,0.5) 0%, rgba(118,75,162,0.5) 100%)',
                         boxShadow: 'none',
                       },
                     }}

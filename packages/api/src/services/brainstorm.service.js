@@ -57,7 +57,7 @@ class BrainstormService {
     try {
       const {
             claudeModel = 'claude-4-sonnet',
-    grokModel = 'grok-2-1212'
+    grokModel = 'grok-3'
       } = participants;
 
       const session = {
